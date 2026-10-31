@@ -1,0 +1,13 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: salesforce
+source: salesforce
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/salesforce"
+    query: "SELECT Id, Name, SystemModstamp FROM Account WHERE Name != null"
+tables:
+  salesforce_records:
+    object: "Account"
+    contract: salesforce_account

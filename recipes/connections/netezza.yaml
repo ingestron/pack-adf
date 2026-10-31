@@ -1,0 +1,11 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: netezza
+connector: netezza
+connectivity: private
+settings:
+  server: "source.example.test"
+  database: "sales"
+  user: "reader"
+  password: "${secret:source-password}"
+  port: 5432

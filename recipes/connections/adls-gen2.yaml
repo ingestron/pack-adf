@@ -1,0 +1,7 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: adls_gen2
+connector: adls-gen2
+connectivity: private
+settings:
+  url: "https://source.example.test"

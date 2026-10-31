@@ -1,0 +1,2440 @@
+[
+  {
+    "id": "postgresql",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "database": "sales",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "PostgreSqlV2",
+      "dataset": "PostgreSqlV2Table",
+      "source": "PostgreSqlV2Source",
+      "properties": {
+        "authenticationType": "Basic",
+        "sslMode": 5,
+        "server": "source.example.test",
+        "database": "sales",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "database": "database",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "azure-postgresql",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "database": "sales",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "AzurePostgreSql",
+      "dataset": "AzurePostgreSqlTable",
+      "source": "AzurePostgreSqlSource",
+      "version": "2.0",
+      "properties": {
+        "authenticationType": "Basic",
+        "sslMode": 5,
+        "server": "source.example.test",
+        "database": "sales",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "database": "database",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "mysql",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "database": "sales",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "MySql",
+      "dataset": "MySqlTable",
+      "source": "MySqlSource",
+      "properties": {
+        "driverVersion": "v2",
+        "sslMode": "4",
+        "server": "source.example.test",
+        "database": "sales",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "database": "database",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "azure-mysql",
+    "method": "adf-table",
+    "settings": {
+      "connection_string": "${secret:source-connection-string}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "AzureMySql",
+      "dataset": "AzureMySqlTable",
+      "source": "AzureMySqlSource",
+      "properties": {
+        "connectionString": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-connection-string"
+        }
+      }
+    },
+    "field_mapping": {
+      "connection_string": "connectionString"
+    }
+  },
+  {
+    "id": "mariadb",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "database": "sales",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {
+      "query": "SELECT * FROM orders"
+    },
+    "expected": {
+      "service": "MariaDB",
+      "dataset": "MariaDBTable",
+      "source": "MariaDBSource",
+      "properties": {
+        "driverVersion": "v2",
+        "sslMode": "4",
+        "server": "source.example.test",
+        "database": "sales",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "database": "database",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "oracle",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "Oracle",
+      "dataset": "OracleTable",
+      "source": "OracleSource",
+      "version": "2.0",
+      "properties": {
+        "authenticationType": "Basic",
+        "server": "source.example.test",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "amazon-rds-oracle",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "AmazonRdsForOracle",
+      "dataset": "AmazonRdsForOracleTable",
+      "source": "AmazonRdsForOracleSource",
+      "version": "2.0",
+      "properties": {
+        "authenticationType": "Basic",
+        "server": "source.example.test",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "db2",
+    "method": "adf-table",
+    "settings": {
+      "connection_string": "${secret:source-connection-string}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "Db2",
+      "dataset": "Db2Table",
+      "source": "Db2Source",
+      "properties": {
+        "connectionString": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-connection-string"
+        }
+      }
+    },
+    "field_mapping": {
+      "connection_string": "connectionString"
+    }
+  },
+  {
+    "id": "informix",
+    "method": "adf-table",
+    "settings": {
+      "connection_string": "synthetic-connection_string",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {
+      "runtime_kind": "self-hosted"
+    },
+    "expected": {
+      "service": "Informix",
+      "dataset": "InformixTable",
+      "source": "InformixSource",
+      "properties": {
+        "authenticationType": "Basic",
+        "connectionString": "synthetic-connection_string",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "connection_string": "connectionString",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "microsoft-access",
+    "method": "adf-table",
+    "settings": {
+      "connection_string": "synthetic-connection_string",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {
+      "runtime_kind": "self-hosted"
+    },
+    "expected": {
+      "service": "MicrosoftAccess",
+      "dataset": "MicrosoftAccessTable",
+      "source": "MicrosoftAccessSource",
+      "properties": {
+        "authenticationType": "Basic",
+        "connectionString": "synthetic-connection_string",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "connection_string": "connectionString",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "sybase",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "database": "sales",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {
+      "runtime_kind": "self-hosted"
+    },
+    "expected": {
+      "service": "Sybase",
+      "dataset": "SybaseTable",
+      "source": "SybaseSource",
+      "properties": {
+        "authenticationType": "Basic",
+        "server": "source.example.test",
+        "database": "sales",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "database": "database",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "teradata",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "Teradata",
+      "dataset": "TeradataTable",
+      "source": "TeradataSource",
+      "version": "2.0",
+      "properties": {
+        "authenticationType": "Basic",
+        "sslMode": "Verify-Full",
+        "server": "source.example.test",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "netezza",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "database": "sales",
+      "user": "reader",
+      "password": "${secret:source-password}",
+      "port": 5432
+    },
+    "object": "sales.orders",
+    "options": {
+      "runtime_kind": "self-hosted"
+    },
+    "expected": {
+      "service": "Netezza",
+      "dataset": "NetezzaTable",
+      "source": "NetezzaSource",
+      "version": "2.0",
+      "properties": {
+        "securityLevel": "onlySecured",
+        "server": "source.example.test",
+        "database": "sales",
+        "uid": "reader",
+        "pwd": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        },
+        "port": 5432
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "database": "database",
+      "user": "uid",
+      "password": "pwd",
+      "port": "port"
+    }
+  },
+  {
+    "id": "amazon-redshift",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "database": "sales",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "AmazonRedshift",
+      "dataset": "AmazonRedshiftTable",
+      "source": "AmazonRedshiftSource",
+      "version": "2.0",
+      "properties": {
+        "sslmode": "verify-full",
+        "server": "source.example.test",
+        "database": "sales",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "database": "database",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "google-bigquery",
+    "method": "adf-table",
+    "settings": {
+      "project_id": "synthetic-project_id",
+      "key_file": "${secret:source-key-file}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "GoogleBigQueryV2",
+      "dataset": "GoogleBigQueryV2Object",
+      "source": "GoogleBigQueryV2Source",
+      "version": "1.1",
+      "properties": {
+        "authenticationType": "ServiceAuthentication",
+        "projectId": "synthetic-project_id",
+        "keyFileContent": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-key-file"
+        }
+      }
+    },
+    "field_mapping": {
+      "project_id": "projectId",
+      "key_file": "keyFileContent"
+    }
+  },
+  {
+    "id": "greenplum",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "database": "sales",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "Greenplum",
+      "dataset": "GreenplumTable",
+      "source": "GreenplumSource",
+      "version": "2.0",
+      "properties": {
+        "authenticationType": "Basic",
+        "sslMode": 5,
+        "host": "source.example.test",
+        "database": "sales",
+        "username": "reader",
+        "pwd": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "host",
+      "database": "database",
+      "user": "username",
+      "password": "pwd"
+    }
+  },
+  {
+    "id": "hive",
+    "method": "adf-table",
+    "settings": {
+      "host": "source.example.test",
+      "port": 5432,
+      "user": "reader",
+      "password": "${secret:source-password}",
+      "transport": "Binary"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "Hive",
+      "dataset": "HiveObject",
+      "source": "HiveSource",
+      "version": "2.0",
+      "properties": {
+        "enableSsl": true,
+        "enableServerCertificateValidation": true,
+        "authenticationType": "UsernameAndPassword",
+        "serverType": "HiveServer2",
+        "host": "source.example.test",
+        "port": 5432,
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        },
+        "thriftTransportProtocol": "Binary"
+      }
+    },
+    "field_mapping": {
+      "host": "host",
+      "port": "port",
+      "user": "username",
+      "password": "password",
+      "transport": "thriftTransportProtocol"
+    }
+  },
+  {
+    "id": "impala",
+    "method": "adf-table",
+    "settings": {
+      "host": "source.example.test",
+      "port": 5432,
+      "user": "reader",
+      "password": "${secret:source-password}",
+      "transport": "Binary"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "Impala",
+      "dataset": "ImpalaObject",
+      "source": "ImpalaSource",
+      "version": "2.0",
+      "properties": {
+        "enableSsl": true,
+        "enableServerCertificateValidation": true,
+        "authenticationType": "UsernameAndPassword",
+        "host": "source.example.test",
+        "port": 5432,
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        },
+        "thriftTransportProtocol": "Binary"
+      }
+    },
+    "field_mapping": {
+      "host": "host",
+      "port": "port",
+      "user": "username",
+      "password": "password",
+      "transport": "thriftTransportProtocol"
+    }
+  },
+  {
+    "id": "presto",
+    "method": "adf-table",
+    "settings": {
+      "host": "source.example.test",
+      "port": 5432,
+      "user": "reader",
+      "password": "${secret:source-password}",
+      "catalog": "synthetic-catalog"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "Presto",
+      "dataset": "PrestoObject",
+      "source": "PrestoSource",
+      "version": "2.0",
+      "properties": {
+        "enableSsl": true,
+        "enableServerCertificateValidation": true,
+        "authenticationType": "LDAP",
+        "host": "source.example.test",
+        "port": 5432,
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        },
+        "catalog": "synthetic-catalog"
+      }
+    },
+    "field_mapping": {
+      "host": "host",
+      "port": "port",
+      "user": "username",
+      "password": "password",
+      "catalog": "catalog"
+    }
+  },
+  {
+    "id": "spark",
+    "method": "adf-table",
+    "settings": {
+      "host": "source.example.test",
+      "port": 5432,
+      "user": "reader",
+      "password": "${secret:source-password}",
+      "http_path": "synthetic-http_path"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "Spark",
+      "dataset": "SparkObject",
+      "source": "SparkSource",
+      "version": "2.0",
+      "properties": {
+        "enableSsl": true,
+        "enableServerCertificateValidation": true,
+        "authenticationType": "UsernameAndPassword",
+        "serverType": "SparkThriftServer",
+        "thriftTransportProtocol": "HTTP",
+        "host": "source.example.test",
+        "port": 5432,
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        },
+        "httpPath": "synthetic-http_path"
+      }
+    },
+    "field_mapping": {
+      "host": "host",
+      "port": "port",
+      "user": "username",
+      "password": "password",
+      "http_path": "httpPath"
+    }
+  },
+  {
+    "id": "vertica",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "database": "sales",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "Vertica",
+      "dataset": "VerticaTable",
+      "source": "VerticaSource",
+      "version": "2.0",
+      "properties": {
+        "server": "source.example.test",
+        "database": "sales",
+        "uid": "reader",
+        "pwd": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "database": "database",
+      "user": "uid",
+      "password": "pwd"
+    }
+  },
+  {
+    "id": "hubspot",
+    "method": "adf-table",
+    "settings": {
+      "client_id": "synthetic-client",
+      "client_secret": "${secret:source-client-secret}",
+      "access_token": "${secret:source-access-token}",
+      "refresh_token": "${secret:source-refresh-token}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "Hubspot",
+      "dataset": "HubspotObject",
+      "source": "HubspotSource",
+      "version": "2.0",
+      "properties": {
+        "clientId": "synthetic-client",
+        "clientSecret": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-secret"
+        },
+        "accessToken": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-access-token"
+        },
+        "refreshToken": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-refresh-token"
+        }
+      }
+    },
+    "field_mapping": {
+      "client_id": "clientId",
+      "client_secret": "clientSecret",
+      "access_token": "accessToken",
+      "refresh_token": "refreshToken"
+    }
+  },
+  {
+    "id": "jira",
+    "method": "adf-table",
+    "settings": {
+      "host": "source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "Jira",
+      "dataset": "JiraObject",
+      "source": "JiraSource",
+      "version": "2.0",
+      "properties": {
+        "host": "source.example.test",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "host": "host",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "quickbooks",
+    "method": "adf-table",
+    "settings": {
+      "company_id": "synthetic-company_id",
+      "client_id": "synthetic-client",
+      "client_secret": "${secret:source-client-secret}",
+      "refresh_token": "${secret:source-refresh-token}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "QuickBooks",
+      "dataset": "QuickBooksObject",
+      "source": "QuickBooksSource",
+      "version": "2.0",
+      "properties": {
+        "endpoint": "quickbooks.api.intuit.com",
+        "companyId": "synthetic-company_id",
+        "consumerKey": "synthetic-client",
+        "consumerSecret": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-secret"
+        },
+        "refreshToken": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-refresh-token"
+        }
+      }
+    },
+    "field_mapping": {
+      "company_id": "companyId",
+      "client_id": "consumerKey",
+      "client_secret": "consumerSecret",
+      "refresh_token": "refreshToken"
+    }
+  },
+  {
+    "id": "shopify",
+    "method": "adf-table",
+    "settings": {
+      "host": "source.example.test",
+      "access_token": "${secret:source-access-token}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "Shopify",
+      "dataset": "ShopifyObject",
+      "source": "ShopifySource",
+      "version": "2.0",
+      "properties": {
+        "host": "source.example.test",
+        "accessToken": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-access-token"
+        }
+      }
+    },
+    "field_mapping": {
+      "host": "host",
+      "access_token": "accessToken"
+    }
+  },
+  {
+    "id": "square",
+    "method": "adf-table",
+    "settings": {
+      "host": "source.example.test",
+      "client_id": "synthetic-client",
+      "client_secret": "${secret:source-client-secret}",
+      "access_token": "${secret:source-access-token}"
+    },
+    "object": "orders",
+    "options": {
+      "runtime_kind": "self-hosted"
+    },
+    "expected": {
+      "service": "Square",
+      "dataset": "SquareObject",
+      "source": "SquareSource",
+      "version": "2.0",
+      "properties": {
+        "host": "source.example.test",
+        "clientId": "synthetic-client",
+        "clientSecret": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-secret"
+        },
+        "accessToken": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-access-token"
+        }
+      }
+    },
+    "field_mapping": {
+      "host": "host",
+      "client_id": "clientId",
+      "client_secret": "clientSecret",
+      "access_token": "accessToken"
+    }
+  },
+  {
+    "id": "xero",
+    "method": "adf-table",
+    "settings": {
+      "client_id": "${secret:source-client-id}",
+      "client_secret": "${secret:source-client-secret}",
+      "tenant_id": "synthetic-tenant_id",
+      "refresh_token": "${secret:source-refresh-token}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "Xero",
+      "dataset": "XeroObject",
+      "source": "XeroSource",
+      "version": "2.0",
+      "properties": {
+        "host": "api.xero.com",
+        "clientId": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-id"
+        },
+        "clientSecret": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-secret"
+        },
+        "tenantId": "synthetic-tenant_id",
+        "refreshToken": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-refresh-token"
+        }
+      }
+    },
+    "field_mapping": {
+      "client_id": "clientId",
+      "client_secret": "clientSecret",
+      "tenant_id": "tenantId",
+      "refresh_token": "refreshToken"
+    }
+  },
+  {
+    "id": "google-ads",
+    "method": "adf-table",
+    "settings": {
+      "customer_id": "synthetic-customer_id",
+      "api_version": "v22",
+      "developer_token": "${secret:source-developer-token}",
+      "client_id": "${secret:source-client-id}",
+      "client_secret": "${secret:source-client-secret}",
+      "refresh_token": "${secret:source-refresh-token}"
+    },
+    "object": "orders",
+    "options": {
+      "query": "SELECT customer.id, customer.descriptive_name FROM customer"
+    },
+    "expected": {
+      "service": "GoogleAdWords",
+      "dataset": "GoogleAdWordsObject",
+      "source": "GoogleAdWordsSource",
+      "properties": {
+        "authenticationType": "UserAuthentication",
+        "clientCustomerID": "synthetic-customer_id",
+        "googleAdsApiVersion": "v22",
+        "developerToken": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-developer-token"
+        },
+        "clientId": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-id"
+        },
+        "clientSecret": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-secret"
+        },
+        "refreshToken": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-refresh-token"
+        }
+      }
+    },
+    "field_mapping": {
+      "customer_id": "clientCustomerID",
+      "api_version": "googleAdsApiVersion",
+      "developer_token": "developerToken",
+      "client_id": "clientId",
+      "client_secret": "clientSecret",
+      "refresh_token": "refreshToken"
+    }
+  },
+  {
+    "id": "dataverse",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "client_id": "synthetic-client",
+      "client_secret": "${secret:source-client-secret}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "CommonDataServiceForApps",
+      "dataset": "CommonDataServiceForAppsEntity",
+      "source": "CommonDataServiceForAppsSource",
+      "properties": {
+        "deploymentType": "Online",
+        "authenticationType": "AADServicePrincipal",
+        "servicePrincipalCredentialType": "ServicePrincipalKey",
+        "serviceUri": "https://source.example.test",
+        "servicePrincipalId": "synthetic-client",
+        "servicePrincipalCredential": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-secret"
+        }
+      }
+    },
+    "field_mapping": {
+      "url": "serviceUri",
+      "client_id": "servicePrincipalId",
+      "client_secret": "servicePrincipalCredential"
+    }
+  },
+  {
+    "id": "dynamics-365",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "client_id": "synthetic-client",
+      "client_secret": "${secret:source-client-secret}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "Dynamics",
+      "dataset": "DynamicsEntity",
+      "source": "DynamicsSource",
+      "properties": {
+        "deploymentType": "Online",
+        "authenticationType": "AADServicePrincipal",
+        "servicePrincipalCredentialType": "ServicePrincipalKey",
+        "serviceUri": "https://source.example.test",
+        "servicePrincipalId": "synthetic-client",
+        "servicePrincipalCredential": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-secret"
+        }
+      }
+    },
+    "field_mapping": {
+      "url": "serviceUri",
+      "client_id": "servicePrincipalId",
+      "client_secret": "servicePrincipalCredential"
+    }
+  },
+  {
+    "id": "dynamics-crm",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "client_id": "synthetic-client",
+      "client_secret": "${secret:source-client-secret}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "DynamicsCrm",
+      "dataset": "DynamicsCrmEntity",
+      "source": "DynamicsCrmSource",
+      "properties": {
+        "deploymentType": "Online",
+        "authenticationType": "AADServicePrincipal",
+        "servicePrincipalCredentialType": "ServicePrincipalKey",
+        "serviceUri": "https://source.example.test",
+        "servicePrincipalId": "synthetic-client",
+        "servicePrincipalCredential": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-secret"
+        }
+      }
+    },
+    "field_mapping": {
+      "url": "serviceUri",
+      "client_id": "servicePrincipalId",
+      "client_secret": "servicePrincipalCredential"
+    }
+  },
+  {
+    "id": "dynamics-ax",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "tenant": "synthetic-tenant",
+      "client_id": "synthetic-client",
+      "client_secret": "${secret:source-client-secret}",
+      "resource": "synthetic-resource"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "DynamicsAX",
+      "dataset": "DynamicsAXResource",
+      "source": "DynamicsAXSource",
+      "properties": {
+        "url": "https://source.example.test",
+        "tenant": "synthetic-tenant",
+        "servicePrincipalId": "synthetic-client",
+        "servicePrincipalKey": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-secret"
+        },
+        "aadResourceId": "synthetic-resource"
+      }
+    },
+    "field_mapping": {
+      "url": "url",
+      "tenant": "tenant",
+      "client_id": "servicePrincipalId",
+      "client_secret": "servicePrincipalKey",
+      "resource": "aadResourceId"
+    }
+  },
+  {
+    "id": "salesforce",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "client_id": "synthetic-client",
+      "client_secret": "${secret:source-client-secret}",
+      "api_version": "65.0"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "SalesforceV2",
+      "dataset": "SalesforceV2Object",
+      "source": "SalesforceV2Source",
+      "properties": {
+        "authenticationType": "OAuth2ClientCredentials",
+        "environmentUrl": "https://source.example.test",
+        "clientId": "synthetic-client",
+        "clientSecret": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-secret"
+        },
+        "apiVersion": "65.0"
+      }
+    },
+    "field_mapping": {
+      "url": "environmentUrl",
+      "client_id": "clientId",
+      "client_secret": "clientSecret",
+      "api_version": "apiVersion"
+    }
+  },
+  {
+    "id": "salesforce-service-cloud",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "client_id": "synthetic-client",
+      "client_secret": "${secret:source-client-secret}",
+      "api_version": "65.0"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "SalesforceServiceCloudV2",
+      "dataset": "SalesforceServiceCloudV2Object",
+      "source": "SalesforceServiceCloudV2Source",
+      "properties": {
+        "authenticationType": "OAuth2ClientCredentials",
+        "environmentUrl": "https://source.example.test",
+        "clientId": "synthetic-client",
+        "clientSecret": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-secret"
+        },
+        "apiVersion": "65.0"
+      }
+    },
+    "field_mapping": {
+      "url": "environmentUrl",
+      "client_id": "clientId",
+      "client_secret": "clientSecret",
+      "api_version": "apiVersion"
+    }
+  },
+  {
+    "id": "servicenow",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "ServiceNowV2",
+      "dataset": "ServiceNowV2Object",
+      "source": "ServiceNowV2Source",
+      "properties": {
+        "authenticationType": "Basic",
+        "endpoint": "https://source.example.test",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "url": "endpoint",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "sharepoint-online-list",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "tenant": "synthetic-tenant",
+      "client_id": "synthetic-client",
+      "certificate": "${secret:source-certificate}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "SharePointOnlineList",
+      "dataset": "SharePointOnlineLResource",
+      "source": "SharePointOnlineListSource",
+      "properties": {
+        "servicePrincipalCredentialType": "ServicePrincipalCert",
+        "siteUrl": "https://source.example.test",
+        "tenantId": "synthetic-tenant",
+        "servicePrincipalId": "synthetic-client",
+        "servicePrincipalEmbeddedCert": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-certificate"
+        }
+      }
+    },
+    "field_mapping": {
+      "url": "siteUrl",
+      "tenant": "tenantId",
+      "client_id": "servicePrincipalId",
+      "certificate": "servicePrincipalEmbeddedCert"
+    }
+  },
+  {
+    "id": "sap-bw-open-hub",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "system_number": "00",
+      "client_id": "synthetic-client",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {
+      "runtime_kind": "self-hosted"
+    },
+    "expected": {
+      "service": "SapOpenHub",
+      "dataset": "SapOpenHubTable",
+      "source": "SapOpenHubSource",
+      "properties": {
+        "server": "source.example.test",
+        "systemNumber": "00",
+        "clientId": "synthetic-client",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "system_number": "systemNumber",
+      "client_id": "clientId",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "sap-bw-mdx",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "system_number": "00",
+      "client_id": "synthetic-client",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {
+      "query": "SELECT {[Measures].[Amount]} ON COLUMNS FROM [Sales]",
+      "runtime_kind": "self-hosted"
+    },
+    "expected": {
+      "service": "SapBw",
+      "dataset": "SapBwCube",
+      "source": "SapBwSource",
+      "properties": {
+        "server": "source.example.test",
+        "systemNumber": "00",
+        "clientId": "synthetic-client",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "system_number": "systemNumber",
+      "client_id": "clientId",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "sap-hana",
+    "method": "adf-table",
+    "settings": {
+      "connection_string": "${secret:source-connection-string}"
+    },
+    "object": "sales.orders",
+    "options": {
+      "query": "SELECT * FROM \"sales\".\"orders\"",
+      "runtime_kind": "self-hosted"
+    },
+    "expected": {
+      "service": "SapHana",
+      "dataset": "SapHanaTable",
+      "source": "SapHanaSource",
+      "properties": {
+        "connectionString": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-connection-string"
+        }
+      }
+    },
+    "field_mapping": {
+      "connection_string": "connectionString"
+    }
+  },
+  {
+    "id": "sap-table",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "system_number": "00",
+      "client_id": "synthetic-client",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {
+      "runtime_kind": "self-hosted"
+    },
+    "expected": {
+      "service": "SapTable",
+      "dataset": "SapTableResource",
+      "source": "SapTableSource",
+      "properties": {
+        "server": "source.example.test",
+        "systemNumber": "00",
+        "clientId": "synthetic-client",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "system_number": "systemNumber",
+      "client_id": "clientId",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "sap-c4c",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "SapCloudForCustomer",
+      "dataset": "SapCloudForCustomerResource",
+      "source": "SapCloudForCustomerSource",
+      "properties": {
+        "url": "https://source.example.test",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "url": "url",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "sap-ecc",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {
+      "runtime_kind": "self-hosted"
+    },
+    "expected": {
+      "service": "SapEcc",
+      "dataset": "SapEccResource",
+      "source": "SapEccSource",
+      "properties": {
+        "url": "https://source.example.test",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "url": "url",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "rest",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "RestService",
+      "dataset": "RestResource",
+      "source": "RestSource",
+      "properties": {
+        "authenticationType": "Anonymous",
+        "enableServerCertificateValidation": true,
+        "url": "https://source.example.test"
+      }
+    },
+    "field_mapping": {
+      "url": "url"
+    }
+  },
+  {
+    "id": "odbc",
+    "method": "adf-table",
+    "settings": {
+      "connection_string": "synthetic-connection_string",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {
+      "runtime_kind": "self-hosted"
+    },
+    "expected": {
+      "service": "Odbc",
+      "dataset": "OdbcTable",
+      "source": "OdbcSource",
+      "properties": {
+        "authenticationType": "Basic",
+        "connectionString": "synthetic-connection_string",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "connection_string": "connectionString",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "odata",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "OData",
+      "dataset": "ODataResource",
+      "source": "ODataSource",
+      "properties": {
+        "authenticationType": "Basic",
+        "url": "https://source.example.test",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "url": "url",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "azure-data-explorer",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "database": "sales"
+    },
+    "object": "orders",
+    "options": {
+      "query": "SELECT * FROM orders"
+    },
+    "expected": {
+      "service": "AzureDataExplorer",
+      "dataset": "AzureDataExplorerTable",
+      "source": "AzureDataExplorerSource",
+      "properties": {
+        "endpoint": "https://source.example.test",
+        "database": "sales"
+      }
+    },
+    "field_mapping": {
+      "url": "endpoint",
+      "database": "database"
+    }
+  },
+  {
+    "id": "azure-table-storage",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "AzureTableStorage",
+      "dataset": "AzureTable",
+      "source": "AzureTableSource",
+      "properties": {
+        "serviceEndpoint": "https://source.example.test"
+      }
+    },
+    "field_mapping": {
+      "url": "serviceEndpoint"
+    }
+  },
+  {
+    "id": "azure-cosmos-db-nosql",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "database": "sales"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "CosmosDb",
+      "dataset": "CosmosDbSqlApiCollection",
+      "source": "CosmosDbSqlApiSource",
+      "properties": {
+        "accountEndpoint": "https://source.example.test",
+        "database": "sales"
+      }
+    },
+    "field_mapping": {
+      "url": "accountEndpoint",
+      "database": "database"
+    }
+  },
+  {
+    "id": "azure-cosmos-db-mongodb",
+    "method": "adf-table",
+    "settings": {
+      "connection_string": "${secret:source-connection-string}",
+      "database": "sales"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "CosmosDbMongoDbApi",
+      "dataset": "CosmosDbMongoDbApiCollection",
+      "source": "CosmosDbMongoDbApiSource",
+      "properties": {
+        "isServerVersionAbove32": true,
+        "connectionString": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-connection-string"
+        },
+        "database": "sales"
+      }
+    },
+    "field_mapping": {
+      "connection_string": "connectionString",
+      "database": "database"
+    }
+  },
+  {
+    "id": "mongodb",
+    "method": "adf-table",
+    "settings": {
+      "connection_string": "${secret:source-connection-string}",
+      "database": "sales"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "MongoDbV2",
+      "dataset": "MongoDbV2Collection",
+      "source": "MongoDbV2Source",
+      "properties": {
+        "connectionString": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-connection-string"
+        },
+        "database": "sales"
+      }
+    },
+    "field_mapping": {
+      "connection_string": "connectionString",
+      "database": "database"
+    }
+  },
+  {
+    "id": "mongodb-atlas",
+    "method": "adf-table",
+    "settings": {
+      "connection_string": "${secret:source-connection-string}",
+      "database": "sales"
+    },
+    "object": "orders",
+    "options": {},
+    "expected": {
+      "service": "MongoDbAtlas",
+      "dataset": "MongoDbAtlasCollection",
+      "source": "MongoDbAtlasSource",
+      "properties": {
+        "connectionString": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-connection-string"
+        },
+        "database": "sales"
+      }
+    },
+    "field_mapping": {
+      "connection_string": "connectionString",
+      "database": "database"
+    }
+  },
+  {
+    "id": "cassandra",
+    "method": "adf-table",
+    "settings": {
+      "host": "source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "Cassandra",
+      "dataset": "CassandraTable",
+      "source": "CassandraSource",
+      "version": "2.0",
+      "properties": {
+        "authenticationType": "Basic",
+        "host": "source.example.test",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "host": "host",
+      "user": "username",
+      "password": "password"
+    }
+  },
+  {
+    "id": "fabric-lakehouse",
+    "method": "adf-table",
+    "settings": {
+      "workspace_id": "synthetic-workspace_id",
+      "artifact_id": "synthetic-artifact_id"
+    },
+    "object": "orders",
+    "options": {
+      "runtime_kind": "azure"
+    },
+    "expected": {
+      "service": "Lakehouse",
+      "dataset": "LakehouseTable",
+      "source": "LakehouseTableSource",
+      "properties": {
+        "authenticationType": "SystemAssignedManagedIdentity",
+        "workspaceId": "synthetic-workspace_id",
+        "artifactId": "synthetic-artifact_id"
+      }
+    },
+    "field_mapping": {
+      "workspace_id": "workspaceId",
+      "artifact_id": "artifactId"
+    }
+  },
+  {
+    "id": "fabric-warehouse",
+    "method": "adf-table",
+    "settings": {
+      "workspace_id": "synthetic-workspace_id",
+      "artifact_id": "synthetic-artifact_id",
+      "server": "source.example.test"
+    },
+    "object": "sales.orders",
+    "options": {
+      "runtime_kind": "azure"
+    },
+    "expected": {
+      "service": "Warehouse",
+      "dataset": "WarehouseTable",
+      "source": "WarehouseSource",
+      "properties": {
+        "authenticationType": "SystemAssignedManagedIdentity",
+        "workspaceId": "synthetic-workspace_id",
+        "artifactId": "synthetic-artifact_id",
+        "endpoint": "source.example.test"
+      }
+    },
+    "field_mapping": {
+      "workspace_id": "workspaceId",
+      "artifact_id": "artifactId",
+      "server": "endpoint"
+    }
+  },
+  {
+    "id": "web-table",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test"
+    },
+    "object": "orders",
+    "options": {
+      "runtime_kind": "self-hosted",
+      "source_options": {
+        "table_index": 0
+      }
+    },
+    "expected": {
+      "service": "Web",
+      "dataset": "WebTable",
+      "source": "WebSource",
+      "properties": {
+        "authenticationType": "Anonymous",
+        "url": "https://source.example.test"
+      }
+    },
+    "field_mapping": {
+      "url": "url"
+    }
+  },
+  {
+    "id": "snowflake",
+    "method": "adf-table",
+    "settings": {
+      "account": "synthetic-account",
+      "database": "sales",
+      "warehouse": "synthetic-warehouse",
+      "user": "reader",
+      "private_key": "${secret:source-private-key}"
+    },
+    "object": "sales.orders",
+    "options": {
+      "source_options": {
+        "staging_sas": "${secret:staging-sas}",
+        "staging_path": "staging/orders"
+      }
+    },
+    "expected": {
+      "service": "SnowflakeV2",
+      "dataset": "SnowflakeV2Table",
+      "source": "SnowflakeV2Source",
+      "version": "1.1",
+      "properties": {
+        "authenticationType": "KeyPair",
+        "accountIdentifier": "synthetic-account",
+        "database": "sales",
+        "warehouse": "synthetic-warehouse",
+        "user": "reader",
+        "privateKey": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-private-key"
+        }
+      }
+    },
+    "field_mapping": {
+      "account": "accountIdentifier",
+      "database": "database",
+      "warehouse": "warehouse",
+      "user": "user",
+      "private_key": "privateKey"
+    }
+  },
+  {
+    "id": "azure-databricks-delta",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "cluster_id": "synthetic-cluster_id",
+      "workspace_resource_id": "synthetic-workspace_resource_id"
+    },
+    "object": "sales.orders",
+    "options": {
+      "runtime_kind": "azure",
+      "source_options": {
+        "staging_sas": "${secret:staging-sas}",
+        "staging_path": "staging/orders"
+      }
+    },
+    "expected": {
+      "service": "AzureDatabricksDeltaLake",
+      "dataset": "AzureDatabricksDeltaLakeDataset",
+      "source": "AzureDatabricksDeltaLakeSource",
+      "properties": {
+        "domain": "https://source.example.test",
+        "clusterId": "synthetic-cluster_id",
+        "workspaceResourceId": "synthetic-workspace_resource_id"
+      }
+    },
+    "field_mapping": {
+      "url": "domain",
+      "cluster_id": "clusterId",
+      "workspace_resource_id": "workspaceResourceId"
+    }
+  },
+  {
+    "id": "microsoft-365",
+    "method": "adf-table",
+    "settings": {
+      "tenant": "synthetic-tenant",
+      "application_tenant": "synthetic-application_tenant",
+      "client_id": "synthetic-client",
+      "client_secret": "${secret:source-client-secret}"
+    },
+    "object": "BasicDataSet_v0.Message_v1",
+    "options": {
+      "runtime_kind": "azure",
+      "format": "json",
+      "source_options": {
+        "requires_date_filter": true,
+        "date_filter_column": "CreatedDateTime"
+      }
+    },
+    "expected": {
+      "service": "Office365",
+      "dataset": "Office365Table",
+      "source": "Office365Source",
+      "properties": {
+        "servicePrincipalCredentialType": "ServicePrincipalKey",
+        "office365TenantId": "synthetic-tenant",
+        "servicePrincipalTenantId": "synthetic-application_tenant",
+        "servicePrincipalId": "synthetic-client",
+        "servicePrincipalKey": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-client-secret"
+        }
+      }
+    },
+    "field_mapping": {
+      "tenant": "office365TenantId",
+      "application_tenant": "servicePrincipalTenantId",
+      "client_id": "servicePrincipalId",
+      "client_secret": "servicePrincipalKey"
+    }
+  },
+  {
+    "id": "http",
+    "method": "adf-files",
+    "settings": {
+      "url": "https://source.example.test"
+    },
+    "object": "orders.json",
+    "options": {
+      "format": "json",
+      "mode": "all",
+      "files": "response.json"
+    },
+    "expected": {
+      "service": "HttpServer",
+      "dataset": "Binary",
+      "source": "BinarySource",
+      "properties": {
+        "authenticationType": "Anonymous",
+        "enableServerCertificateValidation": true,
+        "url": "https://source.example.test"
+      }
+    },
+    "field_mapping": {
+      "url": "url"
+    }
+  },
+  {
+    "id": "azure-blob",
+    "method": "adf-files",
+    "settings": {
+      "url": "https://source.example.test"
+    },
+    "object": "exports/orders",
+    "options": {
+      "format": "json",
+      "mode": "all"
+    },
+    "expected": {
+      "service": "AzureBlobStorage",
+      "dataset": "Binary",
+      "source": "BinarySource",
+      "properties": {
+        "serviceEndpoint": "https://source.example.test"
+      }
+    },
+    "field_mapping": {
+      "url": "serviceEndpoint"
+    }
+  },
+  {
+    "id": "adls-gen2",
+    "method": "adf-files",
+    "settings": {
+      "url": "https://source.example.test"
+    },
+    "object": "exports/orders",
+    "options": {
+      "format": "json",
+      "mode": "all"
+    },
+    "expected": {
+      "service": "AzureBlobFS",
+      "dataset": "Binary",
+      "source": "BinarySource",
+      "properties": {
+        "url": "https://source.example.test"
+      }
+    },
+    "field_mapping": {
+      "url": "url"
+    }
+  },
+  {
+    "id": "azure-files",
+    "method": "adf-files",
+    "settings": {
+      "connection_string": "${secret:source-connection-string}",
+      "share": "synthetic-share"
+    },
+    "object": "orders",
+    "options": {
+      "format": "json",
+      "mode": "all"
+    },
+    "expected": {
+      "service": "AzureFileStorage",
+      "dataset": "Binary",
+      "source": "BinarySource",
+      "properties": {
+        "connectionString": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-connection-string"
+        },
+        "fileShare": "synthetic-share"
+      }
+    },
+    "field_mapping": {
+      "connection_string": "connectionString",
+      "share": "fileShare"
+    }
+  },
+  {
+    "id": "amazon-s3",
+    "method": "adf-files",
+    "settings": {
+      "access_key": "synthetic-access_key",
+      "secret_key": "${secret:source-secret-key}"
+    },
+    "object": "exports/orders",
+    "options": {
+      "format": "json",
+      "mode": "all"
+    },
+    "expected": {
+      "service": "AmazonS3",
+      "dataset": "Binary",
+      "source": "BinarySource",
+      "properties": {
+        "accessKeyId": "synthetic-access_key",
+        "secretAccessKey": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-secret-key"
+        }
+      }
+    },
+    "field_mapping": {
+      "access_key": "accessKeyId",
+      "secret_key": "secretAccessKey"
+    }
+  },
+  {
+    "id": "s3-compatible",
+    "method": "adf-files",
+    "settings": {
+      "access_key": "synthetic-access_key",
+      "secret_key": "${secret:source-secret-key}",
+      "url": "https://source.example.test"
+    },
+    "object": "exports/orders",
+    "options": {
+      "format": "json",
+      "mode": "all"
+    },
+    "expected": {
+      "service": "AmazonS3Compatible",
+      "dataset": "Binary",
+      "source": "BinarySource",
+      "properties": {
+        "accessKeyId": "synthetic-access_key",
+        "secretAccessKey": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-secret-key"
+        },
+        "serviceUrl": "https://source.example.test"
+      }
+    },
+    "field_mapping": {
+      "access_key": "accessKeyId",
+      "secret_key": "secretAccessKey",
+      "url": "serviceUrl"
+    }
+  },
+  {
+    "id": "ftp",
+    "method": "adf-files",
+    "settings": {
+      "host": "source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {
+      "format": "json",
+      "mode": "all"
+    },
+    "expected": {
+      "service": "FtpServer",
+      "dataset": "Binary",
+      "source": "BinarySource",
+      "properties": {
+        "authenticationType": "Basic",
+        "enableSsl": true,
+        "enableServerCertificateValidation": true,
+        "host": "source.example.test",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "host": "host",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "sftp",
+    "method": "adf-files",
+    "settings": {
+      "host": "source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}",
+      "host_key": "synthetic-host_key"
+    },
+    "object": "orders",
+    "options": {
+      "format": "json",
+      "mode": "all"
+    },
+    "expected": {
+      "service": "Sftp",
+      "dataset": "Binary",
+      "source": "BinarySource",
+      "properties": {
+        "authenticationType": "Basic",
+        "skipHostKeyValidation": false,
+        "host": "source.example.test",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        },
+        "hostKeyFingerprint": "synthetic-host_key"
+      }
+    },
+    "field_mapping": {
+      "host": "host",
+      "user": "userName",
+      "password": "password",
+      "host_key": "hostKeyFingerprint"
+    }
+  },
+  {
+    "id": "google-cloud-storage",
+    "method": "adf-files",
+    "settings": {
+      "access_key": "synthetic-access_key",
+      "secret_key": "${secret:source-secret-key}"
+    },
+    "object": "exports/orders",
+    "options": {
+      "format": "json",
+      "mode": "all"
+    },
+    "expected": {
+      "service": "GoogleCloudStorage",
+      "dataset": "Binary",
+      "source": "BinarySource",
+      "properties": {
+        "serviceUrl": "https://storage.googleapis.com",
+        "accessKeyId": "synthetic-access_key",
+        "secretAccessKey": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-secret-key"
+        }
+      }
+    },
+    "field_mapping": {
+      "access_key": "accessKeyId",
+      "secret_key": "secretAccessKey"
+    }
+  },
+  {
+    "id": "hdfs",
+    "method": "adf-files",
+    "settings": {
+      "url": "https://source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {
+      "format": "json",
+      "mode": "all"
+    },
+    "expected": {
+      "service": "Hdfs",
+      "dataset": "Binary",
+      "source": "BinarySource",
+      "properties": {
+        "authenticationType": "Windows",
+        "url": "https://source.example.test",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "url": "url",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "oracle-cloud-storage",
+    "method": "adf-files",
+    "settings": {
+      "access_key": "synthetic-access_key",
+      "secret_key": "${secret:source-secret-key}",
+      "url": "https://source.example.test"
+    },
+    "object": "exports/orders",
+    "options": {
+      "format": "json",
+      "mode": "all"
+    },
+    "expected": {
+      "service": "OracleCloudStorage",
+      "dataset": "Binary",
+      "source": "BinarySource",
+      "properties": {
+        "accessKeyId": "synthetic-access_key",
+        "secretAccessKey": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-secret-key"
+        },
+        "serviceUrl": "https://source.example.test"
+      }
+    },
+    "field_mapping": {
+      "access_key": "accessKeyId",
+      "secret_key": "secretAccessKey",
+      "url": "serviceUrl"
+    }
+  },
+  {
+    "id": "sqlserver",
+    "method": "adf-copy",
+    "settings": {
+      "server": "source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.dbo.orders",
+    "options": {},
+    "expected": {
+      "service": "SqlServer",
+      "dataset": "SqlServerTable",
+      "source": "SqlSource",
+      "properties": {
+        "server": "source.example.test",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        },
+        "authenticationType": "SQL",
+        "database": "sales",
+        "trustServerCertificate": false
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "azure-sql-database",
+    "method": "adf-copy",
+    "settings": {
+      "server": "source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.dbo.orders",
+    "options": {},
+    "expected": {
+      "service": "AzureSqlDatabase",
+      "dataset": "AzureSqlTable",
+      "source": "AzureSqlSource",
+      "properties": {
+        "server": "source.example.test",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        },
+        "authenticationType": "SQL",
+        "database": "sales",
+        "trustServerCertificate": false
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "azure-sql-managed-instance",
+    "method": "adf-copy",
+    "settings": {
+      "server": "source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.dbo.orders",
+    "options": {},
+    "expected": {
+      "service": "AzureSqlMI",
+      "dataset": "AzureSqlMITable",
+      "source": "SqlMISource",
+      "properties": {
+        "server": "source.example.test",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        },
+        "authenticationType": "SQL",
+        "database": "sales",
+        "trustServerCertificate": false
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "azure-synapse",
+    "method": "adf-copy",
+    "settings": {
+      "server": "source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.dbo.orders",
+    "options": {},
+    "expected": {
+      "service": "AzureSqlDW",
+      "dataset": "AzureSqlDWTable",
+      "source": "SqlDWSource",
+      "properties": {
+        "server": "source.example.test",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        },
+        "authenticationType": "SQL",
+        "database": "sales",
+        "trustServerCertificate": false
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "amazon-rds-sqlserver",
+    "method": "adf-copy",
+    "settings": {
+      "server": "source.example.test",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.dbo.orders",
+    "options": {},
+    "expected": {
+      "service": "AmazonRdsForSqlServer",
+      "dataset": "AmazonRdsForSqlServerTable",
+      "source": "AmazonRdsForSqlServerSource",
+      "properties": {
+        "server": "source.example.test",
+        "userName": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        },
+        "authenticationType": "SQL",
+        "database": "sales",
+        "trustServerCertificate": false
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "user": "userName",
+      "password": "password"
+    }
+  },
+  {
+    "id": "files",
+    "method": "adf-files",
+    "settings": {
+      "path": "\\\\files.example.test\\exports",
+      "user": "corp\\reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "orders",
+    "options": {
+      "format": "json",
+      "mode": "all"
+    },
+    "expected": {
+      "service": "FileServer",
+      "dataset": "Binary",
+      "source": "BinarySource",
+      "properties": {
+        "host": "\\\\files.example.test\\exports",
+        "userId": "corp\\reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "path": "host",
+      "user": "userId",
+      "password": "password"
+    }
+  },
+  {
+    "id": "azure-cosmos-postgresql",
+    "method": "adf-table",
+    "settings": {
+      "server": "source.example.test",
+      "database": "sales",
+      "user": "reader",
+      "password": "${secret:source-password}"
+    },
+    "object": "sales.orders",
+    "options": {},
+    "expected": {
+      "service": "AzurePostgreSql",
+      "dataset": "AzurePostgreSqlTable",
+      "source": "AzurePostgreSqlSource",
+      "version": "2.0",
+      "properties": {
+        "authenticationType": "Basic",
+        "sslMode": 5,
+        "server": "source.example.test",
+        "database": "sales",
+        "username": "reader",
+        "password": {
+          "type": "AzureKeyVaultSecret",
+          "secretName": "source-password"
+        }
+      }
+    },
+    "field_mapping": {
+      "server": "server",
+      "database": "database",
+      "user": "username",
+      "password": "password"
+    }
+  }
+]

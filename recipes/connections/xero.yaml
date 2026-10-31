@@ -1,0 +1,10 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: xero
+connector: xero
+connectivity: private
+settings:
+  client_id: "${secret:source-client-id}"
+  client_secret: "${secret:source-client-secret}"
+  tenant_id: "synthetic-tenant_id"
+  refresh_token: "${secret:source-refresh-token}"

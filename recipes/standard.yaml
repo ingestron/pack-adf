@@ -1,0 +1,15 @@
+apiVersion: ingestron.io/v1
+kind: Standard
+id: native
+packs: [databricks@1, adf@1]
+ingest:
+  settings:
+    adf-copy:
+      start: 2026-10-01T00:00:00Z
+      every: { frequency: Hour, interval: 24 }
+    adf-table:
+      start: 2026-10-01T00:00:00Z
+      every: { frequency: Hour, interval: 24 }
+    adf-files:
+      start: 2026-10-01T00:00:00Z
+      every: { frequency: Hour, interval: 24 }

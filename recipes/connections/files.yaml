@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: files
+connector: files
+connectivity: private
+settings:
+  path: "\\\\files.example.test\\exports"
+  user: "corp\\reader"
+  password: "${secret:source-password}"

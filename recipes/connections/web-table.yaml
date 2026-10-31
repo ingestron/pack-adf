@@ -1,0 +1,7 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: web_table
+connector: web-table
+connectivity: private
+settings:
+  url: "https://source.example.test"

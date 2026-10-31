@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: azure_table_storage
+source: azure_table_storage
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/azure-table-storage"
+tables:
+  azure_table_storage_records:
+    object: "orders"
+    contract: records

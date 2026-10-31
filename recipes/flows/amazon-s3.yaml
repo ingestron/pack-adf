@@ -1,0 +1,14 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: amazon_s3
+source: amazon_s3
+ingest:
+  uses: adf-files
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/amazon-s3"
+    format: "json"
+    mode: "all"
+tables:
+  amazon_s3_records:
+    object: "exports/orders"
+    contract: records

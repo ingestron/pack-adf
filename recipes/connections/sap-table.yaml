@@ -1,0 +1,11 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: sap_table
+connector: sap-table
+connectivity: private
+settings:
+  server: "source.example.test"
+  system_number: "00"
+  client_id: "synthetic-client"
+  user: "reader"
+  password: "${secret:source-password}"

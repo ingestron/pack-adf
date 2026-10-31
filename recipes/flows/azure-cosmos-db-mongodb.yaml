@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: azure_cosmos_db_mongodb
+source: azure_cosmos_db_mongodb
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/azure-cosmos-db-mongodb"
+tables:
+  azure_cosmos_db_mongodb_records:
+    object: "orders"
+    contract: records

@@ -1,0 +1,11 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: dynamics_ax
+connector: dynamics-ax
+connectivity: private
+settings:
+  url: "https://source.example.test"
+  tenant: "synthetic-tenant"
+  client_id: "synthetic-client"
+  client_secret: "${secret:source-client-secret}"
+  resource: "synthetic-resource"

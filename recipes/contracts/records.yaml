@@ -1,0 +1,12 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: records
+version: 1.0.0
+status: draft
+schema:
+  - name: records
+    logicalType: object
+    properties:
+      - { name: invoice_id, logicalType: integer, primaryKey: true }
+      - { name: amount, logicalType: number }
+      - { name: modified_at, logicalType: timestamp }

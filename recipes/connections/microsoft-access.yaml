@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: microsoft_access
+connector: microsoft-access
+connectivity: private
+settings:
+  connection_string: "synthetic-connection_string"
+  user: "reader"
+  password: "${secret:source-password}"

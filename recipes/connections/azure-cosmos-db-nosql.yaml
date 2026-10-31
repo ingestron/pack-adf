@@ -1,0 +1,8 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: azure_cosmos_db_nosql
+connector: azure-cosmos-db-nosql
+connectivity: private
+settings:
+  url: "https://source.example.test"
+  database: "sales"

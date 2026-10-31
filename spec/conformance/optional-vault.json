@@ -1,0 +1,20 @@
+[
+  {
+    "name": "managed identity Blob without a vault",
+    "connector": "azure-blob",
+    "settings": { "url": "https://syntheticstore.blob.core.windows.net" },
+    "valid": true
+  },
+  {
+    "name": "S3 secret without a vault",
+    "connector": "amazon-s3",
+    "settings": { "access_key": "synthetic", "secret_key": "${secret:key}" },
+    "valid": false
+  },
+  {
+    "name": "HTTP nested secret header without a vault",
+    "connector": "http",
+    "settings": { "url": "https://example.invalid", "auth_headers": { "X-Key": "${secret:key}" } },
+    "valid": false
+  }
+]

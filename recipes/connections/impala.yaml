@@ -1,0 +1,11 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: impala
+connector: impala
+connectivity: private
+settings:
+  host: "source.example.test"
+  port: 5432
+  user: "reader"
+  password: "${secret:source-password}"
+  transport: "Binary"

@@ -1,0 +1,7 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: db2
+connector: db2
+connectivity: private
+settings:
+  connection_string: "${secret:source-connection-string}"

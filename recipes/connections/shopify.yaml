@@ -1,0 +1,8 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: shopify
+connector: shopify
+connectivity: private
+settings:
+  host: "source.example.test"
+  access_token: "${secret:source-access-token}"

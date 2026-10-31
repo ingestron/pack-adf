@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: teradata
+source: teradata
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/teradata"
+tables:
+  teradata_records:
+    object: "sales.orders"
+    contract: records

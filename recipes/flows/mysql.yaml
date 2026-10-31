@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: mysql
+source: mysql
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/mysql"
+tables:
+  mysql_records:
+    object: "orders"
+    contract: records

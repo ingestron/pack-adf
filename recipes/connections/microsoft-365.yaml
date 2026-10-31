@@ -1,0 +1,10 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: microsoft_365
+connector: microsoft-365
+connectivity: private
+settings:
+  tenant: "synthetic-tenant"
+  application_tenant: "synthetic-application_tenant"
+  client_id: "synthetic-client"
+  client_secret: "${secret:source-client-secret}"

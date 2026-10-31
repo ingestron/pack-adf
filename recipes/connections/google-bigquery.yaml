@@ -1,0 +1,8 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: google_bigquery
+connector: google-bigquery
+connectivity: private
+settings:
+  project_id: "synthetic-project_id"
+  key_file: "${secret:source-key-file}"

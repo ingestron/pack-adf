@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: fabric_warehouse
+connector: fabric-warehouse
+connectivity: private
+settings:
+  workspace_id: "synthetic-workspace_id"
+  artifact_id: "synthetic-artifact_id"
+  server: "source.example.test"

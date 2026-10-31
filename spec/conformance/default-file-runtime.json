@@ -1,0 +1,5 @@
+[
+  { "kind": "azure", "name": "AutoResolveIntegrationRuntime", "explicit": false },
+  { "kind": "azure", "name": "regional-ir", "explicit": true },
+  { "kind": "self-hosted", "name": "shir-files", "explicit": true }
+]

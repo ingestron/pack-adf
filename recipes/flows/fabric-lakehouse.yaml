@@ -1,0 +1,14 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: fabric_lakehouse
+source: fabric_lakehouse
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/fabric-lakehouse"
+    runtime_kind: "azure"
+    integration_runtime: synthetic-azure-runtime
+tables:
+  fabric_lakehouse_records:
+    object: "orders"
+    contract: records

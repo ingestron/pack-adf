@@ -1,0 +1,14 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: google_cloud_storage
+source: google_cloud_storage
+ingest:
+  uses: adf-files
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/google-cloud-storage"
+    format: "json"
+    mode: "all"
+tables:
+  google_cloud_storage_records:
+    object: "exports/orders"
+    contract: records

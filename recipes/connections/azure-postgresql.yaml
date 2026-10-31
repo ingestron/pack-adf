@@ -1,0 +1,10 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: azure_postgresql
+connector: azure-postgresql
+connectivity: private
+settings:
+  server: "source.example.test"
+  database: "sales"
+  user: "reader"
+  password: "${secret:source-password}"

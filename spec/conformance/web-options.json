@@ -1,0 +1,38 @@
+[
+  {
+    "id": "rest",
+    "method": "adf-table",
+    "settings": {
+      "url": "https://source.example.test",
+      "authentication": "OAuth2ClientCredential",
+      "client_id": "reader",
+      "client_secret": "${secret:oauth-secret}",
+      "token_endpoint": "https://login.example.test/token",
+      "resource": "https://source.example.test"
+    },
+    "object": "orders",
+    "options": {},
+    "resource_path": "linkedService/ls_erp_erp.json",
+    "property_path": ["properties", "typeProperties"],
+    "expected": { "resource": "https://source.example.test" }
+  },
+  {
+    "id": "http",
+    "method": "adf-files",
+    "settings": { "url": "https://source.example.test" },
+    "object": "exports",
+    "options": {
+      "mode": "all",
+      "format": "json",
+      "files": "output.json",
+      "source_options": { "request_method": "POST", "request_body": "status=active" }
+    },
+    "resource_path": "pipeline/pl_erp_erp.json",
+    "property_path": ["properties", "activities", 0, "typeProperties", "source", "storeSettings"],
+    "expected": {
+      "type": "HttpReadSettings",
+      "requestMethod": "POST",
+      "requestBody": "status=active"
+    }
+  }
+]

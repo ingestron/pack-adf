@@ -1,0 +1,13 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: microsoft_access
+source: microsoft_access
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/microsoft-access"
+    runtime_kind: "self-hosted"
+tables:
+  microsoft_access_records:
+    object: "orders"
+    contract: records

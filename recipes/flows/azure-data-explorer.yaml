@@ -1,0 +1,13 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: azure_data_explorer
+source: azure_data_explorer
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/azure-data-explorer"
+    query: "SELECT * FROM orders"
+tables:
+  azure_data_explorer_records:
+    object: "orders"
+    contract: records

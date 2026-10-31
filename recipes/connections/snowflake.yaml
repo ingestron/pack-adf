@@ -1,0 +1,11 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: snowflake
+connector: snowflake
+connectivity: private
+settings:
+  account: "synthetic-account"
+  database: "sales"
+  warehouse: "synthetic-warehouse"
+  user: "reader"
+  private_key: "${secret:source-private-key}"

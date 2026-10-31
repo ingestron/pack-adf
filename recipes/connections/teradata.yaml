@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: teradata
+connector: teradata
+connectivity: private
+settings:
+  server: "source.example.test"
+  user: "reader"
+  password: "${secret:source-password}"

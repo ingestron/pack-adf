@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: google_ads
+connector: google-ads
+connectivity: private
+settings:
+  customer_id: "synthetic-customer_id"
+  api_version: "v22"
+  developer_token: "${secret:source-developer-token}"
+  client_id: "${secret:source-client-id}"
+  client_secret: "${secret:source-client-secret}"
+  refresh_token: "${secret:source-refresh-token}"

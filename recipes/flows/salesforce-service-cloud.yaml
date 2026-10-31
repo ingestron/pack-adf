@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: salesforce_service_cloud
+source: salesforce_service_cloud
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/salesforce-service-cloud"
+tables:
+  salesforce_service_cloud_records:
+    object: "orders"
+    contract: records

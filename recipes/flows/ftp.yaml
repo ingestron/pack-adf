@@ -1,0 +1,14 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: ftp
+source: ftp
+ingest:
+  uses: adf-files
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/ftp"
+    format: "json"
+    mode: "all"
+tables:
+  ftp_records:
+    object: "orders"
+    contract: records

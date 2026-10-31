@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: amazon_rds_oracle
+connector: amazon-rds-oracle
+connectivity: private
+settings:
+  server: "source.example.test"
+  user: "reader"
+  password: "${secret:source-password}"

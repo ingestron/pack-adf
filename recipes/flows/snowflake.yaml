@@ -1,0 +1,15 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: snowflake
+source: snowflake
+ingest:
+  uses: adf-table
+  with:
+    resource_names:
+      staging_linked_service: "ls_${project.id}_snowflake_export"
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/snowflake"
+    source_options: { "staging_sas": "${secret:staging-sas}", "staging_path": "staging/orders" }
+tables:
+  snowflake_records:
+    object: "sales.orders"
+    contract: records

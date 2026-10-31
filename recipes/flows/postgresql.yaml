@@ -1,0 +1,18 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: postgresql
+source: postgresql
+ingest:
+  uses: adf-table
+  with:
+    resource_names:
+      source_linked_service: "ls_${project.id}_postgresql_${environment.name}"
+      source_dataset: "ds_${project.id}_orders_${environment.name}"
+      pipeline: "pl_${project.id}_orders_${environment.name}"
+      trigger: "tr_${project.id}_orders_${environment.name}"
+      copy_activity: "copy_orders"
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/postgresql"
+tables:
+  postgresql_records:
+    object: "sales.orders"
+    contract: records

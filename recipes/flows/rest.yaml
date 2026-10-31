@@ -1,0 +1,21 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: rest
+source: rest
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/rest"
+    source_options:
+      collection_reference: "$['items']"
+      column_paths:
+        invoice_id: "['invoice']['id']"
+        amount: "['invoice']['total']"
+        modified_at: "['updatedAt']"
+      pagination:
+        AbsoluteUrl: "$.nextLink"
+        MaxRequestNumber: 100
+tables:
+  rest_records:
+    object: "orders"
+    contract: records

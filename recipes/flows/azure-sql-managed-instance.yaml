@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: azure_sql_managed_instance
+source: azure_sql_managed_instance
+ingest:
+  uses: adf-copy
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/azure-sql-managed-instance"
+tables:
+  azure_sql_managed_instance_records:
+    object: "sales.dbo.orders"
+    contract: records

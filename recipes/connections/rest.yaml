@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: rest
+connector: rest
+connectivity: private
+settings:
+  url: "https://source.example.test"
+  authentication: OAuth2ClientCredential
+  client_id: synthetic-reader
+  client_secret: "${secret:rest-client-secret}"
+  token_endpoint: "https://login.example.test/token"
+  scope: "orders.read"

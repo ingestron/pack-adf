@@ -1,0 +1,7 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: http
+connector: http
+connectivity: private
+settings:
+  url: "https://source.example.test"

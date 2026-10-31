@@ -1,0 +1,52 @@
+[
+  {
+    "connector": "sqlserver",
+    "service": "SqlServer",
+    "dataset": "SqlServerTable",
+    "source": "SqlSource",
+    "authentication": ["SQL", "Windows"]
+  },
+  {
+    "connector": "azure-sql-database",
+    "service": "AzureSqlDatabase",
+    "dataset": "AzureSqlTable",
+    "source": "AzureSqlSource",
+    "authentication": [
+      "SQL",
+      "ServicePrincipal",
+      "SystemAssignedManagedIdentity",
+      "UserAssignedManagedIdentity"
+    ]
+  },
+  {
+    "connector": "azure-sql-managed-instance",
+    "service": "AzureSqlMI",
+    "dataset": "AzureSqlMITable",
+    "source": "SqlMISource",
+    "authentication": [
+      "SQL",
+      "ServicePrincipal",
+      "SystemAssignedManagedIdentity",
+      "UserAssignedManagedIdentity"
+    ]
+  },
+  {
+    "connector": "azure-synapse",
+    "service": "AzureSqlDW",
+    "dataset": "AzureSqlDWTable",
+    "source": "SqlDWSource",
+    "authentication": [
+      "SQL",
+      "ServicePrincipal",
+      "SystemAssignedManagedIdentity",
+      "UserAssignedManagedIdentity"
+    ]
+  },
+  {
+    "connector": "amazon-rds-sqlserver",
+    "service": "AmazonRdsForSqlServer",
+    "dataset": "AmazonRdsForSqlServerTable",
+    "source": "AmazonRdsForSqlServerSource",
+    "authentication": ["SQL", "Windows"]
+  }
+]

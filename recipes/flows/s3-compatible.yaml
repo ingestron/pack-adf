@@ -1,0 +1,14 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: s3_compatible
+source: s3_compatible
+ingest:
+  uses: adf-files
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/s3-compatible"
+    format: "json"
+    mode: "all"
+tables:
+  s3_compatible_records:
+    object: "exports/orders"
+    contract: records

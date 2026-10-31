@@ -1,0 +1,10 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: salesforce_service_cloud
+connector: salesforce-service-cloud
+connectivity: private
+settings:
+  url: "https://source.example.test"
+  client_id: "synthetic-client"
+  client_secret: "${secret:source-client-secret}"
+  api_version: "65.0"

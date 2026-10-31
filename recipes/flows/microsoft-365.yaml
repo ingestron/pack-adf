@@ -1,0 +1,19 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: microsoft_365
+source: microsoft_365
+ingest:
+  uses: adf-table
+  with:
+    resource_names:
+      json_landing_linked_service: "ls_${project.id}_office_landing"
+      json_landing_dataset: "ds_${project.id}_office_json"
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/microsoft-365"
+    runtime_kind: "azure"
+    integration_runtime: synthetic-azure-runtime
+    format: "json"
+    source_options: { "requires_date_filter": true, "date_filter_column": "CreatedDateTime" }
+tables:
+  microsoft_365_records:
+    object: "BasicDataSet_v0.Message_v1"
+    contract: records

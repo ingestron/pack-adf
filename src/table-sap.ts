@@ -1,0 +1,102 @@
+// SAP source selectors and required connection settings.
+import {
+  databaseFields,
+  secretField as secret,
+  textField as text,
+  type TableSource,
+} from "./table-source.js";
+const rfcFields = {
+  server: databaseFields.server,
+  system_number: text("systemNumber", "Two-digit SAP system number."),
+  client_id: text("clientId", "Three-digit SAP client ID."),
+  user: { ...databaseFields.user, native: "userName" },
+  password: databaseFields.password,
+};
+
+/** SAP connectors using their own RFC, MDX, SQL or OData source types. */
+export const tableSap: TableSource[] = [
+  {
+    id: "sap-bw-open-hub",
+    title: "SAP Business Warehouse Open Hub",
+    docs: "sap-business-warehouse-open-hub",
+    service: "SapOpenHub",
+    dataset: "SapOpenHubTable",
+    source: "SapOpenHubSource",
+    object: ["openHubDestinationName"],
+    fields: rfcFields,
+    runtime: "self-hosted",
+  },
+  {
+    id: "sap-bw-mdx",
+    title: "SAP Business Warehouse via MDX",
+    docs: "sap-business-warehouse",
+    service: "SapBw",
+    dataset: "SapBwCube",
+    source: "SapBwSource",
+    object: [],
+    fields: rfcFields,
+    runtime: "self-hosted",
+    query: true,
+    queryRequired: true,
+  },
+  {
+    id: "sap-hana",
+    title: "SAP HANA",
+    docs: "sap-hana",
+    service: "SapHana",
+    dataset: "SapHanaTable",
+    source: "SapHanaSource",
+    object: ["schema", "table"],
+    fields: {
+      connection_string: secret(
+        "connectionString",
+        "Key Vault secret holding the SAP HANA connection string.",
+      ),
+    },
+    runtime: "self-hosted",
+    query: true,
+    queryRequired: true,
+  },
+  {
+    id: "sap-table",
+    title: "SAP Table",
+    docs: "sap-table",
+    service: "SapTable",
+    dataset: "SapTableResource",
+    source: "SapTableSource",
+    object: ["tableName"],
+    fields: rfcFields,
+    runtime: "self-hosted",
+  },
+  {
+    id: "sap-c4c",
+    title: "SAP Cloud for Customer",
+    docs: "sap-cloud-for-customer",
+    service: "SapCloudForCustomer",
+    dataset: "SapCloudForCustomerResource",
+    source: "SapCloudForCustomerSource",
+    object: ["path"],
+    fields: {
+      url: text("url", "SAP C4C OData service URL."),
+      user: databaseFields.user,
+      password: databaseFields.password,
+    },
+    query: true,
+  },
+  {
+    id: "sap-ecc",
+    title: "SAP ECC",
+    docs: "sap-ecc",
+    service: "SapEcc",
+    dataset: "SapEccResource",
+    source: "SapEccSource",
+    object: ["path"],
+    fields: {
+      url: text("url", "SAP ECC OData service URL."),
+      user: databaseFields.user,
+      password: databaseFields.password,
+    },
+    query: true,
+    runtime: "self-hosted",
+  },
+];

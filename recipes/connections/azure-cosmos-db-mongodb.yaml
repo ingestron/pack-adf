@@ -1,0 +1,8 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: azure_cosmos_db_mongodb
+connector: azure-cosmos-db-mongodb
+connectivity: private
+settings:
+  connection_string: "${secret:source-connection-string}"
+  database: "sales"
