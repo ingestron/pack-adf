@@ -38,9 +38,13 @@ in the standard:
 | `layout: increments`                                  | A new file per run under `<object>/`, named by the window's start and the run                               |
 | `path: "{object}/{yyyy}/{MM}/{object}_{run}.parquet"` | Your own path: `{object}`, `{connection}`, the window start's `{yyyy}`, `{MM}`, `{dd}`, `{HH}`, and `{run}` |
 
-A path with a date or run token adds a file per run; without one, each run
-replaces the file. Without a setting, a flow that ends at the landed files gets
-`snapshot` and one a store reads gets `increments`.
+A path must include `{object}`, so tables keep their own files. It adds a file
+per run when it has `{run}`, or the date tokens down to the window's unit
+(`{yyyy}`, `{MM}`, `{dd}` and `{HH}` for hourly windows; `{yyyy}` and `{MM}`
+for monthly ones); otherwise each run replaces the file. Without a setting, a
+flow that ends at the landed files gets `snapshot`, unless each run holds only
+its window (`mode: incremental`, or Microsoft 365's date filter), which gets
+`increments`; a flow a store reads gets `increments`.
 
 ADF alone can be the whole project when the landed files are what you need, for
 example for reports that read them directly:
@@ -51,9 +55,9 @@ store: { default: none }
 ```
 
 Each method records where it lands each table's files, so other packs can read
-them. The pack refuses a layout that would lose data: loads that hold only the
-window's changes (`mode: incremental`), written to one file each run replaces,
-with no store step to merge them.
+them. The pack refuses a layout that would lose data (loads that hold only
+their window, written to a file the next run replaces, with no store step to
+merge them) and two tables landing at the same files.
 
 ## Connector catalogue
 

@@ -4,7 +4,7 @@ import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
 import { addResource } from "./resource-files.js";
 import { nativeSource, stagingOptions, tableTranslator } from "./table-copy-options.js";
 import { exportResources } from "./export-resources.js";
-import { landedFile, layoutOf } from "./layout.js";
+import { landedFile, namesFiles } from "./layout.js";
 import { tableSources } from "./table-method.js";
 import { nativeValue } from "./sql-auth.js";
 import { reference, windowTrigger, type Shared } from "./resources.js";
@@ -33,7 +33,7 @@ export function tableResources(model: ResolvedModel, shared: Shared): Record<str
       properties: {
         parameters: { windowStart: { type: "string" }, windowEnd: { type: "string" } },
         activities: tables.map((table) =>
-          tableActivity(table, source, shared, dataset(table), name),
+          tableActivity(table, source, shared, dataset(table), name, namesFiles(tables)),
         ),
       },
     });
@@ -112,13 +112,14 @@ function tableActivity(
   shared: Shared,
   dataset: string,
   name: string,
+  named: boolean,
 ): Data {
   const options = (table.ingest!.settings.source_options ?? {}) as Data;
   return {
     name: resourceName(table, "copy_activity", `copy_${table.name}`),
     type: "Copy",
     inputs: [reference(dataset, "DatasetReference")],
-    outputs: [tableOutput(table, source, shared, name)],
+    outputs: [tableOutput(table, source, shared, name, named)],
     typeProperties: {
       source: nativeSource(table, source),
       sink: tableSink(source),
@@ -139,20 +140,21 @@ function tableOutput(
   source: TableSource,
   shared: Shared,
   name: string,
+  named: boolean,
 ): Data {
   if (source.id !== "microsoft-365")
     return {
       ...reference(shared.landingDataset, "DatasetReference"),
       parameters: landedFile(table, "parquet"),
     };
-  // ADF names Microsoft 365's increments itself; other layouts name the file.
+  // ADF names Microsoft 365's files itself unless a table of the connection names its file.
   const { folder, file } = landedFile(table, "json");
   return {
     ...reference(
       resourceName(table, "json_landing_dataset", `ds_${name}_json`),
       "DatasetReference",
     ),
-    parameters: layoutOf(table) === "increments" ? { folder } : { folder, file },
+    parameters: named ? { folder, file } : { folder },
   };
 }
 
