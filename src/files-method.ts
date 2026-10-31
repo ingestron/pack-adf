@@ -5,6 +5,7 @@ import { needsVault } from "./vault.js";
 import { webRequestSettings, httpOptionProblems } from "./web-options.js";
 import { fileStores } from "./file-sources.js";
 import { connectionProblems } from "./connection-check.js";
+import { filesOutput } from "./landing-output.js";
 import type { Method, ResolvedTable } from "@ingestron/definitions";
 import { credentialProblems, placement, windowSettings } from "./method.js";
 
@@ -82,6 +83,7 @@ export const adfFiles: Method = {
     },
   },
   check: checkFiles,
+  output: filesOutput,
 };
 
 function checkFiles(table: ResolvedTable): string[] {
