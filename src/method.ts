@@ -5,6 +5,7 @@ import type { Method, ResolvedTable } from "@ingestron/definitions";
 import { resourceNamesSchema } from "./resource-names.js";
 import { sqlTypes } from "./sql-types.js";
 import { sqlConnectionProblems, nonEmpty } from "./sql-auth.js";
+import { layoutProblems, tableOutput } from "./landing-output.js";
 
 const abfss = "^abfss://[^@/]+@[^/]+\\.dfs\\.core\\.windows\\.net(/.*)?$";
 
@@ -174,12 +175,13 @@ export const adfCopy: Method = {
     },
   },
   check: checkCopy,
+  output: tableOutput,
 };
 
 function checkCopy(table: ResolvedTable): string[] {
   const ingest = table.ingest;
   if (!ingest) return [];
-  const problems = sqlConnectionProblems(table);
+  const problems = [...sqlConnectionProblems(table), ...layoutProblems(table)];
   if (ingest.object.split(".").length !== 3 || !ingest.object.split(".").every(nonEmpty))
     problems.push(
       `a ${ingest.connection.connector} object is written database.schema.table, not "${ingest.object}"`,
