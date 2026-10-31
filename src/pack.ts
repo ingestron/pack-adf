@@ -1,4 +1,4 @@
-// The pack: two methods, rules for private sources, and the build function.
+// The pack: three methods, rules for private sources, and the build function.
 import { adfTable } from "./table-method.js";
 import { tableGroups } from "./table-resources.js";
 import { contract } from "./contract.js";
