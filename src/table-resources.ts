@@ -4,7 +4,7 @@ import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
 import { addResource } from "./resource-files.js";
 import { nativeSource, stagingOptions, tableTranslator } from "./table-copy-options.js";
 import { exportResources } from "./export-resources.js";
-import { parseLanding } from "./landing.js";
+import { landedFile, layoutOf } from "./layout.js";
 import { tableSources } from "./table-method.js";
 import { nativeValue } from "./sql-auth.js";
 import { reference, windowTrigger, type Shared } from "./resources.js";
@@ -140,25 +140,20 @@ function tableOutput(
   shared: Shared,
   name: string,
 ): Data {
-  const ingest = table.ingest!;
-  const { path } = parseLanding(String(ingest.settings.landing));
-  const office = source.id === "microsoft-365";
-  const folder = [path, ingest.object].filter(Boolean).join("/");
-  return office
-    ? {
-        ...reference(
-          resourceName(table, "json_landing_dataset", `ds_${name}_json`),
-          "DatasetReference",
-        ),
-        parameters: { folder },
-      }
-    : {
-        ...reference(shared.landingDataset, "DatasetReference"),
-        parameters: {
-          folder,
-          file: "@{concat(formatDateTime(pipeline().parameters.windowStart, 'yyyyMMddHHmmss'), '_', pipeline().RunId, '.parquet')}",
-        },
-      };
+  if (source.id !== "microsoft-365")
+    return {
+      ...reference(shared.landingDataset, "DatasetReference"),
+      parameters: landedFile(table, "parquet"),
+    };
+  // ADF names Microsoft 365's increments itself; other layouts name the file.
+  const { folder, file } = landedFile(table, "json");
+  return {
+    ...reference(
+      resourceName(table, "json_landing_dataset", `ds_${name}_json`),
+      "DatasetReference",
+    ),
+    parameters: layoutOf(table) === "increments" ? { folder } : { folder, file },
+  };
 }
 
 function tableSink(source: TableSource): Data {

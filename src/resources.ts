@@ -3,6 +3,7 @@
 import { resourceName } from "./resource-names.js";
 import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
 import { parseLanding } from "./landing.js";
+import { landedFile } from "./layout.js";
 import { sqlTypes } from "./sql-types.js";
 import { sqlCredentials } from "./sql-auth.js";
 import { query } from "./query.js";
@@ -104,10 +105,6 @@ export function landingDataset(shared: Shared, landing: string): Data {
   };
 }
 
-/** The window's file: its start time and the run id, so reruns never overwrite. */
-const fileName =
-  "@{concat(formatDateTime(pipeline().parameters.windowStart, 'yyyyMMddHHmmss'), '_', pipeline().RunId, '.parquet')}";
-
 /** A Copy activity per table, all in one pipeline per connection and database. */
 export function copyPipeline(
   model: ResolvedModel,
@@ -128,9 +125,6 @@ export function copyPipeline(
 }
 
 function copyActivity(table: ResolvedTable, group: CopyGroup, shared: Shared): Data {
-  const ingest = table.ingest!;
-  const { path } = parseLanding(String(ingest.settings.landing));
-  const folder = [path, ingest.object].filter((part) => part !== "").join("/");
   return {
     name: resourceName(table, "copy_activity", `copy_${table.name}`),
     type: "Copy",
@@ -138,7 +132,7 @@ function copyActivity(table: ResolvedTable, group: CopyGroup, shared: Shared): D
     outputs: [
       {
         ...reference(shared.landingDataset, "DatasetReference"),
-        parameters: { folder, file: fileName },
+        parameters: landedFile(table, "parquet"),
       },
     ],
     typeProperties: {
