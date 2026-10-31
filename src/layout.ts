@@ -10,6 +10,11 @@ export type Layout = "snapshot" | "increments" | "path";
 export type Extension = "parquet" | "json";
 
 const windowParts = ["yyyy", "MM", "dd", "HH"];
+/** The date tokens a path needs to name each window of a frequency apart; Minute needs {run}. */
+const windowTokens: Record<string, string[] | undefined> = {
+  Hour: ["yyyy", "MM", "dd", "HH"],
+  Month: ["yyyy", "MM"],
+};
 const tokens = ["object", "connection", ...windowParts, "run"];
 const tokenPattern = /\{([^{}]*)\}/g;
 
@@ -22,7 +27,26 @@ export function layoutOf(table: ResolvedTable): Layout {
   const { layout, path } = table.ingest!.settings;
   if (typeof path === "string") return "path";
   if (layout === "snapshot" || layout === "increments") return layout;
-  return table.endsAtFiles ? "snapshot" : "increments";
+  return table.endsAtFiles && !windowed(table) ? "snapshot" : "increments";
+}
+
+/**
+ * True when each run holds only its window's rows: incremental mode, or a
+ * date filter on the window (Microsoft 365).
+ * @example windowed(table) // false
+ */
+export function windowed(table: ResolvedTable): boolean {
+  const { mode, source_options: options } = table.ingest!.settings;
+  const filter = (options as { date_filter_column?: unknown } | undefined)?.date_filter_column;
+  return mode === "incremental" || (typeof filter === "string" && filter !== "");
+}
+
+/**
+ * True when one of the tables names its file, so a dataset they share needs a file parameter.
+ * @example namesFiles(tables) // true
+ */
+export function namesFiles(tables: ResolvedTable[]): boolean {
+  return tables.some((table) => layoutOf(table) !== "increments");
 }
 
 /**
@@ -54,12 +78,12 @@ export function landedLocation(table: ResolvedTable, extension: Extension): stri
   const relative = relativePath(table, extension, (part) =>
     part === "object" || part === "connection" ? expressionOf(table, part) : "*",
   );
-  return `${landing}/${relative}`;
+  return `${landing}/${relative.replace(/\*+/g, "*")}`;
 }
 
 /**
- * True when each run writes the same file: a snapshot, or a path pattern
- * without date or run tokens.
+ * True when a run can write over another run's file: a snapshot, or a path
+ * pattern without {run} or the date tokens that tell its windows apart.
  * @example replacesFile(table) // true
  */
 export function replacesFile(table: ResolvedTable): boolean {
@@ -68,7 +92,10 @@ export function replacesFile(table: ResolvedTable): boolean {
   const used = [...String(table.ingest!.settings.path).matchAll(tokenPattern)].map(
     (match) => match[1],
   );
-  return !used.some((name) => name === "run" || windowParts.includes(name ?? ""));
+  if (used.includes("run")) return false;
+  const frequency = (table.ingest!.settings.every as { frequency?: string } | undefined)?.frequency;
+  const needed = windowTokens[frequency ?? ""];
+  return !needed || !needed.every((token) => used.includes(token));
 }
 
 /**
@@ -83,8 +110,9 @@ export function pathProblems(path: string, extension: Extension): string[] {
     .map((match) => match[1] ?? "")
     .filter((name) => !tokens.includes(name))
     .map((name) => `${quoted} uses an unknown token {${name}}; tokens: ${tokens.join(", ")}`);
+  const object = path.includes("{object}") ? [] : [`${quoted} must include {object}`];
   const suffix = path.endsWith(`.${extension}`) ? [] : [`${quoted} must end in .${extension}`];
-  return [...unknown, ...suffix];
+  return [...unknown, ...object, ...suffix];
 }
 
 /** The file's path under the landing folder, with each token replaced. */

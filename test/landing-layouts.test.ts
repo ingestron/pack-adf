@@ -53,19 +53,14 @@ describe("adf-table", () => {
     return project;
   };
 
-  it("lands Microsoft 365 data as one JSON file per table when the flow ends at the files", () => {
+  it("lands Microsoft 365 data as a file per window when the flow ends at the files", () => {
+    // Microsoft 365 copies filter by the window's dates, so one replaced file would lose data.
     const project = office();
     project["standard.yaml"] = endAtFiles(project["standard.yaml"]!);
     const { output, files } = sink(project);
-    expect(output.parameters).toEqual({
-      folder: "erp/BasicDataSet_v0.Message_v1",
-      file: "BasicDataSet_v0.Message_v1.json",
-    });
-    const dataset = json(files, "dataset/ds_erp_erp_json.json").properties;
-    expect(dataset.parameters).toEqual({ folder: { type: "string" }, file: { type: "string" } });
-    expect(dataset.typeProperties.location.fileName).toEqual({
-      value: "@dataset().file",
-      type: "Expression",
+    expect(output.parameters).toEqual({ folder: "erp/BasicDataSet_v0.Message_v1" });
+    expect(json(files, "dataset/ds_erp_erp_json.json").properties.parameters).toEqual({
+      folder: { type: "string" },
     });
   });
 

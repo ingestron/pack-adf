@@ -108,8 +108,8 @@ describe("pathProblems", () => {
   });
 
   it("names an unknown token and the tokens it knows", () => {
-    expect(pathProblems("{table}.parquet", "parquet")).toEqual([
-      'the path pattern "{table}.parquet" uses an unknown token {table}; tokens: object, connection, yyyy, MM, dd, HH, run',
+    expect(pathProblems("{object}_{table}.parquet", "parquet")).toEqual([
+      'the path pattern "{object}_{table}.parquet" uses an unknown token {table}; tokens: object, connection, yyyy, MM, dd, HH, run',
     ]);
   });
 
