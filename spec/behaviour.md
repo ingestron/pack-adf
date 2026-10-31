@@ -143,3 +143,30 @@ For native `adf-files` sources, `runtime_kind: azure` with
 Azure runtime: omit `connectVia`. Other named runtimes keep an explicit
 `IntegrationRuntimeReference`. File System and HDFS still require self-hosted
 runtime validation. See `conformance/default-file-runtime.json`.
+
+## Landing layouts
+
+`adf-copy` and `adf-table` take `layout` (`snapshot` or `increments`) or a
+`path` pattern, both placed in the standard; setting both is a method check
+problem. Without either, a table that ends at the landed files (`store: none`)
+uses `snapshot` and any other table `increments`.
+
+- `snapshot` writes `<landing>/<object>/<object>.parquet` (`.json` for
+  Microsoft 365), replaced by each run.
+- `increments` writes `<landing>/<object>/<windowStart yyyyMMddHHmmss>_<run id>.parquet`;
+  for Microsoft 365, ADF names the files in `<landing>/<object>/`.
+- A `path` pattern is relative to the landing folder, ends in a file name with
+  the format's extension, and uses only the tokens `{object}`, `{connection}`,
+  `{yyyy}`, `{MM}`, `{dd}`, `{HH}` (the window's start) and `{run}` (the run
+  id). Otherwise each problem is a method check problem.
+
+Each copy writes one file (no `maxRowsPerFile`). Each method reports its output:
+the file, or a wildcard pattern with `*` for each date or run token
+(`<object>/*.parquet` for increments); the format; and `replace` when each run
+writes the same file, else `add`. `adf-files` reports `<landing>/<object>/**`
+with `add` when its `format` is `csv`, `parquet` or `json`, and no output
+otherwise.
+
+A table with `mode: incremental`, a layout that replaces one file, and no store
+step is a method check problem: the next run would overwrite the changes
+before anything merged them.
