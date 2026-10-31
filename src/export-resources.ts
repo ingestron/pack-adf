@@ -2,6 +2,7 @@
 import { resourceName } from "./resource-names.js";
 import type { ResolvedTable } from "@ingestron/definitions";
 import { parseLanding } from "./landing.js";
+import { layoutOf } from "./layout.js";
 import { reference, type Shared } from "./resources.js";
 import { vaultSecret } from "./sql-auth.js";
 import type { TableSource } from "./table-source.js";
@@ -63,17 +64,22 @@ function officeResources(tables: ResolvedTable[], shared: Shared, name: string):
 
 function officeDataset(tables: ResolvedTable[], name: string, fileSystem: string): Data {
   const service = resourceName(tables, "json_landing_linked_service", `ls_${name}_json`);
+  // Files are named unless every table lands increments, which ADF names itself.
+  const named = tables.some((table) => layoutOf(table) !== "increments");
   return {
     name: resourceName(tables, "json_landing_dataset", `ds_${name}_json`),
     properties: {
       type: "Json",
       linkedServiceName: reference(service, "LinkedServiceReference"),
-      parameters: { folder: { type: "string" } },
+      parameters: named
+        ? { folder: { type: "string" }, file: { type: "string" } }
+        : { folder: { type: "string" } },
       typeProperties: {
         location: {
           type: "AzureBlobFSLocation",
           fileSystem,
           folderPath: { value: "@dataset().folder", type: "Expression" },
+          ...(named && { fileName: { value: "@dataset().file", type: "Expression" } }),
         },
       },
     },
