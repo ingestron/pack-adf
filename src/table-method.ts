@@ -2,6 +2,7 @@
 import type { Connector, Method, ResolvedTable } from "@ingestron/definitions";
 import { layoutSettings, tablePlacement, windowSettings } from "./method.js";
 import { nonEmpty } from "./sql-auth.js";
+import { layoutProblems, tableOutput } from "./landing-output.js";
 import { connectionProblems } from "./connection-check.js";
 import { tableCloud } from "./table-cloud.js";
 import { tableExports } from "./table-exports.js";
@@ -78,6 +79,7 @@ export const adfTable: Method = {
     },
   },
   check: checkTable,
+  output: tableOutput,
 };
 
 /** Connection facts, rendered by the existing authoring and documentation surfaces. */
@@ -110,7 +112,10 @@ export const tableConnectors: Connector[] = tableSources.map((source) => ({
 function checkTable(table: ResolvedTable): string[] {
   const ingest = table.ingest!;
   const source = tableSources.find((item) => item.id === ingest.connection.connector)!;
-  const problems = connectionProblems(source, ingest.connection.settings);
+  const problems = [
+    ...connectionProblems(source, ingest.connection.settings),
+    ...layoutProblems(table),
+  ];
   const parts = source.object.length > 1 ? ingest.object.split(".") : [ingest.object];
   if (invalidParts(parts, source))
     problems.push(
