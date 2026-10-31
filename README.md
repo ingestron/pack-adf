@@ -27,6 +27,34 @@ set into `<landing>/<object>/`, and a tumbling window trigger, started in
 production and stopped elsewhere. Self-hosted integration runtimes and Key
 Vaults are shared infrastructure: they are referenced by name, never created.
 
+## Landing layouts
+
+`adf-copy` and `adf-table` lay out each table's files in one of three ways, set
+in the standard:
+
+| Setting                                               | Files                                                                                                       |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `layout: snapshot`                                    | One file per table, `<object>/<object>.parquet`, replaced by each run                                       |
+| `layout: increments`                                  | A new file per run under `<object>/`, named by the window's start and the run                               |
+| `path: "{object}/{yyyy}/{MM}/{object}_{run}.parquet"` | Your own path: `{object}`, `{connection}`, the window start's `{yyyy}`, `{MM}`, `{dd}`, `{HH}`, and `{run}` |
+
+A path with a date or run token adds a file per run; without one, each run
+replaces the file. Without a setting, a flow that ends at the landed files gets
+`snapshot` and one a store reads gets `increments`.
+
+ADF alone can be the whole project when the landed files are what you need, for
+example for reports that read them directly:
+
+```yaml
+packs: [adf@1]
+store: { default: none }
+```
+
+Each method records where it lands each table's files, so other packs can read
+them. The pack refuses a layout that would lose data: loads that hold only the
+window's changes (`mode: incremental`), written to one file each run replaces,
+with no store step to merge them.
+
 ## Connector catalogue
 
 `recipesFolder` is a tested project with one connection and one flow for each
