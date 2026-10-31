@@ -1,6 +1,6 @@
 // Full native copies use the existing method settings and connection checks.
 import type { Connector, Method, ResolvedTable } from "@ingestron/definitions";
-import { placement, windowSettings } from "./method.js";
+import { layoutSettings, tablePlacement, windowSettings } from "./method.js";
 import { nonEmpty } from "./sql-auth.js";
 import { connectionProblems } from "./connection-check.js";
 import { tableCloud } from "./table-cloud.js";
@@ -35,7 +35,7 @@ export const adfTable: Method = {
   connectivity: ["private", "workspace", "public"],
   produces: "files",
   renames: true,
-  placement,
+  placement: tablePlacement,
   defaults: {
     runtime_kind: "self-hosted",
     format: "parquet",
@@ -49,6 +49,7 @@ export const adfTable: Method = {
     required: ["landing", "integration_runtime", "key_vault", "start"],
     properties: {
       ...windowSettings,
+      ...layoutSettings,
       runtime_kind: {
         enum: ["azure", "self-hosted"],
         enumDescriptions: [
