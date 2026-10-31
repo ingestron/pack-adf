@@ -1,0 +1,29 @@
+{
+  "names": {
+    "key_vault_linked_service": "Named_key_vault_linked_service",
+    "landing_linked_service": "Named_landing_linked_service",
+    "landing_dataset": "Named_landing_dataset",
+    "landing_files_dataset": "Named_landing_files_dataset",
+    "landing_http_dataset": "Named_landing_http_dataset",
+    "source_linked_service": "Named_source_linked_service",
+    "source_dataset": "Named_source_dataset",
+    "pipeline": "Named_pipeline",
+    "trigger": "Named_trigger",
+    "staging_linked_service": "Named_staging_linked_service",
+    "json_landing_linked_service": "Named_json_landing_linked_service",
+    "json_landing_dataset": "Named_json_landing_dataset",
+    "copy_activity": "Named_copy_activity"
+  },
+  "invalid_names": [
+    "",
+    "../escape",
+    "ls-name",
+    "1name",
+    "bad.name",
+    "@expression",
+    "{{ project }}",
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  ],
+  "invalid_role": "not_a_resource",
+  "shared_group": "connection and database for adf-copy; connection for adf-files and adf-table"
+}

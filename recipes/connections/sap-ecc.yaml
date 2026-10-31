@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: sap_ecc
+connector: sap-ecc
+connectivity: private
+settings:
+  url: "https://source.example.test"
+  user: "reader"
+  password: "${secret:source-password}"

@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: informix
+connector: informix
+connectivity: private
+settings:
+  connection_string: "synthetic-connection_string"
+  user: "reader"
+  password: "${secret:source-password}"

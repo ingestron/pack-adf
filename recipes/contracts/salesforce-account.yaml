@@ -1,0 +1,12 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: salesforce_account
+version: 1.0.0
+status: draft
+schema:
+  - name: accounts
+    logicalType: object
+    properties:
+      - { name: Id, logicalType: string, primaryKey: true }
+      - { name: Name, logicalType: string }
+      - { name: SystemModstamp, logicalType: timestamp }

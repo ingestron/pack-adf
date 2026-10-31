@@ -1,0 +1,14 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: adls_gen2
+source: adls_gen2
+ingest:
+  uses: adf-files
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/adls-gen2"
+    format: "json"
+    mode: "all"
+tables:
+  adls_gen2_records:
+    object: "exports/orders"
+    contract: records

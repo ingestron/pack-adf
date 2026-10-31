@@ -1,0 +1,13 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: odbc
+source: odbc
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/odbc"
+    runtime_kind: "self-hosted"
+tables:
+  odbc_records:
+    object: "orders"
+    contract: records

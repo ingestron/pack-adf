@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: odbc
+connector: odbc
+connectivity: private
+settings:
+  connection_string: "synthetic-connection_string"
+  user: "reader"
+  password: "${secret:source-password}"

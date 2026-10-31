@@ -1,0 +1,152 @@
+// Native CRM entity connectors; values remain in Connection settings.
+import {
+  databaseFields,
+  secretField as secret,
+  textField as text,
+  type TableSource,
+} from "./table-source.js";
+const dynamicsFields = {
+  url: text("serviceUri", "Dynamics organisation service URL."),
+  client_id: text("servicePrincipalId", "Entra application ID."),
+  client_secret: secret(
+    "servicePrincipalCredential",
+    "Key Vault secret holding the application secret.",
+  ),
+};
+const dynamicsDefaults = {
+  deploymentType: "Online",
+  authenticationType: "AADServicePrincipal",
+  servicePrincipalCredentialType: "ServicePrincipalKey",
+};
+const salesforceFields = {
+  url: text("environmentUrl", "Salesforce instance URL."),
+  client_id: text("clientId", "Connected App client ID."),
+  client_secret: secret("clientSecret", "Key Vault secret holding the Connected App secret."),
+  api_version: text("apiVersion", "Supported Bulk API 2.0 version, at least 47.0."),
+};
+
+/** CRM sources using native entity reads and their documented query languages. */
+export const tableCrm: TableSource[] = [
+  {
+    id: "dataverse",
+    title: "Dataverse",
+    docs: "dynamics-crm-office-365",
+    service: "CommonDataServiceForApps",
+    dataset: "CommonDataServiceForAppsEntity",
+    source: "CommonDataServiceForAppsSource",
+    object: ["entityName"],
+    fields: dynamicsFields,
+    defaults: dynamicsDefaults,
+    query: true,
+  },
+  {
+    id: "dynamics-365",
+    title: "Dynamics 365",
+    docs: "dynamics-crm-office-365",
+    service: "Dynamics",
+    dataset: "DynamicsEntity",
+    source: "DynamicsSource",
+    object: ["entityName"],
+    fields: dynamicsFields,
+    defaults: dynamicsDefaults,
+    query: true,
+  },
+  {
+    id: "dynamics-crm",
+    title: "Dynamics CRM",
+    docs: "dynamics-crm-office-365",
+    service: "DynamicsCrm",
+    dataset: "DynamicsCrmEntity",
+    source: "DynamicsCrmSource",
+    object: ["entityName"],
+    fields: dynamicsFields,
+    defaults: dynamicsDefaults,
+    query: true,
+  },
+  {
+    id: "dynamics-ax",
+    title: "Dynamics AX",
+    docs: "dynamics-ax",
+    service: "DynamicsAX",
+    dataset: "DynamicsAXResource",
+    source: "DynamicsAXSource",
+    object: ["path"],
+    fields: {
+      url: text("url", "Dynamics OData service URL."),
+      tenant: text("tenant", "Entra tenant ID."),
+      client_id: text("servicePrincipalId", "Entra application ID."),
+      client_secret: secret(
+        "servicePrincipalKey",
+        "Key Vault secret holding the application secret.",
+      ),
+      resource: text("aadResourceId", "Entra resource URI for the Dynamics instance."),
+    },
+    query: true,
+  },
+  {
+    id: "salesforce",
+    title: "Salesforce",
+    docs: "salesforce",
+    service: "SalesforceV2",
+    dataset: "SalesforceV2Object",
+    source: "SalesforceV2Source",
+    object: ["objectApiName"],
+    fields: salesforceFields,
+    defaults: { authenticationType: "OAuth2ClientCredentials" },
+    query: true,
+  },
+  {
+    id: "salesforce-service-cloud",
+    title: "Salesforce Service Cloud",
+    docs: "salesforce-service-cloud",
+    service: "SalesforceServiceCloudV2",
+    dataset: "SalesforceServiceCloudV2Object",
+    source: "SalesforceServiceCloudV2Source",
+    object: ["objectApiName"],
+    fields: salesforceFields,
+    defaults: { authenticationType: "OAuth2ClientCredentials" },
+    query: true,
+  },
+  {
+    id: "servicenow",
+    title: "ServiceNow",
+    docs: "servicenow",
+    service: "ServiceNowV2",
+    dataset: "ServiceNowV2Object",
+    source: "ServiceNowV2Source",
+    object: ["tableName"],
+    fields: {
+      url: text("endpoint", "ServiceNow instance URL."),
+      user: databaseFields.user,
+      password: databaseFields.password,
+    },
+    defaults: { authenticationType: "Basic" },
+  },
+  {
+    id: "sharepoint-online-list",
+    title: "SharePoint Online List",
+    docs: "sharepoint-online-list",
+    service: "SharePointOnlineList",
+    dataset: "SharePointOnlineLResource",
+    source: "SharePointOnlineListSource",
+    object: ["listName"],
+    fields: {
+      url: text("siteUrl", "SharePoint site URL."),
+      tenant: text("tenantId", "Entra tenant ID."),
+      client_id: text("servicePrincipalId", "Entra application ID."),
+      certificate: secret(
+        "servicePrincipalEmbeddedCert",
+        "Key Vault secret holding the base64 encoded PKCS #12 certificate.",
+      ),
+      certificate_password: {
+        ...secret(
+          "servicePrincipalEmbeddedCertPassword",
+          "Key Vault secret holding the certificate password, if encrypted.",
+        ),
+        optional: true,
+      },
+    },
+    defaults: { servicePrincipalCredentialType: "ServicePrincipalCert" },
+    query: true,
+  },
+];

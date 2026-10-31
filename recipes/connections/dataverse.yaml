@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: dataverse
+connector: dataverse
+connectivity: private
+settings:
+  url: "https://source.example.test"
+  client_id: "synthetic-client"
+  client_secret: "${secret:source-client-secret}"

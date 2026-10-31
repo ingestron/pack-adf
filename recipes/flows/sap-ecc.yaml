@@ -1,0 +1,13 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: sap_ecc
+source: sap_ecc
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/sap-ecc"
+    runtime_kind: "self-hosted"
+tables:
+  sap_ecc_records:
+    object: "orders"
+    contract: records

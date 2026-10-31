@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: dynamics_ax
+source: dynamics_ax
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/dynamics-ax"
+tables:
+  dynamics_ax_records:
+    object: "orders"
+    contract: records

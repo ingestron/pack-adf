@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: oracle_cloud_storage
+connector: oracle-cloud-storage
+connectivity: private
+settings:
+  access_key: "synthetic-access_key"
+  secret_key: "${secret:source-secret-key}"
+  url: "https://source.example.test"

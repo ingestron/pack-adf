@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: impala
+source: impala
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/impala"
+tables:
+  impala_records:
+    object: "sales.orders"
+    contract: records

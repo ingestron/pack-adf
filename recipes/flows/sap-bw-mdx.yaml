@@ -1,0 +1,14 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: sap_bw_mdx
+source: sap_bw_mdx
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/sap-bw-mdx"
+    query: "SELECT {[Measures].[Amount]} ON COLUMNS FROM [Sales]"
+    runtime_kind: "self-hosted"
+tables:
+  sap_bw_mdx_records:
+    object: "orders"
+    contract: records

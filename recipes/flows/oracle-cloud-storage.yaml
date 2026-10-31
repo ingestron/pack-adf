@@ -1,0 +1,14 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: oracle_cloud_storage
+source: oracle_cloud_storage
+ingest:
+  uses: adf-files
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/oracle-cloud-storage"
+    format: "json"
+    mode: "all"
+tables:
+  oracle_cloud_storage_records:
+    object: "exports/orders"
+    contract: records

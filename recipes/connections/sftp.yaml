@@ -1,0 +1,10 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: sftp
+connector: sftp
+connectivity: private
+settings:
+  host: "source.example.test"
+  user: "reader"
+  password: "${secret:source-password}"
+  host_key: "synthetic-host_key"

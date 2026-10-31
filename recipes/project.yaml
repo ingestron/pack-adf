@@ -1,0 +1,10 @@
+id: native
+environments:
+  dev: {}
+  prod: {}
+imports:
+  - standard.yaml
+  - platform.yaml
+  - connections/*.yaml
+  - flows/*.yaml
+  - contracts/*.yaml

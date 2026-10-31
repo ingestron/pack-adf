@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: azure_synapse
+source: azure_synapse
+ingest:
+  uses: adf-copy
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/azure-synapse"
+tables:
+  azure_synapse_records:
+    object: "sales.dbo.orders"
+    contract: records

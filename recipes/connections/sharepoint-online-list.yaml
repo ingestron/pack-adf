@@ -1,0 +1,10 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: sharepoint_online_list
+connector: sharepoint-online-list
+connectivity: private
+settings:
+  url: "https://source.example.test"
+  tenant: "synthetic-tenant"
+  client_id: "synthetic-client"
+  certificate: "${secret:source-certificate}"

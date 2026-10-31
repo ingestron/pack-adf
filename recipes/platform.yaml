@@ -1,0 +1,29 @@
+apiVersion: ingestron.io/v1
+kind: Platform
+id: native
+settings:
+  adf-copy:
+    resource_names:
+      key_vault_linked_service: "ls_${project.id}_secrets"
+      landing_linked_service: "ls_${project.id}_lake"
+      landing_dataset: "ds_${project.id}_parquet"
+    landing: abfss://landing@syntheticlake.dfs.core.windows.net/native
+    key_vault: https://synthetic-vault.vault.azure.net
+    integration_runtime: synthetic-self-hosted-runtime
+  adf-table:
+    resource_names:
+      key_vault_linked_service: "ls_${project.id}_secrets"
+      landing_linked_service: "ls_${project.id}_lake"
+      landing_dataset: "ds_${project.id}_parquet"
+    landing: abfss://landing@syntheticlake.dfs.core.windows.net/native
+    key_vault: https://synthetic-vault.vault.azure.net
+    integration_runtime: synthetic-self-hosted-runtime
+  adf-files:
+    resource_names:
+      key_vault_linked_service: "ls_${project.id}_secrets"
+      landing_linked_service: "ls_${project.id}_lake"
+      landing_files_dataset: "ds_${project.id}_copied_files"
+      landing_http_dataset: "ds_${project.id}_http_download"
+    landing: abfss://landing@syntheticlake.dfs.core.windows.net/native
+    key_vault: https://synthetic-vault.vault.azure.net
+    integration_runtime: synthetic-self-hosted-runtime

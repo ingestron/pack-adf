@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: s3_compatible
+connector: s3-compatible
+connectivity: private
+settings:
+  access_key: "synthetic-access_key"
+  secret_key: "${secret:source-secret-key}"
+  url: "https://source.example.test"

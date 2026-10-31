@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: oracle
+connector: oracle
+connectivity: private
+settings:
+  server: "source.example.test"
+  user: "reader"
+  password: "${secret:source-password}"

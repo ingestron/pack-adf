@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: mongodb_atlas
+source: mongodb_atlas
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/mongodb-atlas"
+tables:
+  mongodb_atlas_records:
+    object: "orders"
+    contract: records

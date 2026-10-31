@@ -1,0 +1,14 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: web_table
+source: web_table
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/web-table"
+    runtime_kind: "self-hosted"
+    source_options: { "table_index": 0 }
+tables:
+  web_table_records:
+    object: "orders"
+    contract: records

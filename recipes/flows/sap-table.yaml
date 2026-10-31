@@ -1,0 +1,13 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: sap_table
+source: sap_table
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/sap-table"
+    runtime_kind: "self-hosted"
+tables:
+  sap_table_records:
+    object: "orders"
+    contract: records

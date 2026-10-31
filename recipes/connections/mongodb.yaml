@@ -1,0 +1,8 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: mongodb
+connector: mongodb
+connectivity: private
+settings:
+  connection_string: "${secret:source-connection-string}"
+  database: "sales"

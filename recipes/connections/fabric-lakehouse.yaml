@@ -1,0 +1,8 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: fabric_lakehouse
+connector: fabric-lakehouse
+connectivity: private
+settings:
+  workspace_id: "synthetic-workspace_id"
+  artifact_id: "synthetic-artifact_id"

@@ -1,0 +1,28 @@
+[
+  { "id": "postgresql", "query": "optional", "sourceOptions": [], "format": "parquet" },
+  {
+    "id": "rest",
+    "query": "unsupported",
+    "sourceOptions": [
+      "collection_reference",
+      "request_method",
+      "request_body",
+      "pagination",
+      "column_paths"
+    ],
+    "format": "parquet"
+  },
+  { "id": "google-ads", "query": "required", "sourceOptions": [], "format": "parquet" },
+  {
+    "id": "microsoft-365",
+    "query": "unsupported",
+    "sourceOptions": [
+      "date_filter_column",
+      "requires_date_filter",
+      "allowed_groups",
+      "user_scope_filter"
+    ],
+    "format": "json",
+    "runtime": "azure"
+  }
+]

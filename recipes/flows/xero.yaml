@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: xero
+source: xero
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/xero"
+tables:
+  xero_records:
+    object: "orders"
+    contract: records

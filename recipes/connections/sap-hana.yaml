@@ -1,0 +1,7 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: sap_hana
+connector: sap-hana
+connectivity: private
+settings:
+  connection_string: "${secret:source-connection-string}"

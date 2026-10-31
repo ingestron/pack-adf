@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: hdfs
+connector: hdfs
+connectivity: private
+settings:
+  url: "https://source.example.test"
+  user: "reader"
+  password: "${secret:source-password}"

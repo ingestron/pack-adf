@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: sap_c4c
+connector: sap-c4c
+connectivity: private
+settings:
+  url: "https://source.example.test"
+  user: "reader"
+  password: "${secret:source-password}"

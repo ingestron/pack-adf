@@ -1,0 +1,8 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: amazon_s3
+connector: amazon-s3
+connectivity: private
+settings:
+  access_key: "synthetic-access_key"
+  secret_key: "${secret:source-secret-key}"

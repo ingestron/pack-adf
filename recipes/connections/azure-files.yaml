@@ -1,0 +1,8 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: azure_files
+connector: azure-files
+connectivity: private
+settings:
+  connection_string: "${secret:source-connection-string}"
+  share: "synthetic-share"

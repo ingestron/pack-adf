@@ -1,0 +1,14 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: fabric_warehouse
+source: fabric_warehouse
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/fabric-warehouse"
+    runtime_kind: "azure"
+    integration_runtime: synthetic-azure-runtime
+tables:
+  fabric_warehouse_records:
+    object: "sales.orders"
+    contract: records

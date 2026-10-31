@@ -1,0 +1,10 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: quickbooks
+connector: quickbooks
+connectivity: private
+settings:
+  company_id: "synthetic-company_id"
+  client_id: "synthetic-client"
+  client_secret: "${secret:source-client-secret}"
+  refresh_token: "${secret:source-refresh-token}"

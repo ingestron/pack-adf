@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: spark
+source: spark
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/spark"
+tables:
+  spark_records:
+    object: "sales.orders"
+    contract: records

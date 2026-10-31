@@ -1,0 +1,11 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: sap_bw_open_hub
+connector: sap-bw-open-hub
+connectivity: private
+settings:
+  server: "source.example.test"
+  system_number: "00"
+  client_id: "synthetic-client"
+  user: "reader"
+  password: "${secret:source-password}"

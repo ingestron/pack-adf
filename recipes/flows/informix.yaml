@@ -1,0 +1,13 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: informix
+source: informix
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/informix"
+    runtime_kind: "self-hosted"
+tables:
+  informix_records:
+    object: "orders"
+    contract: records

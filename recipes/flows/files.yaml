@@ -1,0 +1,14 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: files
+source: files
+ingest:
+  uses: adf-files
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/files"
+    format: "json"
+    mode: "all"
+tables:
+  files_records:
+    object: "orders"
+    contract: records

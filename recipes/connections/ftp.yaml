@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: ftp
+connector: ftp
+connectivity: private
+settings:
+  host: "source.example.test"
+  user: "reader"
+  password: "${secret:source-password}"

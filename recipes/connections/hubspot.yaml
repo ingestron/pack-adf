@@ -1,0 +1,10 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: hubspot
+connector: hubspot
+connectivity: private
+settings:
+  client_id: "synthetic-client"
+  client_secret: "${secret:source-client-secret}"
+  access_token: "${secret:source-access-token}"
+  refresh_token: "${secret:source-refresh-token}"

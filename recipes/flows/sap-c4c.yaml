@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: sap_c4c
+source: sap_c4c
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/sap-c4c"
+tables:
+  sap_c4c_records:
+    object: "orders"
+    contract: records

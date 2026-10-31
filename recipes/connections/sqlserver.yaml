@@ -1,0 +1,9 @@
+apiVersion: ingestron.io/v1
+kind: Connection
+id: sqlserver
+connector: sqlserver
+connectivity: private
+settings:
+  server: "source.example.test"
+  user: "reader"
+  password: "${secret:source-password}"

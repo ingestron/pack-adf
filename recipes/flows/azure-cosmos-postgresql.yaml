@@ -1,0 +1,12 @@
+apiVersion: ingestron.io/v1
+kind: Flow
+id: azure_cosmos_postgresql
+source: azure_cosmos_postgresql
+ingest:
+  uses: adf-table
+  with:
+    landing: "abfss://landing@syntheticlake.dfs.core.windows.net/native/azure-cosmos-postgresql"
+tables:
+  azure_cosmos_postgresql_records:
+    object: "sales.orders"
+    contract: records
