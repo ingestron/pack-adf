@@ -74,6 +74,30 @@ export const placement = {
   standard: ["every", "start", "retries", "resource_names"],
 };
 
+/** Where the tabular methods' settings belong: layouts are a standard's choice. */
+export const tablePlacement = {
+  platform: placement.platform,
+  standard: [...placement.standard, "layout", "path"],
+};
+
+/** How the tabular methods lay out each table's files in the landing folder. */
+export const layoutSettings = {
+  layout: {
+    enum: ["snapshot", "increments"],
+    enumDescriptions: [
+      "One file per table, <object>/<object>.parquet, replaced by each run. The default when the flow ends at the landed files.",
+      "A new file per run under <object>/. The default when a store reads the files.",
+    ],
+    description: "How each table's files are laid out in the landing folder.",
+  },
+  path: {
+    type: "string",
+    description:
+      "A path under the landing folder for each table's file, with tokens {object}, {connection}, the window start's {yyyy}, {MM}, {dd}, {HH}, and {run}. With a date or run token each run adds a file; without, each run replaces it. Replaces layout.",
+    examples: ["{object}/{yyyy}/{MM}/{dd}/{object}_{run}.parquet"],
+  },
+};
+
 /** Problems with a connection that signs in with a user and a Key Vault password. */
 export function credentialProblems(table: ResolvedTable, keys: string[]): string[] {
   const settings = table.ingest?.connection.settings ?? {};
@@ -96,7 +120,7 @@ export const adfCopy: Method = {
   connectivity: ["private", "workspace", "public"],
   produces: "files",
   renames: true,
-  placement,
+  placement: tablePlacement,
   defaults: {
     format: "parquet",
     runtime_kind: "self-hosted",
@@ -111,6 +135,7 @@ export const adfCopy: Method = {
     required: ["landing", "integration_runtime", "runtime_kind", "key_vault", "start"],
     properties: {
       ...windowSettings,
+      ...layoutSettings,
       runtime_kind: {
         enum: ["azure", "self-hosted"],
         enumDescriptions: [
