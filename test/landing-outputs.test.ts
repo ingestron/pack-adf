@@ -79,7 +79,13 @@ describe("checks", () => {
 
   it("refuses incremental loads into one replaced file with nothing to merge them", () => {
     const standard = withSettings(endAtFiles(base["standard.yaml"]!), incremental);
-    expect(problems({ "standard.yaml": standard })).toEqual([
+    expect(problems({ "standard.yaml": standard })).toEqual([]);
+    expect(outputOf({ "standard.yaml": standard })?.loads).toBe("add");
+    const snapshot = withSettings(
+      endAtFiles(base["standard.yaml"]!),
+      `${incremental}      layout: snapshot\n`,
+    );
+    expect(problems({ "standard.yaml": snapshot })).toEqual([
       { code: "METHOD_CHECK", message: `"adf-copy" for table "invoices": ${lost}.` },
     ]);
   });
@@ -114,6 +120,7 @@ describe("checks", () => {
     );
     expect(problems({ "standard.yaml": standard }).map((item) => item.message)).toEqual([
       '"adf-copy" for table "invoices": the path pattern "{table}.csv" uses an unknown token {table}; tokens: object, connection, yyyy, MM, dd, HH, run.',
+      '"adf-copy" for table "invoices": the path pattern "{table}.csv" must include {object}.',
       '"adf-copy" for table "invoices": the path pattern "{table}.csv" must end in .parquet.',
     ]);
   });

@@ -149,24 +149,36 @@ runtime validation. See `conformance/default-file-runtime.json`.
 `adf-copy` and `adf-table` take `layout` (`snapshot` or `increments`) or a
 `path` pattern, both placed in the standard; setting both is a method check
 problem. Without either, a table that ends at the landed files (`store: none`)
-uses `snapshot` and any other table `increments`.
+uses `snapshot`, and any other table `increments`; a table whose runs each hold
+only their window (`mode: incremental`, or a `source_options.date_filter_column`)
+always defaults to `increments`.
 
 - `snapshot` writes `<landing>/<object>/<object>.parquet` (`.json` for
   Microsoft 365), replaced by each run.
 - `increments` writes `<landing>/<object>/<windowStart yyyyMMddHHmmss>_<run id>.parquet`;
   for Microsoft 365, ADF names the files in `<landing>/<object>/`.
-- A `path` pattern is relative to the landing folder, ends in a file name with
-  the format's extension, and uses only the tokens `{object}`, `{connection}`,
+- A `path` pattern is relative to the landing folder, includes `{object}`,
+  ends in a file name with the format's extension, and uses only the tokens `{object}`, `{connection}`,
   `{yyyy}`, `{MM}`, `{dd}`, `{HH}` (the window's start) and `{run}` (the run
   id). Otherwise each problem is a method check problem.
 
 Each copy writes one file (no `maxRowsPerFile`). Each method reports its output:
-the file, or a wildcard pattern with `*` for each date or run token
-(`<object>/*.parquet` for increments); the format; and `replace` when each run
-writes the same file, else `add`. `adf-files` reports `<landing>/<object>/**`
+the file, or a wildcard pattern with one `*` for each run of date or run tokens
+(`<object>/*.parquet` for increments); the format; and `add` when each run
+writes its own file, else `replace`. A path writes its own file per run when it
+has `{run}`, or the date tokens down to the window's unit: `{yyyy}`, `{MM}`,
+`{dd}`, `{HH}` for `Hour`; `{yyyy}`, `{MM}` for `Month`; only `{run}` for
+`Minute`. `adf-files` reports `<landing>/<object>/**`
 with `add` when its `format` is `csv`, `parquet` or `json`, and no output
 otherwise.
 
-A table with `mode: incremental`, a layout that replaces one file, and no store
-step is a method check problem: the next run would overwrite the changes
-before anything merged them.
+A table whose runs each hold only their window, with a layout that replaces
+one file and no store step, is a method check problem: the next run would
+overwrite the rows before anything merged them. A table with a path pattern
+whose files land where another tabular table's files land is a pack check
+problem; tables with the default layouts are checked by their
+`<landing>/<object>/` folders, as before.
+
+Microsoft 365's JSON dataset is shared by a connection's tables: it takes a file
+name only when one of them names its file, and then every table passes one
+(increments pass the increment name ADF otherwise generates).

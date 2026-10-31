@@ -1,7 +1,14 @@
 // What ADF tells other packs about each table's landed files, and the
 // layouts it refuses because they would lose data or overwrite each other.
 import type { ResolvedTable, StepOutput } from "@ingestron/definitions";
-import { landedLocation, layoutOf, pathProblems, replacesFile, type Extension } from "./layout.js";
+import {
+  landedLocation,
+  layoutOf,
+  pathProblems,
+  replacesFile,
+  windowed,
+  type Extension,
+} from "./layout.js";
 
 /** The tabular methods' files: the extension follows the source (JSON for Microsoft 365). */
 export function extensionOf(table: ResolvedTable): Extension {
@@ -31,15 +38,38 @@ export function filesOutput(table: ResolvedTable): StepOutput | undefined {
 
 /** Problems with a tabular copy's layout, as METHOD_CHECK messages. */
 export function layoutProblems(table: ResolvedTable): string[] {
-  const { layout, path, mode } = table.ingest!.settings;
+  const { layout, path } = table.ingest!.settings;
   if (layout !== undefined && path !== undefined) return ["set layout or path, not both"];
   if (layoutOf(table) === "path") {
     const problems = pathProblems(String(path), extensionOf(table));
     if (problems.length > 0) return problems;
   }
-  if (mode === "incremental" && replacesFile(table) && !table.store)
+  if (windowed(table) && replacesFile(table) && !table.store)
     return [
       "each run holds only the window's changes and replaces the last file, so changes would be lost; keep a file per run (layout: increments, or a path with {run}), or add a store step",
     ];
   return [];
+}
+
+/**
+ * Tables whose files would mix: a table with a path pattern landing where
+ * another table's files land (the build checks the default layouts' folders).
+ */
+export function samePathProblems(tables: ResolvedTable[]): string[] {
+  const problems: string[] = [];
+  tables.forEach((table, index) => {
+    const location = tableOutput(table).location;
+    const other = tables
+      .slice(0, index)
+      .find(
+        (earlier) =>
+          (layoutOf(table) === "path" || layoutOf(earlier) === "path") &&
+          tableOutput(earlier).location === location,
+      );
+    if (other)
+      problems.push(
+        `tables "${other.name}" and "${table.name}" land at the same files ${location}`,
+      );
+  });
+  return problems;
 }
