@@ -25,6 +25,7 @@ export const afterCopySchema = {
       type: "string",
       pattern: "^(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}$",
       default: defaultTimeout,
+      examples: ["01:00:00", "02:30:00"],
       description:
         "How long ADF waits for the job's run before stopping it and failing, as [d.]hh:mm:ss.",
     },
