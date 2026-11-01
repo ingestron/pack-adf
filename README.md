@@ -29,8 +29,9 @@ Vaults are shared infrastructure: they are referenced by name, never created.
 
 ## Landing layouts
 
-`adf-copy` and `adf-table` lay out each table's files in one of three ways, set
-in the standard:
+`adf-copy` and `adf-table` lay out each table's files in one of three ways,
+usually set in the standard; a flow or table can set its own, and the one set
+closer to the table wins:
 
 | Setting                                               | Files                                                                                                       |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -38,7 +39,9 @@ in the standard:
 | `layout: increments`                                  | A new file per run under `<object>/`, named by the window's start and the run                               |
 | `path: "{object}/{yyyy}/{MM}/{object}_{run}.parquet"` | Your own path: `{object}`, `{connection}`, the window start's `{yyyy}`, `{MM}`, `{dd}`, `{HH}`, and `{run}` |
 
-A path must include `{object}`, so tables keep their own files. It adds a file
+A path must include `{object}`, so tables keep their own files, and must not
+start with `/`, use `.` or `..` as a folder, or have a name starting with `@`,
+which ADF reads as an expression. It adds a file
 per run when it has `{run}`, or the date tokens down to the window's unit
 (`{yyyy}`, `{MM}`, `{dd}` and `{HH}` for hourly windows; `{yyyy}` and `{MM}`
 for monthly ones); otherwise each run replaces the file. Without a setting, a
