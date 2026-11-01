@@ -10,6 +10,7 @@ import { build, copyGroups, filesGroups } from "./build.js";
 import { adfFiles } from "./files-method.js";
 import { adfCopy } from "./method.js";
 import { request } from "./request.js";
+import { checkingAfterCopy } from "./after-copy-settings.js";
 
 /**
  * The Azure Data Factory pack, version 1. Use it with a platform pack:
@@ -45,7 +46,11 @@ export const adf: Pack = {
       ],
     },
   },
-  methods: { "adf-copy": adfCopy, "adf-files": adfFiles, "adf-table": adfTable },
+  methods: {
+    "adf-copy": checkingAfterCopy(adfCopy),
+    "adf-files": checkingAfterCopy(adfFiles),
+    "adf-table": checkingAfterCopy(adfTable),
+  },
   connectors,
   contract,
   check: checkShared,
@@ -68,6 +73,8 @@ function checkShared(model: ResolvedModel): string[] {
   const problems = project
     ? [`every ADF table must use the same key_vault and landing storage; ${project}`]
     : [];
+  const job = differing(tables, (settings) => [settings.after_copy]);
+  if (job) problems.push(`every ADF table must use the same after_copy; ${job}`);
   try {
     build(model);
   } catch (error) {
