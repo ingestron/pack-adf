@@ -24,12 +24,14 @@ interface Trigger {
 export function afterCopy(files: Record<string, string>, model: ResolvedModel): void {
   const job = afterCopyOf(model);
   if (!job) return;
-  const groups = [...scheduleGroups(files).values()].sort((a, b) =>
-    startOf(a[0]!).localeCompare(startOf(b[0]!)),
+  // Started schedules first, then by start, so the plain name goes to the earliest started one.
+  const groups = [...scheduleGroups(files).values()].sort(
+    (a, b) => Number(stopped(a[0]!)) - Number(stopped(b[0]!)) || startOf(a[0]!) - startOf(b[0]!),
   );
   const used = new Set<string>();
+  const firsts = new Map<string, Trigger>();
   for (const triggers of groups) {
-    const name = parentName(model.project.id, triggers[0]!, used);
+    const name = parentName(model.project.id, triggers[0]!, firsts, used);
     used.add(name);
     const children = triggers.map(
       (item) => item.properties.pipeline.pipelineReference.referenceName,
@@ -47,23 +49,47 @@ export function afterCopy(files: Record<string, string>, model: ResolvedModel): 
   }
 }
 
-const startOf = (trigger: Trigger) => String(trigger.properties.typeProperties.startTime ?? "");
+const startOf = (trigger: Trigger) =>
+  Date.parse(String(trigger.properties.typeProperties.startTime));
+const stopped = (trigger: Trigger) => trigger.properties.runtimeState === "Stopped";
 
 /**
- * `<project>_every_<interval>_<unit>`; another schedule of the same size is
- * named by its start, `_from_<yyyyMMdd>` (with `HHmm` when not midnight), and
- * `_stopped` when it differs only by being stopped.
+ * `<project>_every_<interval>_<unit>` for the first schedule of that size;
+ * another is named by what differs from that one: `_from_<yyyyMMdd>` (with
+ * `HHmm`, or `HHmmss` when seconds are set) for a different start, then
+ * `_stopped` when it is stopped and that one is not; a counter only if that is
+ * still taken.
  */
-function parentName(project: string, trigger: Trigger, used: Set<string>): string {
+function parentName(
+  project: string,
+  trigger: Trigger,
+  firsts: Map<string, Trigger>,
+  used: Set<string>,
+): string {
   const { frequency, interval } = trigger.properties.typeProperties;
   const base = `${project}_every_${interval}_${frequency.toLowerCase()}`;
-  if (!used.has(base)) return base;
+  const first = firsts.get(base);
+  if (!first) {
+    firsts.set(base, trigger);
+    return base;
+  }
   const start = startOf(trigger);
-  const time = start.slice(11, 16).replace(":", "");
-  const dated = `${base}_from_${start.slice(0, 10).replaceAll("-", "")}${time === "0000" ? "" : time}`;
-  if (!used.has(dated)) return dated;
-  const stopped = `${dated}_stopped`;
-  return used.has(stopped) ? `${stopped}_${used.size}` : stopped;
+  const from = start === startOf(first) ? "" : `_from_${stamp(start)}`;
+  const state = stopped(trigger) && !stopped(first) ? "_stopped" : "";
+  const name = `${base}${from}${state}`;
+  if (!used.has(name)) return name;
+  let count = 2;
+  while (used.has(`${name}_${count}`)) count += 1;
+  return `${name}_${count}`;
+}
+
+/** A start as yyyyMMdd, then HHmm when not midnight, or HHmmss when it has seconds (UTC). */
+function stamp(time: number): string {
+  const iso = new Date(time).toISOString();
+  const date = iso.slice(0, 10).replaceAll("-", "");
+  const clock = iso.slice(11, 19).replaceAll(":", "");
+  if (clock.endsWith("00")) return clock === "000000" ? date : `${date}${clock.slice(0, 4)}`;
+  return `${date}${clock}`;
 }
 
 /** Every trigger, removed from the files and grouped by its window settings and state. */
