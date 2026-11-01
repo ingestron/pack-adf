@@ -64,3 +64,10 @@ export function generate(changes: Record<string, string> = {}, environment = "de
 
 export const json = (files: Record<string, string>, path: string) =>
   JSON.parse(files[path] ?? "null");
+
+/** The ERP standard with after_copy written under adf-copy's settings. */
+export const withAfterCopy = (value: string) =>
+  base["standard.yaml"]!.replace(
+    "      start: 2026-10-01T00:00:00Z\n",
+    `      start: 2026-10-01T00:00:00Z\n      after_copy: ${value}\n`,
+  );

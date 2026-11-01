@@ -1,4 +1,5 @@
 // Turns the tables copied with adf-copy and adf-files into ADF resource files, path → JSON.
+import { afterCopy } from "./after-copy.js";
 import { resourceName } from "./resource-names.js";
 import { addResource, mergeResources } from "./resource-files.js";
 import { tableGroups, tableResources } from "./table-resources.js";
@@ -62,6 +63,7 @@ export function build(model: ResolvedModel): Record<string, string> {
     );
   }
   mergeResources(files, tableResources(model, shared));
+  afterCopy(files, model);
   return files;
 }
 

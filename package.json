@@ -1,6 +1,6 @@
 {
   "name": "@ingestron/pack-adf",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Azure Data Factory methods for Ingestron: copies from sources the data platform cannot reach into a landing folder.",
   "license": "Apache-2.0",
   "author": "IntentLabs <hello@ingestron.io>",

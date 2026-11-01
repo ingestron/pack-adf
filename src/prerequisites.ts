@@ -1,6 +1,7 @@
 // Infrastructure requests name prerequisites without attempting to provision them.
 import type { RequestSection, ResolvedModel } from "@ingestron/definitions";
 import { connectors } from "./connectors.js";
+import { afterCopyOf } from "./after-copy-settings.js";
 /** Shared ADF infrastructure and source-specific access for the platform request. */
 export function prerequisites(model: ResolvedModel): RequestSection[] {
   const tables = model.tables.filter((table) => table.ingest?.pack === "adf");
@@ -32,7 +33,23 @@ export function prerequisites(model: ResolvedModel): RequestSection[] {
       title: "ADF prerequisites",
       intro:
         "Provision these before running the generated assets. Generation does not inspect Azure or validate source credentials.",
-      lines: [...infrastructure, ...sources],
+      lines: [...infrastructure, ...jobLines(model), ...sources],
     },
+  ];
+}
+
+/** The job after the copies: the factory's role on it, and its limits within after_copy.timeout. */
+function jobLines(model: ResolvedModel): string[] {
+  const afterCopy = afterCopyOf(model);
+  if (!afterCopy) return [];
+  const name = afterCopy.job.split("/").at(-1)!;
+  const [days, clock] = afterCopy.timeout.includes(".")
+    ? afterCopy.timeout.split(".")
+    : ["0", afterCopy.timeout];
+  const [hours, minutes, seconds] = clock!.split(":").map(Number);
+  const total = Number(days) * 86400 + hours! * 3600 + minutes! * 60 + seconds!;
+  return [
+    `The factory's managed identity needs the Container Apps Jobs Operator role on \`${name}\`, or a custom role with Microsoft.App/jobs/read, start/action, stop/execution/action and executions/read.`,
+    `Set \`${name}\`'s replica timeout to ${Math.floor(total / 2)} seconds and retry limit to 1, so a retried run ends within after_copy.timeout (${afterCopy.timeout}).`,
   ];
 }

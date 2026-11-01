@@ -191,3 +191,24 @@ of an Azure Container Apps job,
 and `timeout`, how long ADF waits for the job's run, as `[d.]hh:mm:ss`
 (default `01:00:00`). A `job` that is not such a resource ID is a method check
 error. Every ADF table must use the same `after_copy`, or none.
+
+With `after_copy`, the connection pipelines have no triggers. Each group of
+triggers with the same window settings and state becomes one parent pipeline,
+`pl_<project>_every_<interval>_<frequency, lower case>` (`_2`, `_3` when two
+groups share a name), and one trigger, `tr_` with the same name, passing the
+window to the parent. The parent:
+
+1. runs each connection pipeline (`run_<pipeline>`, ExecutePipeline, waiting,
+   passing the window), with no order between them;
+2. `start_job`: after all of them succeed, POST
+   `https://management.azure.com<job>/start?api-version=2026-07-01` with the
+   factory's managed identity and no retry;
+3. `wait_for_job`: until the run's status is not `Running`, `Processing`,
+   `Degraded` or `Unknown`, wait 30 seconds and GET
+   `…/executions/<name>?api-version=2026-07-01`, within `timeout`;
+4. `check_job`: fail with the status unless it is `Succeeded`;
+5. when `wait_for_job` fails, `stop_job` POSTs `…/executions/<name>/stop` and
+   `job_timed_out` fails the pipeline.
+
+`request` adds the factory's role on the job, and the job's replica timeout
+(half of `timeout`, in seconds) and retry limit (1).
