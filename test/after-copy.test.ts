@@ -1,5 +1,7 @@
 // after_copy: the Container Apps job ADF starts after each schedule's copies.
 import { describe, expect, it } from "vitest";
+import { methodReference } from "@ingestron/definitions";
+import { adf } from "../src/index.js";
 import { base, generate, withAfterCopy } from "./erp.js";
 
 const job = "/subscriptions/0000/resourceGroups/rg/providers/Microsoft.App/jobs/sales-job";
@@ -35,6 +37,16 @@ describe("after_copy", () => {
     expect(found.map(({ message }) => message).join("\n")).toContain(
       "every ADF table must use the same after_copy",
     );
+  });
+
+  it("gives an example of each free-text after_copy setting, for editor help", () => {
+    const fields = methodReference(adf, "adf-copy").filter(
+      (row) => row.path[0] === "after_copy" && row.path.length === 2,
+    );
+    expect(fields.map((row) => [row.path.join("."), row.example !== undefined])).toEqual([
+      ["after_copy.job", true],
+      ["after_copy.timeout", true],
+    ]);
   });
 
   it("generates as before without after_copy", () => {
