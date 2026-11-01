@@ -51,5 +51,6 @@ function jobLines(model: ResolvedModel): string[] {
   return [
     `The factory's managed identity needs the Container Apps Jobs Operator role on \`${name}\`, or a custom role with Microsoft.App/jobs/read, start/action, stop/execution/action and executions/read.`,
     `Set \`${name}\`'s replica timeout to ${Math.floor(total / 2)} seconds and retry limit to 1, so a retried run ends within after_copy.timeout (${afterCopy.timeout}).`,
+    "When you turn after_copy on, set `start` to the next window: the new triggers run every window since `start`, each copying again and starting the job.",
   ];
 }
