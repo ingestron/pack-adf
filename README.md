@@ -59,6 +59,40 @@ them. The pack refuses a layout that would lose data (loads that hold only
 their window, written to a file the next run replaces, with no store step to
 merge them) and two tables landing at the same files.
 
+## Start a job after the copies
+
+With the platform setting `after_copy`, ADF starts an Azure Container Apps job
+after each schedule's copies, for example one that builds tables from the
+landed files:
+
+```yaml
+# platform.yaml
+settings:
+  adf-copy:
+    after_copy:
+      job: /subscriptions/<id>/resourceGroups/rg-data/providers/Microsoft.App/jobs/sales-job
+      timeout: "01:00:00" # the default
+```
+
+Each schedule then has one parent pipeline, `pl_<project>_every_<interval>_<unit>`,
+and one trigger in place of the connection pipelines' triggers. The parent:
+
+1. runs the schedule's connection pipelines in parallel;
+2. starts the job once, signed in as the factory's managed identity, with no
+   retry, so a run never starts twice;
+3. reads the run's status every 30 seconds until it ends, and fails the
+   pipeline when the run did not succeed;
+4. stops the run and fails when it is still going at `timeout`.
+
+The factory's managed identity needs the Container Apps Jobs Operator role on
+the job, or a custom role with `Microsoft.App/jobs/read`, `start/action`,
+`stop/execution/action` and `executions/read`; `ingestron request` says so,
+with the job's replica timeout and retry limit to set. Two schedules may
+start the job at the same time.
+
+Checked against live Azure: not yet. The parent reads the run's name from the
+start call's response (`@activity('start_job').output.name`).
+
 ## Connector catalogue
 
 `recipesFolder` is a tested project with one connection and one flow for each
@@ -92,6 +126,11 @@ Microsoft Learn: [connector overview](https://learn.microsoft.com/en-us/azure/da
 [Key Vault secrets](https://learn.microsoft.com/en-us/azure/data-factory/store-credentials-in-key-vault),
 [tumbling window triggers](https://learn.microsoft.com/en-us/azure/data-factory/how-to-create-tumbling-window-trigger),
 [source control](https://learn.microsoft.com/en-us/azure/data-factory/source-control).
+For `after_copy` (accessed 2026-11-01): Container Apps
+[Jobs - Start](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/jobs/start),
+[Job Execution](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/job-execution/job-execution),
+[Jobs - Stop Execution](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/jobs/stop-execution)
+and [jobs and their roles](https://learn.microsoft.com/en-us/azure/container-apps/jobs).
 
 ## Dependencies
 
