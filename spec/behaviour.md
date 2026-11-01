@@ -90,17 +90,17 @@ connection snippets include only the default authentication path's required fiel
 
 ## Definition-driven resource names
 
-All three ADF methods accept `resource_names` in the existing method settings.
-Each value is a literal name after the existing `${project.id}`,
-`${environment.name}` and `${values.…}` references resolve. No new template
-syntax or naming layer is introduced. Omitted fields retain the current
-project/connection/database/table-derived names byte for byte.
+All three ADF methods accept `resource_names` in their settings. Each value is
+a literal name after the `${project.id}`, `${environment.name}` and
+`${values.…}` references resolve; there is no template syntax or naming layer of
+its own. An omitted role keeps the name derived from the project, connection,
+database or table.
 
 The configurable roles are Key Vault and landing linked services, Parquet,
 binary and HTTP landing datasets, source linked service and dataset, pipeline,
 trigger, staging linked service, Microsoft 365 JSON linked service and dataset,
-and Copy activity. Factory, runtime and credential resources are not generated;
-existing runtime and credential references remain their current settings.
+and Copy activity. Factory, runtime and credential resources are not generated; runtimes and
+credentials are referenced by their settings.
 
 Shared resource names must agree for every table using that resource; SQL
 source datasets are per connection/database, file datasets per connection,
@@ -118,7 +118,7 @@ hyphens. Names are limited to 200 characters to keep generated resource filename
 portable. Invalid names, unknown name roles,
 case-insensitive resource collisions and duplicate activities fail before
 writing. No sanitisation silently changes a supplied name. Renaming uses the
-existing generated manifest to create new paths and remove owned obsolete paths.
+generated manifest to create the new paths and remove the old ones it owns.
 
 REST OAuth2ClientCredential accepts optional `resource` as well as `scope`.
 Other authentication modes reject those fields. HTTP `source_options` accepts
@@ -145,20 +145,28 @@ runtime validation. See `conformance/default-file-runtime.json`.
 ## Landing layouts
 
 `adf-copy` and `adf-table` take `layout` (`snapshot` or `increments`) or a
-`path` pattern, both placed in the standard; setting both is a method check
-problem. Without either, a table that ends at the landed files (`store: none`)
-uses `snapshot`, and any other table `increments`; a table whose runs each hold
-only their window (`mode: incremental`, or a `source_options.date_filter_column`)
-always defaults to `increments`.
+`path` pattern, usually placed in the standard. When both are set, the one set
+closer to the table wins, by the layers of section 3 of the definitions
+specification; both set in the same place is a method check problem, and so is
+setting one where the standard fixes the other. Without either, a table that
+ends at the landed files (`store: none`) uses `snapshot`, and any other table
+`increments`; a table whose runs each hold only their window (`mode:
+incremental`, or a `source_options.date_filter_column`) always defaults to
+`increments`.
 
 - `snapshot` writes `<landing>/<object>/<object>.parquet` (`.json` for
   Microsoft 365), replaced by each run.
 - `increments` writes `<landing>/<object>/<windowStart yyyyMMddHHmmss>_<run id>.parquet`;
   for Microsoft 365, ADF names the files in `<landing>/<object>/`.
-- A `path` pattern is relative to the landing folder, includes `{object}`,
-  ends in a file name with the format's extension, and uses only the tokens `{object}`, `{connection}`,
-  `{yyyy}`, `{MM}`, `{dd}`, `{HH}` (the window's start) and `{run}` (the run
-  id). Otherwise each problem is a method check problem.
+- A `path` pattern is relative to the landing folder, includes `{object}`, ends
+  in a file name with the format's extension, and uses only the tokens
+  `{object}`, `{connection}`, `{yyyy}`, `{MM}`, `{dd}`, `{HH}` (the window's
+  start) and `{run}` (the run id). It must not start with `/`, have an empty
+  folder name, use `.` or `..` as a folder, have a brace outside a `{token}`,
+  or have a folder or file name that ADF reads as an expression (starting with
+  `@`, or holding `@{`). Each problem is a method check problem.
+
+An object whose name starts with `@` or holds `@{` is a method check problem.
 
 Each copy writes one file (no `maxRowsPerFile`). Each method reports its output:
 the file, or a wildcard pattern with one `*` for each run of date or run tokens
@@ -166,45 +174,49 @@ the file, or a wildcard pattern with one `*` for each run of date or run tokens
 writes its own file, else `replace`. A path writes its own file per run when it
 has `{run}`, or the date tokens down to the window's unit: `{yyyy}`, `{MM}`,
 `{dd}`, `{HH}` for `Hour`; `{yyyy}`, `{MM}` for `Month`; only `{run}` for
-`Minute`. `adf-files` reports `<landing>/<object>/**`
-with `add` when its `format` is `csv`, `parquet` or `json`, and no output
-otherwise.
+`Minute`. `adf-files` reports `<landing>/<object>/**` with `add` when its
+`format` is `csv`, `parquet` or `json`, and no output otherwise.
 
-A table whose runs each hold only their window, with a layout that replaces
-one file and no store step, is a method check problem: the next run would
-overwrite the rows before anything merged them. A table with a path pattern
-whose files land where another tabular table's files land is a pack check
-problem; tables with the default layouts are checked by their
-`<landing>/<object>/` folders, as before.
+A table whose runs each hold only their window, with a layout that replaces one
+file and no store step, is a method check problem: the next run would overwrite
+the rows before anything merged them. A table whose path pattern lands where
+another tabular table's files land is a pack check problem; tables with
+`snapshot` or `increments` are checked by their `<landing>/<object>/` folders.
 
 Microsoft 365's JSON dataset is shared by a connection's tables: it takes a file
 name only when one of them names its file, and then every table passes one
 (increments pass the increment name ADF otherwise generates).
 
-A path pattern is refused when it starts with `/`, has an empty folder name,
-uses `.` or `..` as a folder, has a brace outside a `{token}`, or has a folder
-or file name that ADF reads as an expression (starting with `@`, or holding
-`@{`); an object with such a name is refused too. When `layout` and `path`
-are both set, the one set closer to the table wins (the layers of section 3
-of the definitions specification); set in the same place, they are refused.
-
 ## Starting a job after the copies
 
-`after_copy` is a platform setting of every ADF method: `job`, the resource ID
-of an Azure Container Apps job,
-`/subscriptions/<id>/resourceGroups/<group>/providers/Microsoft.App/jobs/<name>`,
-and `timeout`, how long ADF waits for the job's run, as `[d.]hh:mm:ss`
-(default `01:00:00`). A `job` that is not such a resource ID is a method check
-error. Every ADF table must use the same `after_copy`, or none.
+`after_copy` is a platform setting of every ADF method, set under each method a
+project uses: `job`, the resource ID of an Azure Container Apps job,
+`/subscriptions/<subscription GUID>/resourceGroups/<group>/providers/Microsoft.App/jobs/<name>`,
+and `timeout`, how long ADF waits for the job's run, as `[d.]hh:mm:ss` with
+hours, minutes and seconds in range (default `01:00:00`), more than zero and at
+most 90 days. Either out of form is a method check problem. Every ADF table
+must use the same `after_copy`, or none.
 
-With `after_copy`, the connection pipelines have no triggers. Each group of
-triggers with the same window settings and state becomes one parent pipeline,
-`pl_<project>_every_<interval>_<frequency, lower case>` (`_2`, `_3` when two
-groups share a name), and one trigger, `tr_` with the same name, passing the
-window to the parent. The parent:
+With `after_copy`, the connection pipelines have no triggers. Triggers with the
+same window size, start and state become one parent pipeline and one trigger,
+which passes the window to the parent and does not retry; each connection
+pipeline's Copy activities take its trigger's retries and interval as their
+`policy`, so a retry never copies the schedule again or starts the job twice.
+Retries alone never split a schedule.
+
+The parent is `pl_<project>_every_<interval>_<frequency, lower case>` and its
+trigger `tr_` with the same name. Started schedules are named before stopped
+ones, each in order of start; the first of a size takes the plain name, and
+another is named by what differs from it: `_from_<yyyyMMdd>` (with `HHmm`, or
+`HHmmss` when seconds are set, in UTC) for a different start, then `_stopped`
+when it is stopped and the first is not, then a counter if that is still taken.
+A parent name that a generated pipeline already has is a pack check problem.
+
+The parent:
 
 1. runs each connection pipeline (`run_<pipeline>`, ExecutePipeline, waiting,
-   passing the window), with no order between them;
+   passing the window), with no order between them; an activity name longer
+   than ADF's 55 characters becomes `run_<first 44 characters>_<6-character hash>`;
 2. `start_job`: after all of them succeed, POST
    `https://management.azure.com<job>/start?api-version=2026-07-01` with the
    factory's managed identity and no retry; `remember_job` keeps the run's
@@ -220,17 +232,7 @@ window to the parent. The parent:
    `job_timed_out` fails the pipeline when it stopped, `job_not_stopped` with
    the error when it did not.
 
-The parent trigger's retry count is 0; its retries and interval move onto the
-connection pipelines' Copy activities' `policy`. `request` also says to set
-`start` to the next window when `after_copy` is turned on.
-
-`request` adds the factory's role on the job, and the job's replica timeout
-(half of `timeout`, in seconds) and retry limit (1).
-
-`timeout` must be more than zero and at most 90 days. Triggers that differ only
-in their retries make one parent: retries are the copies'. Schedules of the same
-size get the plain name in order of their start; another is named
-`_from_<yyyyMMdd>` (with `HHmm` when its start is not midnight), and
-`_stopped` when it differs only by being stopped. A parent name that a
-generated pipeline already has is refused. An activity name longer than ADF's
-55 characters is shortened to `run_<first 44 characters>_<6-character hash>`.
+`request` adds the factory's role on the job; the job's replica timeout (half
+of `timeout`, in seconds) and retry limit (1); and, because new triggers run
+every window since `start`, to set `start` to the next window when turning
+`after_copy` on.

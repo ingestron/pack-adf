@@ -63,7 +63,8 @@ export function timeoutSeconds(timeout: string): number | undefined {
   const [days, hours, minutes, seconds] = [match[1] ?? "0", match[2], match[3], match[4]].map(
     Number,
   ) as [number, number, number, number];
-  if (minutes > 59 || seconds > 59 || (match[1] !== undefined && hours > 23)) return undefined;
+  // ADF reads [d.]hh:mm:ss: 24 hours or more is written with days, such as 1.00:00:00.
+  if (minutes > 59 || seconds > 59 || hours > 23) return undefined;
   return days * 86400 + hours * 3600 + minutes * 60 + seconds;
 }
 

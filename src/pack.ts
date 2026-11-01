@@ -5,6 +5,7 @@ import { contract } from "./contract.js";
 import type { Pack, ResolvedModel, ResolvedTable } from "@ingestron/definitions";
 import { parseLanding } from "./landing.js";
 import { samePathProblems } from "./landing-output.js";
+import { layoutOf } from "./layout.js";
 import { connectors } from "./connectors.js";
 import { build, copyGroups, filesGroups } from "./build.js";
 import { adfFiles } from "./files-method.js";
@@ -95,7 +96,7 @@ function checkShared(model: ResolvedModel): string[] {
       );
   }
   problems.push(...nativeGroupProblems(model));
-  problems.push(...landingConflicts(tables.filter((table) => !table.ingest?.settings.path)));
+  problems.push(...landingConflicts(tables.filter((table) => layoutOf(table) !== "path")));
   problems.push(
     ...samePathProblems(tables.filter((table) => table.ingest?.method !== "adf-files")),
   );

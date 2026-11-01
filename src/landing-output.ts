@@ -40,9 +40,9 @@ export function filesOutput(table: ResolvedTable): StepOutput | undefined {
 
 /** Problems with a tabular copy's layout, as METHOD_CHECK messages. */
 export function layoutProblems(table: ResolvedTable): string[] {
-  const { layout, path } = table.ingest!.settings;
-  if (layout !== undefined && path !== undefined && narrower(table, "path", "layout") === undefined)
-    return ["set layout or path, not both"];
+  const { path } = table.ingest!.settings;
+  const both = bothSetProblems(table);
+  if (both.length > 0) return both;
   const object = expressionProblems(`the object "${table.ingest!.object}"`, [table.ingest!.object]);
   if (object.length > 0) return object;
   if (layoutOf(table) === "path") {
@@ -77,4 +77,23 @@ export function samePathProblems(tables: ResolvedTable[]): string[] {
       );
   });
   return problems;
+}
+
+/** Layout and path both set: refused in the same place, or where the standard fixes one. */
+function bothSetProblems(table: ResolvedTable): string[] {
+  const { layout, path } = table.ingest!.settings;
+  if (layout === undefined || path === undefined) return [];
+  const fixed = fixedOf(table);
+  const other = fixed === "layout" ? "path" : "layout";
+  if (fixed) return [`the standard fixes ${fixed}, so ${other} cannot be set; remove ${other}`];
+  return narrower(table, "path", "layout") === undefined ? ["set layout or path, not both"] : [];
+}
+
+/** The one of layout and path the standard fixes, when the other is set elsewhere. */
+function fixedOf(table: ResolvedTable): "layout" | "path" | undefined {
+  const { origins } = table.ingest!;
+  const layout = origins.layout?.layer === "fixed";
+  const path = origins.path?.layer === "fixed";
+  if (layout === path) return undefined;
+  return layout ? "layout" : "path";
 }
