@@ -38,9 +38,18 @@ export function parentPipeline(
   };
 }
 
+/** `run_<pipeline>`, shortened with a hash to ADF's 55 characters for an activity name. */
+export function runName(child: string): string {
+  const name = `run_${child}`;
+  if (name.length <= 55) return name;
+  let hash = 2166136261;
+  for (const character of child) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
+  return `run_${child.slice(0, 44)}_${(hash >>> 0).toString(16).padStart(8, "0").slice(0, 6)}`;
+}
+
 function copyActivity(child: string): Data {
   return {
-    name: `run_${child}`,
+    name: runName(child),
     type: "ExecutePipeline",
     typeProperties: {
       pipeline: { referenceName: child, type: "PipelineReference" },
@@ -78,7 +87,7 @@ const executionUrl = (job: string, tail: string) =>
 function startActivities(job: string, children: string[]): Data[] {
   return [
     web("start_job", "POST", `${arm}${job}/start${api}`, {
-      dependsOn: children.map((child) => after(`run_${child}`)),
+      dependsOn: children.map((child) => after(runName(child))),
       policy: { retry: 0 },
     }),
     setVariable("remember_job", "execution", "@activity('start_job').output.name", [

@@ -25,9 +25,23 @@ const tokenPattern = /\{([^{}]*)\}/g;
  */
 export function layoutOf(table: ResolvedTable): Layout {
   const { layout, path } = table.ingest!.settings;
-  if (typeof path === "string") return "path";
+  if (typeof path === "string" && narrower(table, "path", "layout") !== false) return "path";
   if (layout === "snapshot" || layout === "increments") return layout;
   return table.endsAtFiles && !windowed(table) ? "snapshot" : "increments";
+}
+
+const layers = ["pack", "standard", "platform", "rule", "definition", "table", "fixed"];
+
+/**
+ * True when `first` was set closer to the table than `second`, false when
+ * further away, undefined when both were set in the same place or one is unset.
+ */
+export function narrower(table: ResolvedTable, first: string, second: string): boolean | undefined {
+  const { origins, settings } = table.ingest!;
+  if (settings[first] === undefined || settings[second] === undefined) return undefined;
+  const rank = (key: string) => layers.indexOf(origins[key]?.layer ?? "pack");
+  if (rank(first) === rank(second)) return undefined;
+  return rank(first) > rank(second);
 }
 
 /**
@@ -106,6 +120,8 @@ export function pathProblems(path: string, extension: Extension): string[] {
   const quoted = `the path pattern "${path}"`;
   if (path.endsWith("/") || path.split("/").at(-1) === "")
     return [`${quoted} must end in a file name`];
+  const misread = segmentProblems(quoted, path);
+  if (misread.length > 0) return misread;
   const unknown = [...path.matchAll(tokenPattern)]
     .map((match) => match[1] ?? "")
     .filter((name) => !tokens.includes(name))
@@ -113,6 +129,30 @@ export function pathProblems(path: string, extension: Extension): string[] {
   const object = path.includes("{object}") ? [] : [`${quoted} must include {object}`];
   const suffix = path.endsWith(`.${extension}`) ? [] : [`${quoted} must end in .${extension}`];
   return [...unknown, ...object, ...suffix];
+}
+
+/** Folder and file names ADF would misread or refuse: problems naming `what`. */
+function segmentProblems(what: string, path: string): string[] {
+  const segments = path.split("/");
+  if (path.startsWith("/")) return [`${what} must not start with /`];
+  if (segments.some((segment) => segment === "")) return [`${what} has an empty folder name`];
+  if (segments.some((segment) => segment === "." || segment === ".."))
+    return [`${what} must not use . or .. as a folder`];
+  if (/[{}]/.test(path.replace(tokenPattern, "")))
+    return [`${what} has a brace that is not part of a {token}`];
+  return expressionProblems(what, segments);
+}
+
+/**
+ * Names ADF reads as an expression: starting with @, or holding @{.
+ * @example expressionProblems('the object "@x"', ["@x"]) // ['the object "@x" has a name starting with @, …']
+ */
+export function expressionProblems(what: string, segments: string[]): string[] {
+  if (segments.some((segment) => segment.startsWith("@")))
+    return [`${what} has a name starting with @, which ADF reads as an expression`];
+  if (segments.some((segment) => segment.includes("@{")))
+    return [`${what} holds @{, which ADF reads as an expression`];
+  return [];
 }
 
 /** The file's path under the landing folder, with each token replaced. */
