@@ -4,7 +4,8 @@ import { methodReference } from "@ingestron/definitions";
 import { adf } from "../src/index.js";
 import { base, generate, withAfterCopy } from "./erp.js";
 
-const job = "/subscriptions/0000/resourceGroups/rg/providers/Microsoft.App/jobs/sales-job";
+const job =
+  "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.App/jobs/sales-job";
 
 const errors = (changes: Record<string, string>) =>
   generate(changes)
@@ -28,7 +29,7 @@ describe("after_copy", () => {
   it("refuses tables with different after_copy", () => {
     const crm = base["erp.yaml"]!.replace("id: erp", "id: crm");
     const flow =
-      "apiVersion: ingestron.io/v1\nkind: Flow\nid: crm\nsource: crm\ningest: { with: { after_copy: { job: /subscriptions/1/resourceGroups/rg/providers/Microsoft.App/jobs/other } } }\ntables:\n  accounts: { object: crm.dbo.Accounts, contract: invoices }\n";
+      "apiVersion: ingestron.io/v1\nkind: Flow\nid: crm\nsource: crm\ningest: { with: { after_copy: { job: /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg/providers/Microsoft.App/jobs/other } } }\ntables:\n  accounts: { object: crm.dbo.Accounts, contract: invoices }\n";
     const found = errors({
       "standard.yaml": withAfterCopy(`{ job: "${job}" }`),
       "crm.yaml": crm,

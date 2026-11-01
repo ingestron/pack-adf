@@ -2,8 +2,12 @@
 // and how long ADF waits for its run.
 import type { Method, ResolvedModel } from "@ingestron/definitions";
 
-const jobId =
-  /^\/subscriptions\/[^/]+\/resourceGroups\/[^/]+\/providers\/Microsoft\.App\/jobs\/[-\w.()]+$/i;
+const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+const jobId = new RegExp(
+  `^/subscriptions/${uuid}/resourceGroups/[-\\w.()]{1,90}/providers/Microsoft\\.App/jobs/[-\\w.()]+$`,
+  "i",
+);
+const ninetyDays = 90 * 86400;
 
 /** The default wait for the job's run, as an ADF timespan. */
 export const defaultTimeout = "01:00:00";
@@ -35,11 +39,32 @@ export const afterCopySchema = {
 
 /** Problems with a table's after_copy, as METHOD_CHECK messages. */
 export function afterCopyProblems(settings: Record<string, unknown>): string[] {
-  const value = settings.after_copy as { job?: unknown } | undefined;
-  if (!value || (typeof value.job === "string" && jobId.test(value.job))) return [];
-  return [
-    "after_copy.job must be a Container Apps job resource ID, /subscriptions/<id>/resourceGroups/<group>/providers/Microsoft.App/jobs/<name>",
-  ];
+  const value = settings.after_copy as { job?: unknown; timeout?: unknown } | undefined;
+  if (!value) return [];
+  const problems =
+    typeof value.job === "string" && jobId.test(value.job)
+      ? []
+      : [
+          "after_copy.job must be a Container Apps job resource ID, /subscriptions/<id>/resourceGroups/<group>/providers/Microsoft.App/jobs/<name>",
+        ];
+  const timeout = typeof value.timeout === "string" ? value.timeout : defaultTimeout;
+  const seconds = timeoutSeconds(timeout);
+  if (seconds === undefined || seconds <= 0 || seconds > ninetyDays)
+    problems.push(
+      `after_copy.timeout "${timeout}" must be more than zero and at most 90 days, as [d.]hh:mm:ss`,
+    );
+  return problems;
+}
+
+/** An ADF timespan in seconds; undefined unless [d.]hh:mm:ss with minutes and seconds under 60. */
+export function timeoutSeconds(timeout: string): number | undefined {
+  const match = /^(?:(\d+)\.)?(\d{2}):(\d{2}):(\d{2})$/.exec(timeout);
+  if (!match) return undefined;
+  const [days, hours, minutes, seconds] = [match[1] ?? "0", match[2], match[3], match[4]].map(
+    Number,
+  ) as [number, number, number, number];
+  if (minutes > 59 || seconds > 59 || (match[1] !== undefined && hours > 23)) return undefined;
+  return days * 86400 + hours * 3600 + minutes * 60 + seconds;
 }
 
 /** The method with after_copy's problems added to its own check. */

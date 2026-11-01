@@ -30,3 +30,25 @@ Accessed 2026-11-01:
 - Concurrent copies writing the same ADLS Gen2 file can fail with
   `AdlsGen2OperationFailedConcurrentWrite` ([Microsoft Q&A](https://learn.microsoft.com/en-us/answers/questions/880077/azure-data-factory-copy-activity-adlsgen2operation)),
   one reason two tables must not land at the same file.
+
+## Starting a job after the copies
+
+Accessed 2026-11-01:
+
+- Container Apps REST API, version 2026-07-01:
+  [Jobs - Start](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/jobs/start)
+  (200 with the execution's `name` and `id`, or 202 with `Location`),
+  [Job Execution](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/job-execution/job-execution)
+  (`properties.status`: `Running`, `Processing`, `Stopped`, `Degraded`,
+  `Failed`, `Unknown`, `Succeeded`) and
+  [Jobs - Stop Execution](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/jobs/stop-execution).
+- [Jobs in Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/jobs):
+  the Container Apps Jobs Operator role, and the custom-role actions.
+- [Pipelines and activities](https://learn.microsoft.com/en-us/azure/data-factory/concepts-pipelines-activities):
+  an activity name has at most 55 characters, a pipeline name at most 140;
+  dependency conditions `Succeeded`, `Failed`, `Skipped`, `Completed`.
+- [Web activity](https://learn.microsoft.com/en-us/azure/data-factory/control-flow-web-activity):
+  `authentication` of type `MSI` with a `resource`, and the asynchronous
+  pattern for 202 responses.
+- [Until activity](https://learn.microsoft.com/en-us/azure/data-factory/control-flow-until-activity):
+  `timeout` as `[d.]hh:mm:ss`; an inner activity's failure does not stop the loop.

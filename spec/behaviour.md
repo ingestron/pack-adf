@@ -1,7 +1,6 @@
 # Azure Data Factory generation
 
-The ADF pack uses the existing Connection, Flow, Platform and Standard
-settings. The pack builds native resources; it does not provision shared
+The ADF pack reads the Connection, Flow, Platform and Standard settings. The pack builds native resources; it does not provision shared
 infrastructure. Every required user-specific ADF value must be supplied by a
 definition or a documented default, including conditional authentication
 fields. No generated resource requires a manual configuration edit.
@@ -28,11 +27,10 @@ credentials. The connection contains no credential values, only references.
 
 `integration_runtime` names the existing Azure or self-hosted runtime. Windows
 authentication requires a self-hosted runtime as an external prerequisite.
-The existing `encrypt` setting and mandatory certificate verification are
-preserved. Optional `host_name_in_certificate` sets the expected TLS host.
-The existing SQL Server output is unchanged when these additions are unused.
+`encrypt` and mandatory certificate verification apply. Optional
+`host_name_in_certificate` sets the expected TLS host.
 
-The current resource grouping, landing folder, schedule, standards precedence
+Resource grouping, the landing folder, schedule, standards precedence
 and fixed settings apply. Two different sources must not share a landing
 folder accidentally: conflicting destinations fail with a message directing
 the user to choose a distinct landing path in the definitions.
@@ -134,9 +132,9 @@ and `requestBody`, without manual resource edits.
 method settings contain a secret reference. Any nested `$secret` reference still
 requires a Key Vault. Omitting an unused vault omits its linked service and
 prerequisite; it must never generate the string `undefined` as a vault URL.
-Existing flows supplying a vault retain their generated service. Other methods'
-vault requirements are unchanged. Managed-identity Blob/ADLS file copying needs
-only the existing factory identity and storage permissions.
+A flow that supplies a vault keeps its linked service. Managed-identity
+Blob/ADLS file copying needs only the factory's identity and storage
+permissions.
 
 For native `adf-files` sources, `runtime_kind: azure` with
 `integration_runtime: AutoResolveIntegrationRuntime` selects ADF's implicit default
@@ -183,6 +181,13 @@ Microsoft 365's JSON dataset is shared by a connection's tables: it takes a file
 name only when one of them names its file, and then every table passes one
 (increments pass the increment name ADF otherwise generates).
 
+A path pattern is refused when it starts with `/`, has an empty folder name,
+uses `.` or `..` as a folder, has a brace outside a `{token}`, or has a folder
+or file name that ADF reads as an expression (starting with `@`, or holding
+`@{`); an object with such a name is refused too. When `layout` and `path`
+are both set, the one set closer to the table wins (the layers of section 3
+of the definitions specification); set in the same place, they are refused.
+
 ## Starting a job after the copies
 
 `after_copy` is a platform setting of every ADF method: `job`, the resource ID
@@ -221,3 +226,11 @@ connection pipelines' Copy activities' `policy`. `request` also says to set
 
 `request` adds the factory's role on the job, and the job's replica timeout
 (half of `timeout`, in seconds) and retry limit (1).
+
+`timeout` must be more than zero and at most 90 days. Triggers that differ only
+in their retries make one parent: retries are the copies'. Schedules of the same
+size get the plain name in order of their start; another is named
+`_from_<yyyyMMdd>` (with `HHmm` when its start is not midnight), and
+`_stopped` when it differs only by being stopped. A parent name that a
+generated pipeline already has is refused. An activity name longer than ADF's
+55 characters is shortened to `run_<first 44 characters>_<6-character hash>`.

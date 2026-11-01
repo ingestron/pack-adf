@@ -88,7 +88,7 @@ export const layoutSettings = {
   layout: {
     enum: ["snapshot", "increments"],
     enumDescriptions: [
-      "One file per table, <object>/<object>.parquet, replaced by each run. The default when the flow ends at the landed files.",
+      "One file per table, <object>/<object>.parquet (.json for Microsoft 365), replaced by each run. The default when the flow ends at the landed files.",
       "A new file per run under <object>/. The default when a store reads the files.",
     ],
     description: "How each table's files are laid out in the landing folder.",

@@ -74,7 +74,7 @@ describe("outputs", () => {
 
 describe("checks", () => {
   const lost =
-    "each run holds only the window's changes and replaces the last file, so changes would be lost; keep a file per run (layout: increments, or a path with {run}), or add a store step";
+    "each run holds only the window's changes and replaces the last file, so changes would be lost; keep a file per run (layout: increments, or a path with {run}), or add a store step that reads each run's file before the next run replaces it";
   const incremental = "      mode: incremental\n      watermark_column: modified_at\n";
 
   it("refuses incremental loads into one replaced file with nothing to merge them", () => {

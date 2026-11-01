@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 import { adf } from "../src/index.js";
 import { base, generate, json, withAfterCopy } from "./erp.js";
 
-const job = "/subscriptions/0000/resourceGroups/rg/providers/Microsoft.App/jobs/sales-job";
+const job =
+  "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.App/jobs/sales-job";
 const arm = "https://management.azure.com";
 const msi = { type: "MSI", resource: "https://management.azure.com/" };
 

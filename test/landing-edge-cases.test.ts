@@ -22,7 +22,7 @@ const withCopies = (contract: string) =>
 const problems = (changes: Record<string, string>) =>
   generate(changes).result.diagnostics.map(({ code, message }) => ({ code, message }));
 const lost =
-  "each run holds only the window's changes and replaces the last file, so changes would be lost; keep a file per run (layout: increments, or a path with {run}), or add a store step";
+  "each run holds only the window's changes and replaces the last file, so changes would be lost; keep a file per run (layout: increments, or a path with {run}), or add a store step that reads each run's file before the next run replaces it";
 
 describe("tables landing at the same file", () => {
   it("needs {object} in a path pattern, so tables keep their own files", () => {
