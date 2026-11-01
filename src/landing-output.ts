@@ -2,8 +2,10 @@
 // layouts it refuses because they would lose data or overwrite each other.
 import type { ResolvedTable, StepOutput } from "@ingestron/definitions";
 import {
+  expressionProblems,
   landedLocation,
   layoutOf,
+  narrower,
   pathProblems,
   replacesFile,
   windowed,
@@ -39,14 +41,17 @@ export function filesOutput(table: ResolvedTable): StepOutput | undefined {
 /** Problems with a tabular copy's layout, as METHOD_CHECK messages. */
 export function layoutProblems(table: ResolvedTable): string[] {
   const { layout, path } = table.ingest!.settings;
-  if (layout !== undefined && path !== undefined) return ["set layout or path, not both"];
+  if (layout !== undefined && path !== undefined && narrower(table, "path", "layout") === undefined)
+    return ["set layout or path, not both"];
+  const object = expressionProblems(`the object "${table.ingest!.object}"`, [table.ingest!.object]);
+  if (object.length > 0) return object;
   if (layoutOf(table) === "path") {
     const problems = pathProblems(String(path), extensionOf(table));
     if (problems.length > 0) return problems;
   }
   if (windowed(table) && replacesFile(table) && !table.store)
     return [
-      "each run holds only the window's changes and replaces the last file, so changes would be lost; keep a file per run (layout: increments, or a path with {run}), or add a store step",
+      "each run holds only the window's changes and replaces the last file, so changes would be lost; keep a file per run (layout: increments, or a path with {run}), or add a store step that reads each run's file before the next run replaces it",
     ];
   return [];
 }

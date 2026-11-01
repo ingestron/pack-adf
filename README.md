@@ -34,7 +34,7 @@ in the standard:
 
 | Setting                                               | Files                                                                                                       |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `layout: snapshot`                                    | One file per table, `<object>/<object>.parquet`, replaced by each run                                       |
+| `layout: snapshot`                                    | One file per table, `<object>/<object>.parquet` (`.json` for Microsoft 365), replaced by each run           |
 | `layout: increments`                                  | A new file per run under `<object>/`, named by the window's start and the run                               |
 | `path: "{object}/{yyyy}/{MM}/{object}_{run}.parquet"` | Your own path: `{object}`, `{connection}`, the window start's `{yyyy}`, `{MM}`, `{dd}`, `{HH}`, and `{run}` |
 
@@ -61,7 +61,7 @@ merge them) and two tables landing at the same files.
 
 ## Start a job after the copies
 
-With the platform setting `after_copy`, ADF starts an Azure Container Apps job
+With the platform setting `after_copy`, set under each ADF method a project uses (`adf-copy`, `adf-files`, `adf-table`), ADF starts an Azure Container Apps job
 after each schedule's copies, for example one that builds tables from the
 landed files:
 
