@@ -74,6 +74,7 @@ describe("after_copy", () => {
       "pause",
       "get_job_status",
       "set_job_status",
+      "status_unreadable",
     ]);
     const check = named(parent, "check_job");
     expect(check.dependsOn).toEqual([
@@ -96,7 +97,7 @@ describe("after_copy", () => {
     expect(stop.typeProperties.url.value).toMatch(/\/stop\?api-version=2026-07-01'\)$/);
     const failed = named(parent, "job_timed_out");
     expect(failed.dependsOn).toEqual([
-      { activity: "stop_job", dependencyConditions: ["Completed"] },
+      { activity: "stop_job", dependencyConditions: ["Succeeded"] },
     ]);
     expect(failed.typeProperties.message).toContain("within 02:30:00");
   });
@@ -132,6 +133,75 @@ describe("after_copy", () => {
     );
     expect(lines).toContain(
       "Set `sales-job`'s replica timeout to 1800 seconds and retry limit to 1, so a retried run ends within after_copy.timeout (01:00:00).",
+    );
+  });
+
+  it("retries a failed copy in place, not the whole schedule", () => {
+    const { files } = build();
+    expect(
+      json(files, "trigger/tr_erp_every_24_hour.json").properties.typeProperties.retryPolicy,
+    ).toEqual({
+      count: 0,
+      intervalInSeconds: 300,
+    });
+    const copies = activities(files, "pl_erp_erp").filter((item) => item.type === "Copy");
+    expect(copies.length).toBeGreaterThan(0);
+    for (const copy of copies)
+      expect(copy.policy).toMatchObject({ retry: 2, retryIntervalInSeconds: 300 });
+  });
+
+  it("fails at once when the start call gives no run name", () => {
+    const parent = activities(build().files, "pl_erp_every_24_hour");
+    const remember = named(parent, "remember_job");
+    expect(remember.type).toBe("SetVariable");
+    expect(remember.dependsOn).toEqual([
+      { activity: "start_job", dependencyConditions: ["Succeeded"] },
+    ]);
+    expect(remember.typeProperties).toMatchObject({
+      variableName: "execution",
+      value: { value: "@activity('start_job').output.name", type: "Expression" },
+    });
+    expect(named(parent, "wait_for_job").dependsOn).toEqual([
+      { activity: "remember_job", dependencyConditions: ["Succeeded"] },
+    ]);
+    const status = named(named(parent, "wait_for_job").typeProperties.activities, "get_job_status");
+    expect(status.typeProperties.url.value).toContain("variables('execution')");
+    expect(named(parent, "stop_job").typeProperties.url.value).toContain("variables('execution')");
+  });
+
+  it("ends the wait when the run's status cannot be read", () => {
+    const inner = named(activities(build().files, "pl_erp_every_24_hour"), "wait_for_job")
+      .typeProperties.activities as Activity[];
+    expect(named(inner, "get_job_status").policy).toMatchObject({
+      retry: 3,
+      retryIntervalInSeconds: 30,
+    });
+    const unreadable = named(inner, "status_unreadable");
+    expect(unreadable.dependsOn).toEqual([
+      { activity: "get_job_status", dependencyConditions: ["Failed"] },
+    ]);
+    expect(unreadable.typeProperties.value.value).toBe(
+      "@concat('unreadable: ', activity('get_job_status').error.message)",
+    );
+  });
+
+  it("says whether a run still going at the timeout was stopped", () => {
+    const parent = activities(build().files, "pl_erp_every_24_hour");
+    expect(named(parent, "job_timed_out").dependsOn).toEqual([
+      { activity: "stop_job", dependencyConditions: ["Succeeded"] },
+    ]);
+    const notStopped = named(parent, "job_not_stopped");
+    expect(notStopped.type).toBe("Fail");
+    expect(notStopped.dependsOn).toEqual([
+      { activity: "stop_job", dependencyConditions: ["Failed"] },
+    ]);
+    expect(notStopped.typeProperties.message.value).toContain("could not be stopped");
+  });
+
+  it("warns that turning after_copy on runs every window since start", () => {
+    const lines = adf.request!(build().model).flatMap((section) => section.lines);
+    expect(lines).toContain(
+      "When you turn after_copy on, set `start` to the next window: the new triggers run every window since `start`, each copying again and starting the job.",
     );
   });
 });

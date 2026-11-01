@@ -202,13 +202,22 @@ window to the parent. The parent:
    passing the window), with no order between them;
 2. `start_job`: after all of them succeed, POST
    `https://management.azure.com<job>/start?api-version=2026-07-01` with the
-   factory's managed identity and no retry;
+   factory's managed identity and no retry; `remember_job` keeps the run's
+   name (`output.name`) in the variable `execution`, failing at once without
+   one;
 3. `wait_for_job`: until the run's status is not `Running`, `Processing`,
    `Degraded` or `Unknown`, wait 30 seconds and GET
-   `…/executions/<name>?api-version=2026-07-01`, within `timeout`;
+   `…/executions/<execution>?api-version=2026-07-01` (three retries, 30
+   seconds apart), within `timeout`; a GET that still fails sets the status to
+   `unreadable: <error>`, which ends the wait;
 4. `check_job`: fail with the status unless it is `Succeeded`;
-5. when `wait_for_job` fails, `stop_job` POSTs `…/executions/<name>/stop` and
-   `job_timed_out` fails the pipeline.
+5. when `wait_for_job` fails, `stop_job` POSTs `…/executions/<execution>/stop`;
+   `job_timed_out` fails the pipeline when it stopped, `job_not_stopped` with
+   the error when it did not.
+
+The parent trigger's retry count is 0; its retries and interval move onto the
+connection pipelines' Copy activities' `policy`. `request` also says to set
+`start` to the next window when `after_copy` is turned on.
 
 `request` adds the factory's role on the job, and the job's replica timeout
 (half of `timeout`, in seconds) and retry limit (1).

@@ -79,10 +79,18 @@ and one trigger in place of the connection pipelines' triggers. The parent:
 
 1. runs the schedule's connection pipelines in parallel;
 2. starts the job once, signed in as the factory's managed identity, with no
-   retry, so a run never starts twice;
+   retry, and fails at once when the start call gives no run name;
 3. reads the run's status every 30 seconds until it ends, and fails the
-   pipeline when the run did not succeed;
-4. stops the run and fails when it is still going at `timeout`.
+   pipeline when the run did not succeed or its status cannot be read after
+   three tries;
+4. stops the run and fails when it is still going at `timeout`, saying whether
+   it stopped.
+
+A failed copy is retried in place (`retries`); the schedule's trigger does not
+retry, so a retry never copies the schedule again or starts the job twice.
+When you turn `after_copy` on, set `start` to the next window: the new
+triggers run every window since `start`, each copying again and starting the
+job.
 
 The factory's managed identity needs the Container Apps Jobs Operator role on
 the job, or a custom role with `Microsoft.App/jobs/read`, `start/action`,
