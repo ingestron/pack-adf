@@ -182,3 +182,12 @@ problem; tables with the default layouts are checked by their
 Microsoft 365's JSON dataset is shared by a connection's tables: it takes a file
 name only when one of them names its file, and then every table passes one
 (increments pass the increment name ADF otherwise generates).
+
+## Starting a job after the copies
+
+`after_copy` is a platform setting of every ADF method: `job`, the resource ID
+of an Azure Container Apps job,
+`/subscriptions/<id>/resourceGroups/<group>/providers/Microsoft.App/jobs/<name>`,
+and `timeout`, how long ADF waits for the job's run, as `[d.]hh:mm:ss`
+(default `01:00:00`). A `job` that is not such a resource ID is a method check
+error. Every ADF table must use the same `after_copy`, or none.

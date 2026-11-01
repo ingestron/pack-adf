@@ -2,6 +2,7 @@
 // data platform reads them, for sources the platform cannot reach.
 import type { Method, ResolvedTable } from "@ingestron/definitions";
 
+import { afterCopySchema } from "./after-copy-settings.js";
 import { resourceNamesSchema } from "./resource-names.js";
 import { sqlTypes } from "./sql-types.js";
 import { sqlConnectionProblems, nonEmpty } from "./sql-auth.js";
@@ -62,6 +63,7 @@ export const windowSettings = {
     minimum: 0,
     description: "How often a failed window is tried again, five minutes apart.",
   },
+  after_copy: afterCopySchema,
   paused: {
     type: "boolean",
     description:
@@ -71,7 +73,7 @@ export const windowSettings = {
 
 /** Shared infrastructure belongs in the platform, the schedule in the standard. */
 export const placement = {
-  platform: ["landing", "integration_runtime", "runtime_kind", "key_vault", "paused"],
+  platform: ["landing", "integration_runtime", "runtime_kind", "key_vault", "paused", "after_copy"],
   standard: ["every", "start", "retries", "resource_names"],
 };
 
