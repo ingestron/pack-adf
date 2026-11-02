@@ -101,3 +101,13 @@ describe("audit columns", () => {
     ).toContain("audit_columns are not offered for REST yet");
   });
 });
+
+describe("the SQL source dataset", () => {
+  it("uses ADF's current dataset model, which additional columns need", () => {
+    // Checked live: without schema and typeProperties ADF refuses additionalColumns
+    // with AdditionalColumnWithInvalidDataset.
+    const dataset = json(generate().files, "dataset/ds_erp_erp_erp.json").properties;
+    expect(dataset.schema).toEqual([]);
+    expect(dataset.typeProperties).toEqual({});
+  });
+});
