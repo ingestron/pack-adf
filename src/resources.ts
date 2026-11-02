@@ -85,6 +85,9 @@ export function sourceDataset(group: CopyGroup): Data {
     properties: {
       type: sqlTypes[group.connection.connector]!.dataset,
       linkedServiceName: reference(group.linkedService, "LinkedServiceReference"),
+      // ADF's current dataset model: without these, a copy refuses additionalColumns.
+      schema: [],
+      typeProperties: {},
     },
   };
 }
