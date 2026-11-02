@@ -92,7 +92,7 @@ function checkShared(model: ResolvedModel): string[] {
         `the adf-files tables of ${group.connection.id} share one linked service, pipeline and trigger, so ${shareKeys.slice(0, -1).join(", ")} and ${shareKeys.at(-1)} must be the same; ${different}`,
       );
   }
-  problems.push(...nativeGroupProblems(model));
+  problems.push(...nativeGroupProblems(model), ...annotationProblems(model));
   problems.push(...landingConflicts(tables.filter((table) => layoutOf(table) !== "path")));
   problems.push(
     ...samePathProblems(tables.filter((table) => table.ingest?.method !== "adf-files")),
@@ -100,7 +100,7 @@ function checkShared(model: ResolvedModel): string[] {
   return problems;
 }
 
-/** Settings one project shares: storage, the vault, the after-copy job, folder and annotations. */
+/** Settings one project shares: storage, the vault, the after-copy job and the factory folder. */
 function projectProblems(tables: ResolvedTable[]): string[] {
   const problems: string[] = [];
   const project = differing(tables, (settings) => {
@@ -111,9 +111,24 @@ function projectProblems(tables: ResolvedTable[]): string[] {
     problems.push(`every ADF table must use the same key_vault and landing storage; ${project}`);
   const job = differing(tables, (settings) => [settings.after_copy]);
   if (job) problems.push(`every ADF table must use the same after_copy; ${job}`);
-  const design = differing(tables, (settings) => [settings.folder, settings.annotations]);
-  if (design) problems.push(`every ADF table must use the same folder and annotations; ${design}`);
+  const folder = differing(tables, (settings) => [settings.folder]);
+  if (folder) problems.push(`every ADF table must use the same folder; ${folder}`);
   return problems;
+}
+
+/** The tables of one pipeline share its annotations. */
+function annotationProblems(model: ResolvedModel): string[] {
+  const groups = [
+    ...copyGroups(model).map((group) => group.tables),
+    ...filesGroups(model).map((group) => group.tables),
+    ...tableGroups(model),
+  ];
+  return groups.flatMap((tables) => {
+    const different = differing(tables, (settings) => [settings.annotations]);
+    return different
+      ? [`the tables of one ADF pipeline must use the same annotations; ${different}`]
+      : [];
+  });
 }
 
 /** The settings a ForEach's tables share: the pattern always, the rest under foreach. */

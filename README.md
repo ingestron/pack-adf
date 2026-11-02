@@ -137,8 +137,11 @@ ingest:
   text such as `${environment.name}`. The packs that read the files are told
   about them (`output.columns`). Not offered for sources read by path, or
   Microsoft 365.
-- `folder` and `annotations` apply to every pipeline and dataset the project
-  generates, so all its ADF tables share them.
+- `folder` files the project's pipelines and datasets in the factory, so all
+  its ADF tables share it. `annotations` are added to a pipeline, so the tables
+  of one pipeline share them; flows can tag their pipelines differently.
+- Audit column names must not differ only by case, nor be `_ingestron_file` or
+  `_rescued_data`, which the packs reading the files use.
 
 Every pipeline and Copy activity has a description.
 

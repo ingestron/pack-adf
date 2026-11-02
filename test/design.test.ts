@@ -81,7 +81,7 @@ describe("the factory's folders and annotations", () => {
       "flow.yaml": flow,
     });
     expect(result.diagnostics.map((item) => item.message).join("\n")).toContain(
-      "every ADF table must use the same folder and annotations",
+      "every ADF table must use the same folder",
     );
   });
 });
@@ -110,5 +110,41 @@ describe("descriptions", () => {
     const native = tableProject("rest", "  url: https://source.example.test", "orders");
     described(generate(native).files);
     described(generate(s3).files);
+  });
+});
+
+describe("review fixes", () => {
+  it("lets each pipeline have its own annotations", () => {
+    const hr = base["erp.yaml"]!.replace("id: erp", "id: hr");
+    const { result, files } = generate({
+      "hr.yaml": hr,
+      "flow.yaml":
+        "apiVersion: ingestron.io/v1\nkind: Flow\nid: erp\nsource: erp\ningest: { with: { annotations: [finance] } }\ntables:\n  invoices: { object: erp.dbo.Invoices, contract: invoices }\n",
+      "hr-flow.yaml":
+        "apiVersion: ingestron.io/v1\nkind: Flow\nid: hr\nsource: hr\ningest: { with: { annotations: [people] } }\ntables:\n  staff: { object: hr.dbo.Staff, contract: invoices }\n",
+    });
+    expect(result.diagnostics).toEqual([]);
+    expect(json(files, "pipeline/pl_erp_erp.json").properties.annotations).toContain("finance");
+    expect(json(files, "pipeline/pl_erp_hr.json").properties.annotations).toContain("people");
+    expect(json(files, "pipeline/pl_erp_hr.json").properties.annotations).not.toContain("finance");
+  });
+
+  it("still needs one folder for the project", () => {
+    const flow =
+      "apiVersion: ingestron.io/v1\nkind: Flow\nid: erp\nsource: erp\ntables:\n  invoices: { object: erp.dbo.Invoices, contract: invoices }\n  credits: { object: erp.dbo.Credits, contract: invoices, ingest: { with: { folder: other } } }\n";
+    const { result } = generate({
+      "standard.yaml": withDesign(["folder: ingestron"]),
+      "flow.yaml": flow,
+    });
+    expect(result.diagnostics.map((item) => item.message).join("\n")).toContain(
+      "every ADF table must use the same folder",
+    );
+  });
+
+  it("names the table each ForEach copy ran for", () => {
+    const files = built(["pattern: foreach"]);
+    const copy = json(files, "pipeline/pl_erp_erp.json").properties.activities[0].typeProperties
+      .activities[0];
+    expect(copy.userProperties).toEqual([{ name: "table", value: "@item().table" }]);
   });
 });
