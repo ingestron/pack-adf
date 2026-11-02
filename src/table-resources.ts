@@ -1,4 +1,5 @@
 // Ordinary native table copies: concrete connector facts supply only documented properties.
+import { activity, describeCopy, describePipeline, policyOf } from "./design.js";
 import { resourceName } from "./resource-names.js";
 import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
 import { addResource } from "./resource-files.js";
@@ -31,6 +32,7 @@ export function tableResources(model: ResolvedModel, shared: Shared): Record<str
     add("pipeline", {
       name: pipeline,
       properties: {
+        description: describePipeline(tables, "one Copy activity per table"),
         parameters: { windowStart: { type: "string" }, windowEnd: { type: "string" } },
         activities: tables.map((table) =>
           tableActivity(table, source, shared, dataset(table), name, namesFiles(tables)),
@@ -115,24 +117,28 @@ function tableActivity(
   named: boolean,
 ): Data {
   const options = (table.ingest!.settings.source_options ?? {}) as Data;
-  return {
-    name: resourceName(table, "copy_activity", `copy_${table.name}`),
-    type: "Copy",
-    inputs: [reference(dataset, "DatasetReference")],
-    outputs: [tableOutput(table, source, shared, name, named)],
-    typeProperties: {
-      source: nativeSource(table, source),
-      sink: tableSink(source),
-      ...(source.staged
-        ? stagingOptions(
-            source,
-            resourceName(table, "staging_linked_service", `ls_${name}_staging`),
-            options.staging_path,
-          )
-        : {}),
-      ...tableTranslator(table, source),
+  return activity(
+    resourceName(table, "copy_activity", `copy_${table.name}`),
+    describeCopy(table, source.id === "microsoft-365" ? "JSON" : "Parquet"),
+    "Copy",
+    {
+      inputs: [reference(dataset, "DatasetReference")],
+      outputs: [tableOutput(table, source, shared, name, named)],
+      typeProperties: {
+        source: nativeSource(table, source),
+        sink: tableSink(source),
+        ...(source.staged
+          ? stagingOptions(
+              source,
+              resourceName(table, "staging_linked_service", `ls_${name}_staging`),
+              options.staging_path,
+            )
+          : {}),
+        ...tableTranslator(table, source),
+      },
     },
-  };
+    policyOf(table),
+  );
 }
 
 function tableOutput(
