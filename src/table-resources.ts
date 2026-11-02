@@ -1,5 +1,5 @@
 // Ordinary native table copies: concrete connector facts supply only documented properties.
-import { activity, describeCopy, describePipeline, policyOf } from "./design.js";
+import { activity, annotationsOf, describeCopy, describePipeline, policyOf } from "./design.js";
 import { resourceName } from "./resource-names.js";
 import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
 import { addResource } from "./resource-files.js";
@@ -33,6 +33,10 @@ export function tableResources(model: ResolvedModel, shared: Shared): Record<str
       name: pipeline,
       properties: {
         description: describePipeline(tables, "one Copy activity per table"),
+        // Native pipelines had no annotations; they get them when the tables name some.
+        ...(first.ingest!.settings.annotations !== undefined && {
+          annotations: annotationsOf(model, tables),
+        }),
         parameters: { windowStart: { type: "string" }, windowEnd: { type: "string" } },
         activities: tables.map((table) =>
           tableActivity(table, source, shared, dataset(table), name, namesFiles(tables)),
