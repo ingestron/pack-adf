@@ -83,8 +83,8 @@ describe("pattern: foreach", () => {
     const items = properties.parameters.tables.defaultValue;
     expect(items[0].watermark).toBe("[modified_at]");
     expect(JSON.stringify(items)).not.toContain("@");
-    const query = properties.activities[0].typeProperties.activities[0].typeProperties.source
-      .sqlReaderQuery;
+    const query =
+      properties.activities[0].typeProperties.activities[0].typeProperties.source.sqlReaderQuery;
     expect(query.type).toBe("Expression");
     expect(query.value).toContain("item().watermark");
     expect(query.value).toContain(
