@@ -104,6 +104,44 @@ start the job at the same time.
 Checked against live Azure: not yet. The parent reads the run's name from the
 start call's response (`@activity('start_job').output.name`).
 
+## Design your pipelines
+
+The standard sets how the generated pipelines look; a flow or table can
+override, except where a pipeline's tables must agree.
+
+```yaml
+ingest:
+  settings:
+    adf-copy:
+      pattern: foreach # or activities, the default: one Copy per table
+      parallel: 4 # foreach: tables copied at once
+      activity: { retries: 2, retry_interval: 60, timeout: 120 } # seconds, minutes
+      audit_columns:
+        _loaded_at: run.trigger_time
+        _run_id: run.id
+        _source: source.object
+      folder: ingestron/${project.id}
+      annotations: [finance]
+```
+
+- `pattern: foreach` (adf-copy) puts one parameterised Copy inside a ForEach
+  over the pipeline's `tables` parameter. Its default value is the generated
+  table list, so nothing is read at run time; pass a shorter list to copy some
+  tables again. The tables of one pipeline share `pattern`, `parallel`,
+  `activity` and `audit_columns`. A path with date or `{run}` tokens needs
+  `pattern: activities`.
+- `activity` is the Copy activity's policy, for all three methods.
+- `audit_columns` adds columns to every landed row (adf-copy, adf-table): one
+  of `run.trigger_time`, `run.window_start`, `run.window_end` (timestamps),
+  `run.id`, `run.pipeline`, `source.object`, `source.connection`, or literal
+  text such as `${environment.name}`. The packs that read the files are told
+  about them (`output.columns`). Not offered for sources read by path, or
+  Microsoft 365.
+- `folder` and `annotations` apply to every pipeline and dataset the project
+  generates, so all its ADF tables share them.
+
+Every pipeline and Copy activity has a description.
+
 ## Connector catalogue
 
 `recipesFolder` is a tested project with one connection and one flow for each
