@@ -74,6 +74,11 @@ function checkShared(model: ResolvedModel): string[] {
     return [...problems, (error as Error).message];
   }
   for (const group of copyGroups(model)) {
+    const loop = differing(group.tables, (settings) => foreachKeys(settings));
+    if (loop)
+      problems.push(
+        `the adf-copy tables of ${group.connection.id}.${group.database} share one ForEach, so pattern, parallel, activity and audit_columns must be the same; ${loop}`,
+      );
     const different = differing(group.tables, (settings) => groupKeys.map((key) => settings[key]));
     if (different)
       problems.push(
@@ -109,6 +114,12 @@ function projectProblems(tables: ResolvedTable[]): string[] {
   const design = differing(tables, (settings) => [settings.folder, settings.annotations]);
   if (design) problems.push(`every ADF table must use the same folder and annotations; ${design}`);
   return problems;
+}
+
+/** The settings a ForEach's tables share: the pattern always, the rest under foreach. */
+function foreachKeys(settings: Record<string, unknown>): unknown[] {
+  if (settings.pattern !== "foreach") return [settings.pattern ?? "activities"];
+  return [settings.pattern, settings.parallel, settings.activity, settings.audit_columns];
 }
 
 const shareKeys = ["integration_runtime", "runtime_kind", "every", "start", "retries", "paused"];

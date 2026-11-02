@@ -1,6 +1,7 @@
 // Turns the tables copied with adf-copy and adf-files into ADF resource files, path → JSON.
 import { afterCopy } from "./after-copy.js";
 import { decorate } from "./design.js";
+import { foreachPipeline } from "./foreach.js";
 import { resourceName } from "./resource-names.js";
 import { addResource, mergeResources } from "./resource-files.js";
 import { tableGroups, tableResources } from "./table-resources.js";
@@ -84,7 +85,12 @@ function copyResources(
     add("linkedService", sqlServerService(group, shared, settings));
     add("dataset", sourceDataset(group));
     const pipeline = resourceName(group.tables, "pipeline", `pl_${name}`);
-    add("pipeline", copyPipeline(model, group, shared, pipeline));
+    add(
+      "pipeline",
+      settings.pattern === "foreach"
+        ? foreachPipeline(model, group, shared, pipeline)
+        : copyPipeline(model, group, shared, pipeline),
+    );
     add(
       "trigger",
       windowTrigger(model, group, pipeline, resourceName(group.tables, "trigger", `tr_${name}`)),

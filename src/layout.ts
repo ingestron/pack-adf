@@ -182,3 +182,27 @@ function expressionOf(table: ResolvedTable, token: string): string {
 function incrementName(extension: Extension): string {
   return `@{concat(formatDateTime(pipeline().parameters.windowStart, 'yyyyMMddHHmmss'), '_', pipeline().RunId, '.${extension}')}`;
 }
+
+/**
+ * The folder and file a ForEach item names: the file is "" for increments
+ * (each run names its own); undefined for a path with date or run tokens.
+ * @example staticFile(table) // { folder: "erp/erp.dbo.Invoices", file: "erp.dbo.Invoices.parquet" }
+ */
+export function staticFile(
+  table: ResolvedTable,
+  extension: Extension,
+): { folder: string; file: string } | undefined {
+  const layout = layoutOf(table);
+  if (layout === "increments") return { folder: landedFile(table, extension).folder, file: "" };
+  if (layout === "path" && datedPath(table)) return undefined;
+  return landedFile(table, extension);
+}
+
+/** True when the table's path pattern uses a date or run token. */
+export function datedPath(table: ResolvedTable): boolean {
+  const path = table.ingest!.settings.path;
+  if (typeof path !== "string") return false;
+  return [...path.matchAll(tokenPattern)].some(
+    (match) => match[1] !== "object" && match[1] !== "connection",
+  );
+}
