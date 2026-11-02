@@ -129,8 +129,17 @@ function checkTable(table: ResolvedTable): string[] {
     problems.push("this connector does not support a query setting");
   if (source.queryRequired && !nonEmpty(ingest.settings.query))
     problems.push('this connector needs "query" in ingest.with');
-  problems.push(...sourceOptionProblems(table, source));
+  problems.push(...sourceOptionProblems(table, source), ...auditSupport(table, source));
   return problems;
+}
+
+/** Audit columns are mapped by name; sources read by path or by ADF's own columns are refused. */
+function auditSupport(table: ResolvedTable, source: TableSource): string[] {
+  if (!table.ingest!.settings.audit_columns) return [];
+  if (!source.hierarchical && source.id !== "microsoft-365") return [];
+  return [
+    `audit_columns are not offered for ${source.title} yet: its columns are read by path, not by name`,
+  ];
 }
 
 function invalidParts(parts: string[], source: TableSource): boolean {

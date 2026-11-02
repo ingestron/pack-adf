@@ -1,6 +1,7 @@
 // The design settings applied to generated resources: the Copy activity's
 // policy and description, and the project's factory folder and annotations.
-import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
+import type { Column, ResolvedModel, ResolvedTable } from "@ingestron/definitions";
+import { auditValues } from "./design-settings.js";
 
 type Data = Record<string, unknown>;
 
@@ -87,4 +88,52 @@ function annotate(properties: Data, annotations: string[]): void {
   if (annotations.length === 0) return;
   const own = (properties.annotations as string[] | undefined) ?? [];
   properties.annotations = [...new Set([...own, ...annotations])];
+}
+
+/** The table's audit columns, name to value, in the order written. */
+function auditColumns(table: ResolvedTable): [string, string][] {
+  return Object.entries((table.ingest!.settings.audit_columns ?? {}) as Record<string, string>);
+}
+
+/**
+ * The copy source's additionalColumns; `item` writes source values for a ForEach item.
+ * @example additionalColumnsOf(table) // { additionalColumns: [{ name: "_run_id", value: { value: "@pipeline().RunId", type: "Expression" } }] }
+ */
+export function additionalColumnsOf(
+  table: ResolvedTable,
+  item = false,
+): { additionalColumns?: Data[] } {
+  const columns = auditColumns(table);
+  if (columns.length === 0) return {};
+  return {
+    additionalColumns: columns.map(([name, written]) => {
+      const known = auditValues[written];
+      if (!known) return { name, value: written };
+      const value = known.value(table, item);
+      return {
+        name,
+        value: known.expression || value.startsWith("@") ? { value, type: "Expression" } : value,
+      };
+    }),
+  };
+}
+
+/** Mappings for the audit columns, for copies that map their columns explicitly. */
+export function auditMappings(table: ResolvedTable): Data[] {
+  return auditColumns(table).map(([name]) => ({ source: { name }, sink: { name } }));
+}
+
+/** The audit columns as the landed files carry them, for the packs that read the files. */
+export function auditOutputColumns(table: ResolvedTable): Column[] | undefined {
+  const columns = auditColumns(table);
+  if (columns.length === 0) return undefined;
+  return columns.map(([name, written]) => {
+    const known = auditValues[written];
+    return {
+      name,
+      logicalType: known?.type ?? "string",
+      nullable: false,
+      description: `Added by ADF: ${known ? known.description : `the text "${written}"`}.`,
+    };
+  });
 }
