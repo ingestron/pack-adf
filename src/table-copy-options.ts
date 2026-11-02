@@ -1,4 +1,5 @@
 // Connector-specific Copy activity fields, kept separate from common pipeline assembly.
+import { additionalColumnsOf, auditMappings } from "./design.js";
 import type { ResolvedTable } from "@ingestron/definitions";
 import { reference } from "./resources.js";
 import type { TableSource } from "./table-source.js";
@@ -16,7 +17,7 @@ export function nativeSource(table: ResolvedTable, source: TableSource): Data {
     result.exportSettings = { type: "AzureDatabricksDeltaLakeExportCommand" };
   if (source.id === "microsoft-365") Object.assign(result, officeSource(table, options));
   if (source.id === "rest") Object.assign(result, restSource(options));
-  return result;
+  return { ...result, ...additionalColumnsOf(table) };
 }
 function officeSource(table: ResolvedTable, options: Data): Data {
   return {
@@ -56,16 +57,18 @@ export function tableTranslator(table: ResolvedTable, source: TableSource): Data
       ...(Boolean(options.collection_reference) && {
         collectionReference: options.collection_reference,
       }),
-      mappings: table.contract.columns.map((column) => ({
-        source: source.hierarchical
-          ? {
-              path:
-                (options.column_paths as Record<string, string> | undefined)?.[column.name] ??
-                `${options.collection_reference ? "" : "$"}['${(column.physicalName ?? column.name).replaceAll("\\", "\\\\").replaceAll("'", "\\'")}']`,
-            }
-          : { name: column.physicalName ?? column.name },
-        sink: { name: column.name },
-      })),
+      mappings: table.contract.columns
+        .map((column): Data => ({
+          source: source.hierarchical
+            ? {
+                path:
+                  (options.column_paths as Record<string, string> | undefined)?.[column.name] ??
+                  `${options.collection_reference ? "" : "$"}['${(column.physicalName ?? column.name).replaceAll("\\", "\\\\").replaceAll("'", "\\'")}']`,
+              }
+            : { name: column.physicalName ?? column.name },
+          sink: { name: column.name },
+        }))
+        .concat(auditMappings(table)),
     },
   };
 }
