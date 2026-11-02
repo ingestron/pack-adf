@@ -101,3 +101,20 @@ describe("ADF design settings by method", () => {
     );
   });
 });
+
+describe("audit column names the store packs need apart", () => {
+  it("refuses two names that differ only by case", () => {
+    expect(messages(["audit_columns: { _run: run.id, _RUN: run.pipeline }"]).join("\n")).toContain(
+      'audit columns "_run" and "_RUN" differ only by case',
+    );
+  });
+
+  it("refuses names the packs that read the files add", () => {
+    expect(messages(["audit_columns: { _ingestron_file: run.id }"]).join("\n")).toContain(
+      '"_ingestron_file" is a name the packs that read the files use',
+    );
+    expect(messages(["audit_columns: { _RESCUED_DATA: run.id }"]).join("\n")).toContain(
+      "is a name the packs that read the files use",
+    );
+  });
+});

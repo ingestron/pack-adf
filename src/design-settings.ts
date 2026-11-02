@@ -148,6 +148,23 @@ export function designProblems(table: ResolvedTable): string[] {
   const contract = new Set(table.contract.columns.map((column) => column.name.toLowerCase()));
   for (const [name, value] of Object.entries(columns))
     problems.push(...auditProblems(name, value, contract));
+  problems.push(...caseProblems(Object.keys(columns)));
+  return problems;
+}
+
+/** Columns the packs that read the files add themselves (DuckDB's file name, Databricks' rescued data). */
+const reserved = ["_ingestron_file", "_rescued_data"];
+
+/** Audit columns whose names differ only by case: the engines compare names case-insensitively. */
+function caseProblems(names: string[]): string[] {
+  const seen = new Map<string, string>();
+  const problems: string[] = [];
+  for (const name of names) {
+    const earlier = seen.get(name.toLowerCase());
+    if (earlier)
+      problems.push(`audit columns "${earlier}" and "${name}" differ only by case; rename one`);
+    else seen.set(name.toLowerCase(), name);
+  }
   return problems;
 }
 
@@ -158,6 +175,8 @@ function auditProblems(name: string, value: string, contract: Set<string>): stri
     problems.push(
       `audit column "${name}" must start with a letter or underscore and hold only letters, digits and underscores`,
     );
+  if (reserved.includes(name.toLowerCase()))
+    problems.push(`audit column "${name}" is a name the packs that read the files use; rename it`);
   if (contract.has(name.toLowerCase()))
     problems.push(`audit column "${name}" is a contract column; give it another name`);
   if (/^(run|source)\./.test(value) && !(value in auditValues))
