@@ -67,15 +67,7 @@ function checkShared(model: ResolvedModel): string[] {
   const tables = model.tables.filter((table) =>
     /^adf-(copy|files|table)$/.test(table.ingest?.method ?? ""),
   );
-  const project = differing(tables, (settings) => {
-    const { url, fileSystem } = parseLanding(String(settings.landing));
-    return [settings.key_vault, url, fileSystem];
-  });
-  const problems = project
-    ? [`every ADF table must use the same key_vault and landing storage; ${project}`]
-    : [];
-  const job = differing(tables, (settings) => [settings.after_copy]);
-  if (job) problems.push(`every ADF table must use the same after_copy; ${job}`);
+  const problems = projectProblems(tables);
   try {
     build(model);
   } catch (error) {
@@ -100,6 +92,22 @@ function checkShared(model: ResolvedModel): string[] {
   problems.push(
     ...samePathProblems(tables.filter((table) => table.ingest?.method !== "adf-files")),
   );
+  return problems;
+}
+
+/** Settings one project shares: storage, the vault, the after-copy job, folder and annotations. */
+function projectProblems(tables: ResolvedTable[]): string[] {
+  const problems: string[] = [];
+  const project = differing(tables, (settings) => {
+    const { url, fileSystem } = parseLanding(String(settings.landing));
+    return [settings.key_vault, url, fileSystem];
+  });
+  if (project)
+    problems.push(`every ADF table must use the same key_vault and landing storage; ${project}`);
+  const job = differing(tables, (settings) => [settings.after_copy]);
+  if (job) problems.push(`every ADF table must use the same after_copy; ${job}`);
+  const design = differing(tables, (settings) => [settings.folder, settings.annotations]);
+  if (design) problems.push(`every ADF table must use the same folder and annotations; ${design}`);
   return problems;
 }
 
