@@ -116,12 +116,18 @@ function retryCopies(
 ): void {
   const path = `pipeline/${child}.json`;
   const pipeline = JSON.parse(files[path]!) as { properties: { activities: Data[] } };
-  for (const activity of pipeline.properties.activities.filter((item) => item.type === "Copy"))
-    activity.policy = {
-      ...(activity.policy as Data | undefined),
-      retry: retry.count,
-      retryIntervalInSeconds: retry.intervalInSeconds,
-    };
+  // The team's own activity policy wins; Copy activities in a ForEach count too.
+  const nested = (item: Data) =>
+    item.type === "ForEach"
+      ? ((item.typeProperties as { activities: Data[] }).activities ?? [])
+      : [item];
+  for (const activity of pipeline.properties.activities.flatMap(nested))
+    if (activity.type === "Copy")
+      activity.policy = {
+        retry: retry.count,
+        retryIntervalInSeconds: retry.intervalInSeconds,
+        ...(activity.policy as Data | undefined),
+      };
   files[path] = text(pipeline);
 }
 

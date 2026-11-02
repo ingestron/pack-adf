@@ -8,6 +8,7 @@ import { resourceNamesSchema } from "./resource-names.js";
 import { sqlTypes } from "./sql-types.js";
 import { sqlConnectionProblems, nonEmpty } from "./sql-auth.js";
 import { layoutProblems, tableOutput } from "./landing-output.js";
+import { datedPath } from "./layout.js";
 
 const abfss = "^abfss://[^@/]+@[^/]+\\.dfs\\.core\\.windows\\.net(/.*)?$";
 
@@ -190,6 +191,8 @@ function checkCopy(table: ResolvedTable): string[] {
     problems.push(
       `a ${ingest.connection.connector} object is written database.schema.table, not "${ingest.object}"`,
     );
+  if (ingest.settings.pattern === "foreach" && datedPath(table))
+    problems.push("use pattern: activities for a path with date or run tokens");
   if (
     ingest.settings.mode === "incremental" &&
     typeof ingest.settings.watermark_column !== "string"
