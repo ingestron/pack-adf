@@ -7,7 +7,13 @@ import { landedFile } from "./layout.js";
 import { sqlTypes } from "./sql-types.js";
 import { sqlCredentials } from "./sql-auth.js";
 import { query } from "./query.js";
-import { activity, describeCopy, describePipeline, policyOf } from "./design.js";
+import {
+  activity,
+  additionalColumnsOf,
+  describeCopy,
+  describePipeline,
+  policyOf,
+} from "./design.js";
 
 type Data = Record<string, unknown>;
 
@@ -143,6 +149,7 @@ function copyActivity(table: ResolvedTable, group: CopyGroup, shared: Shared): D
         source: {
           type: sqlTypes[group.connection.connector]!.source,
           sqlReaderQuery: query(table),
+          ...additionalColumnsOf(table),
         },
         sink: {
           type: "ParquetSink",

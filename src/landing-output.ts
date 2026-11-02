@@ -1,5 +1,7 @@
 // What ADF tells other packs about each table's landed files, and the
 // layouts it refuses because they would lose data or overwrite each other.
+import { auditOutputColumns } from "./design.js";
+import type { LandedOutput } from "./landed-output.js";
 import type { ResolvedTable, StepOutput } from "@ingestron/definitions";
 import {
   expressionProblems,
@@ -21,12 +23,14 @@ export function extensionOf(table: ResolvedTable): Extension {
  * Where a tabular copy lands the table's files.
  * @example tableOutput(table) // { location: "abfss://…/orders/orders.parquet", format: "parquet", loads: "replace" }
  */
-export function tableOutput(table: ResolvedTable): StepOutput {
+export function tableOutput(table: ResolvedTable): LandedOutput {
   const extension = extensionOf(table);
+  const columns = auditOutputColumns(table);
   return {
     location: landedLocation(table, extension),
     format: extension,
     loads: replacesFile(table) ? "replace" : "add",
+    ...(columns && { columns }),
   };
 }
 
