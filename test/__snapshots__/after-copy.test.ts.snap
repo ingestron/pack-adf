@@ -97,9 +97,11 @@ exports[`after_copy > generates as before without after_copy 1`] = `
   "pipeline/pl_erp_erp.json": "{
 	"name": "pl_erp_erp",
 	"properties": {
+		"description": "Copies one table from erp to landing.",
 		"activities": [
 			{
 				"name": "copy_invoices",
+				"description": "Copies erp.dbo.Invoices to landing as Parquet.",
 				"type": "Copy",
 				"inputs": [
 					{
