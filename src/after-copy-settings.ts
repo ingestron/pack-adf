@@ -1,5 +1,6 @@
 // after_copy: the Container Apps job ADF starts after each schedule's copies,
 // and how long ADF waits for its run.
+import { designProblems } from "./design-settings.js";
 import type { Method, ResolvedModel } from "@ingestron/definitions";
 
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
@@ -76,6 +77,7 @@ export function checkingAfterCopy(method: Method): Method {
     check: (table, ...rest) => [
       ...(check?.(table, ...rest) ?? []),
       ...afterCopyProblems(table.ingest?.settings ?? {}),
+      ...(table.ingest ? designProblems(table) : []),
     ],
   };
 }

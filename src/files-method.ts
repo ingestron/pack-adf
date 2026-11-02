@@ -8,6 +8,7 @@ import { connectionProblems } from "./connection-check.js";
 import { filesOutput } from "./landing-output.js";
 import type { Method, ResolvedTable } from "@ingestron/definitions";
 import { credentialProblems, placement, windowSettings } from "./method.js";
+import { fileDesignSettings } from "./design-settings.js";
 
 /** Copies files from a share with Azure Data Factory into a landing folder. */
 export const adfFiles: Method = {
@@ -33,6 +34,7 @@ export const adfFiles: Method = {
     required: ["landing", "integration_runtime", "start", "format"],
     properties: {
       ...windowSettings,
+      ...fileDesignSettings,
       source_options: {
         type: "object",
         additionalProperties: false,
