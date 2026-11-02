@@ -1,6 +1,7 @@
 // Full native copies use the existing method settings and connection checks.
 import type { Connector, Method, ResolvedTable } from "@ingestron/definitions";
 import { layoutSettings, tablePlacement, windowSettings } from "./method.js";
+import { designSettings } from "./design-settings.js";
 import { nonEmpty } from "./sql-auth.js";
 import { layoutProblems, tableOutput } from "./landing-output.js";
 import { connectionProblems } from "./connection-check.js";
@@ -51,6 +52,7 @@ export const adfTable: Method = {
     properties: {
       ...windowSettings,
       ...layoutSettings,
+      ...designSettings,
       runtime_kind: {
         enum: ["azure", "self-hosted"],
         enumDescriptions: [

@@ -3,6 +3,7 @@
 import type { Method, ResolvedTable } from "@ingestron/definitions";
 
 import { afterCopySchema } from "./after-copy-settings.js";
+import { designPlacement, designSettings, fileDesignSettings } from "./design-settings.js";
 import { resourceNamesSchema } from "./resource-names.js";
 import { sqlTypes } from "./sql-types.js";
 import { sqlConnectionProblems, nonEmpty } from "./sql-auth.js";
@@ -74,13 +75,13 @@ export const windowSettings = {
 /** Shared infrastructure belongs in the platform, the schedule in the standard. */
 export const placement = {
   platform: ["landing", "integration_runtime", "runtime_kind", "key_vault", "paused", "after_copy"],
-  standard: ["every", "start", "retries", "resource_names"],
+  standard: ["every", "start", "retries", "resource_names", ...Object.keys(fileDesignSettings)],
 };
 
 /** Where the tabular methods' settings belong: layouts are a standard's choice. */
 export const tablePlacement = {
   platform: placement.platform,
-  standard: [...placement.standard, "layout", "path"],
+  standard: [...new Set([...placement.standard, ...designPlacement, "layout", "path"])],
 };
 
 /** How the tabular methods lay out each table's files in the landing folder. */
@@ -139,6 +140,7 @@ export const adfCopy: Method = {
     properties: {
       ...windowSettings,
       ...layoutSettings,
+      ...designSettings,
       runtime_kind: {
         enum: ["azure", "self-hosted"],
         enumDescriptions: [
