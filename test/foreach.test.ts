@@ -133,6 +133,19 @@ describe("pattern: foreach", () => {
     );
   });
 
+  it("accepts a dated path in the standard when the flow's layout wins", () => {
+    const { result, files } = generate({
+      "standard.yaml": standard([
+        "pattern: foreach",
+        'path: "{object}/{yyyy}/{MM}/{dd}/{object}_{run}.parquet"',
+      ]),
+      "flow.yaml": `${twoTables()}ingest:\n  with:\n    layout: snapshot\n`,
+    });
+    expect(result.diagnostics).toEqual([]);
+    const items = json(files, "pipeline/pl_erp_erp.json").properties.parameters.tables.defaultValue;
+    expect(items[0].file).toBe("erp.dbo.Invoices.parquet");
+  });
+
   it("lands where the activities pattern lands", () => {
     const { properties } = pipeline(["layout: snapshot"]);
     expect(properties.parameters.tables.defaultValue[0].folder).toBe(
