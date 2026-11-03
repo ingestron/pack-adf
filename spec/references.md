@@ -78,7 +78,7 @@ below is what the pack writes for `pattern`, `parallel`, `activity`,
     `timeout` is a timespan, `retry` an integer defaulting to 0, and
     `retryIntervalInSeconds` an integer defaulting to 30. The page also says
     the default time-out is 12 hours with a minimum of 10 minutes; the pack
-    allows 1 minute and up, and does not enforce the minimum.
+    enforces the minimum, so `activity.timeout` is 10 minutes or more.
   - [Pipelines - Create Or Update, ActivityPolicy](https://learn.microsoft.com/en-us/rest/api/datafactory/pipelines/create-or-update):
     `retryIntervalInSeconds` has a minimum of 30 and a maximum of 86400,
     which the pack's limits follow; the REST page gives the default time-out
