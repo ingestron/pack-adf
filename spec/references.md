@@ -52,3 +52,16 @@ Accessed 2026-11-01:
   pattern for 202 responses.
 - [Until activity](https://learn.microsoft.com/en-us/azure/data-factory/control-flow-until-activity):
   `timeout` as `[d.]hh:mm:ss`; an inner activity's failure does not stop the loop.
+
+## Reruns of the ForEach pattern
+
+Accessed 2026-11-03:
+
+- [Expressions and functions](https://learn.microsoft.com/en-us/azure/data-factory/control-flow-expression-language-functions):
+  documents `@item()`, `empty`, `if` and `formatDateTime`. It documents no
+  safe-navigation form such as `item()?.file`, so the pack keeps `item().file`
+  and `item().watermark`, and every item carries all its keys. The only
+  mention of `?.` found is community guidance on Microsoft Q&A, which is not
+  an official source. The documentation does not say whether `if` evaluates
+  both branches, so a rerun must give `windowStart` and `windowEnd`.
+
