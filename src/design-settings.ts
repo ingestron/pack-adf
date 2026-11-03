@@ -60,6 +60,12 @@ export const auditValues: Record<string, AuditValue> = {
 
 const known = Object.keys(auditValues).join(", ");
 
+/** The run or source value a written audit value names, in any case; undefined for literal text. */
+export function auditValueOf(written: string): AuditValue | undefined {
+  const key = written.toLowerCase();
+  return Object.hasOwn(auditValues, key) ? auditValues[key] : undefined;
+}
+
 /** The design settings every ADF copy method accepts (audit columns: tabular methods only). */
 export const designSettings = {
   pattern: {
@@ -179,7 +185,7 @@ function auditProblems(name: string, value: string, contract: Set<string>): stri
     problems.push(`audit column "${name}" is a name the packs that read the files use; rename it`);
   if (contract.has(name.toLowerCase()))
     problems.push(`audit column "${name}" is a contract column; give it another name`);
-  if (/^(run|source)\./.test(value) && !(value in auditValues))
+  if (/^(run|source)\./i.test(value) && !auditValueOf(value))
     problems.push(`audit column "${name}" uses "${value}"; run and source values: ${known}`);
   else if (value.startsWith("@") || value.includes("@{"))
     problems.push(`audit column "${name}" holds "${value}", which ADF reads as an expression`);
