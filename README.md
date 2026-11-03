@@ -128,9 +128,9 @@ ingest:
   over the pipeline's `tables` parameter. Its default value is the generated
   table list, so nothing is read at run time; pass a shorter list to copy some
   tables again. The pipeline also has `windowStart` and `windowEnd`
-  parameters, with no default: a schedule trigger fills them, and a rerun you
-  start by hand must give both (for example `2026-11-01T00:00:00Z` and
-  `2026-11-02T00:00:00Z`), or the copies can fail on the empty value. Take the
+  parameters, with no default: the tumbling window trigger fills them, and a
+  rerun you start by hand must give both (for example `2026-11-01T00:00:00Z` and
+  `2026-11-02T00:00:00Z`), or the copies may fail on the empty value. Take the
   shorter list from the `tables` default, because each item must keep all of
   its keys (`table`, `object`, `connection`, `query`, `watermark`, `folder`
   and `file`); the copy reads them as `@item().file` and so on, and a missing
@@ -146,7 +146,8 @@ ingest:
   case, so `RUN.ID` means `run.id`. Not offered for sources read by path, or
   Microsoft 365.
 - `run.window_start` and `run.window_end` come from the pipeline's
-  `windowStart` and `windowEnd` parameters, which the schedule trigger fills.
+  `windowStart` and `windowEnd` parameters, which the tumbling window trigger
+  fills.
   A run you start by hand must give both; with an empty value the column lands
   as empty text, which the packs that read the files cannot cast to a
   timestamp.
