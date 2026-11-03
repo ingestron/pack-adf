@@ -196,6 +196,23 @@ whole minutes from 10 to 10080 and becomes `timeout` as `d.hh:mm:ss`. The
 minimum of 10 minutes is ADF's own (see `references.md`); a smaller value is a
 settings problem, so no generated file carries a timeout ADF would refuse.
 
+## Design settings
+
+An audit column (`audit_columns`) names the value it holds. A value that is
+`run.` or `source.` followed by one of the names the pack lists is matched in
+any case (`RUN.ID` and `run.id` are the same) and is generated in its canonical
+lower-case form: the ADF expression or literal for that name, with the column's
+type. Any other text is landed as written. Text that starts with `run.` or
+`source.` in any case but is not one of those names is a method check problem,
+as is text that starts with `@` or holds `@{`, which ADF would read as an
+expression.
+
+Under `pattern: foreach`, a path with date or run tokens is a method check
+problem. It is refused only when the path is the layout in use: if a `layout`
+is set closer to the table than the `path` (in the flow, for example), the
+layout wins, the path is not used, and the table is not refused. A path with
+only `{object}` and `{connection}` is not refused by this rule.
+
 ## Starting a job after the copies
 
 `after_copy` is a platform setting of every ADF method, set under each method a
