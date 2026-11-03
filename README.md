@@ -115,7 +115,7 @@ ingest:
     adf-copy:
       pattern: foreach # or activities, the default: one Copy per table
       parallel: 4 # foreach: tables copied at once
-      activity: { retries: 2, retry_interval: 60, timeout: 120 } # seconds, minutes
+      activity: { retries: 2, retry_interval: 60, timeout: 120 } # seconds, minutes (10 or more)
       audit_columns:
         _loaded_at: run.trigger_time
         _run_id: run.id
