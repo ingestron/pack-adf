@@ -127,7 +127,14 @@ ingest:
 - `pattern: foreach` (adf-copy) puts one parameterised Copy inside a ForEach
   over the pipeline's `tables` parameter. Its default value is the generated
   table list, so nothing is read at run time; pass a shorter list to copy some
-  tables again. The tables of one pipeline share `pattern`, `parallel`,
+  tables again. The pipeline also has `windowStart` and `windowEnd`
+  parameters, with no default: a schedule trigger fills them, and a rerun you
+  start by hand must give both (for example `2026-11-01T00:00:00Z` and
+  `2026-11-02T00:00:00Z`), or the copies can fail on the empty value. Take the
+  shorter list from the `tables` default, because each item must keep all of
+  its keys (`table`, `object`, `connection`, `query`, `watermark`, `folder`
+  and `file`); the copy reads them as `@item().file` and so on, and a missing
+  key fails the run. The tables of one pipeline share `pattern`, `parallel`,
   `activity` and `audit_columns`. A path with date or `{run}` tokens needs
   `pattern: activities`.
 - `activity` is the Copy activity's policy, for all three methods.
