@@ -65,3 +65,50 @@ Accessed 2026-11-03:
   an official source. The documentation does not say whether `if` evaluates
   both branches, so a rerun must give `windowStart` and `windowEnd`.
 
+## Design settings
+
+Accessed 2026-11-03, against current Microsoft documentation. Each setting
+below is what the pack writes for `pattern`, `parallel`, `activity`,
+`audit_columns`, `folder` and `annotations`.
+
+- **Copy activity policy** (`activity`): `retries`, `retry_interval` and
+  `timeout` become `retry`, `retryIntervalInSeconds` and `timeout` in the
+  activity's `policy`.
+  - [Pipelines and activities, Activity policy](https://learn.microsoft.com/en-us/azure/data-factory/concepts-pipelines-activities#activity-policy):
+    `timeout` is a timespan, `retry` an integer defaulting to 0, and
+    `retryIntervalInSeconds` an integer defaulting to 30. The page also says
+    the default time-out is 12 hours with a minimum of 10 minutes; the pack
+    allows 1 minute and up, and does not enforce the minimum.
+  - [Pipelines - Create Or Update, ActivityPolicy](https://learn.microsoft.com/en-us/rest/api/datafactory/pipelines/create-or-update):
+    `retryIntervalInSeconds` has a minimum of 30 and a maximum of 86400,
+    which the pack's limits follow; the REST page gives the default time-out
+    as 7 days, against the 12 hours above. The pack sets a timeout only when
+    the team does.
+- **Additional columns** (`audit_columns`):
+  - [Copy activity overview, Add additional columns during copy](https://learn.microsoft.com/en-us/azure/data-factory/copy-activity-overview#add-additional-columns-during-copy):
+    `additionalColumns` in the copy source is an array of `name` and `value`;
+    a value is `$$FILEPATH`, `$$COLUMN:<name>`, an expression or a static
+    value. The feature needs the latest dataset model, and the new columns
+    must be mapped to the sink when the mapping is explicit.
+  - [SQL Server connector, Dataset properties](https://learn.microsoft.com/en-us/azure/data-factory/connector-sql-server#dataset-properties):
+    `SqlServerTable` with an optional top-level `schema` and `typeProperties`
+    holding `schema` and `table`. The empty `typeProperties: {}` the pack
+    writes for the source dataset is not documented; ADF refused additional
+    columns without it (`AdditionalColumnWithInvalidDataset`) in the live
+    check of 2026-11-02.
+- **ForEach** (`pattern: foreach`, `parallel`):
+  - [ForEach activity](https://learn.microsoft.com/en-us/azure/data-factory/control-flow-for-each-activity):
+    `isSequential` defaults to false; `batchCount` is the upper concurrency
+    limit, an integer up to 50 with a default of 20 (the pack defaults to 4);
+    `items` is an expression returning an array, at most 100,000 items;
+    `@item()` is the current item. Concurrent iterations writing the same
+    file can fail, which is why each table names its own file.
+- **Pipeline and dataset folders** (`folder`):
+  [Pipelines - Create Or Update, PipelineFolder](https://learn.microsoft.com/en-us/rest/api/datafactory/pipelines/create-or-update)
+  and [Datasets - Create Or Update, DatasetFolder](https://learn.microsoft.com/en-us/rest/api/datafactory/datasets/create-or-update):
+  `properties.folder.name` is the folder; without it the resource sits at the
+  root. The pages do not say how a nested folder is written; the pack
+  passes the team's `folder` text as it is.
+- **Annotations** (`annotations`):
+  [Pipelines and activities, Pipeline JSON](https://learn.microsoft.com/en-us/azure/data-factory/concepts-pipelines-activities#pipeline-json):
+  `annotations` is an optional array of tags on the pipeline.
