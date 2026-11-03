@@ -187,6 +187,15 @@ Microsoft 365's JSON dataset is shared by a connection's tables: it takes a file
 name only when one of them names its file, and then every table passes one
 (increments pass the increment name ADF otherwise generates).
 
+## Copy activity policy
+
+The design setting `activity` sets the Copy activity's `policy`; keys left out
+use ADF's defaults. `retries` is 0 to 10 and becomes `retry`. `retry_interval`
+is 30 to 86400 seconds and becomes `retryIntervalInSeconds`. `timeout` is
+whole minutes from 10 to 10080 and becomes `timeout` as `d.hh:mm:ss`. The
+minimum of 10 minutes is ADF's own (see `references.md`); a smaller value is a
+settings problem, so no generated file carries a timeout ADF would refuse.
+
 ## Starting a job after the copies
 
 `after_copy` is a platform setting of every ADF method, set under each method a

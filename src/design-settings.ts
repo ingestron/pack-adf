@@ -105,9 +105,9 @@ export const designSettings = {
       },
       timeout: {
         type: "integer",
-        minimum: 1,
+        minimum: 10,
         maximum: 10080,
-        description: "Minutes a copy may run before ADF stops it.",
+        description: "Minutes (10 or more) a copy may run before ADF stops it.",
         examples: [120],
       },
     },

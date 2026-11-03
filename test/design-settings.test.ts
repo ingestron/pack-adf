@@ -66,6 +66,11 @@ describe("ADF design settings", () => {
     expect(messages(["activity: { timeout: 0 }"])).not.toEqual([]);
   });
 
+  it("refuses an activity timeout under ADF's minimum of 10 minutes", () => {
+    expect(messages(["activity: { timeout: 9 }"])).not.toEqual([]);
+    expect(messages(["activity: { timeout: 10 }"])).toEqual([]);
+  });
+
   it("refuses parallel without the foreach pattern", () => {
     expect(messages(["parallel: 8"]).join("\n")).toContain("parallel applies to pattern: foreach");
   });
