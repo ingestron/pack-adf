@@ -198,8 +198,10 @@ export function staticFile(
   return landedFile(table, extension);
 }
 
-/** True when the table's path pattern uses a date or run token. */
+/** True when the table lands at its path pattern and the pattern uses a date or run token. */
 export function datedPath(table: ResolvedTable): boolean {
+  // A layout set closer to the table than the path wins, so the path is not used.
+  if (layoutOf(table) !== "path") return false;
   const path = table.ingest!.settings.path;
   if (typeof path !== "string") return false;
   return [...path.matchAll(tokenPattern)].some(
