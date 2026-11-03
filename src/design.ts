@@ -1,7 +1,7 @@
 // The design settings applied to generated resources: the Copy activity's
 // policy and description, and the project's factory folder and annotations.
 import type { Column, ResolvedModel, ResolvedTable } from "@ingestron/definitions";
-import { auditValues } from "./design-settings.js";
+import { auditValueOf } from "./design-settings.js";
 
 type Data = Record<string, unknown>;
 
@@ -96,7 +96,7 @@ export function additionalColumnsOf(
   if (columns.length === 0) return {};
   return {
     additionalColumns: columns.map(([name, written]) => {
-      const known = auditValues[written];
+      const known = auditValueOf(written);
       if (!known) return { name, value: written };
       const value = known.value(table, item);
       return {
@@ -117,7 +117,7 @@ export function auditOutputColumns(table: ResolvedTable): Column[] | undefined {
   const columns = auditColumns(table);
   if (columns.length === 0) return undefined;
   return columns.map(([name, written]) => {
-    const known = auditValues[written];
+    const known = auditValueOf(written);
     return {
       name,
       logicalType: known?.type ?? "string",

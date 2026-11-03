@@ -135,8 +135,14 @@ ingest:
   of `run.trigger_time`, `run.window_start`, `run.window_end` (timestamps),
   `run.id`, `run.pipeline`, `source.object`, `source.connection`, or literal
   text such as `${environment.name}`. The packs that read the files are told
-  about them (`output.columns`). Not offered for sources read by path, or
+  about them (`output.columns`). The run and source names are read in any
+  case, so `RUN.ID` means `run.id`. Not offered for sources read by path, or
   Microsoft 365.
+- `run.window_start` and `run.window_end` come from the pipeline's
+  `windowStart` and `windowEnd` parameters, which the schedule trigger fills.
+  A run you start by hand must give both; with an empty value the column lands
+  as empty text, which the packs that read the files cannot cast to a
+  timestamp.
 - `folder` files the project's pipelines and datasets in the factory, so all
   its ADF tables share it. `annotations` are added to a pipeline, so the tables
   of one pipeline share them; flows can tag their pipelines differently.
