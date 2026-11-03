@@ -62,6 +62,29 @@ describe("audit columns", () => {
     ]);
   });
 
+  it("read run and source values in any case", () => {
+    const cased = generate({
+      "standard.yaml": audited(["_run_id: RUN.ID", "_source: Source.Object"]),
+    });
+    expect(cased.result.diagnostics).toEqual([]);
+    const source = json(cased.files, "pipeline/pl_erp_erp.json").properties.activities[0]
+      .typeProperties.source;
+    expect(source.additionalColumns).toEqual([
+      { name: "_run_id", value: { value: "@pipeline().RunId", type: "Expression" } },
+      { name: "_source", value: "erp.dbo.Invoices" },
+    ]);
+    const table = cased.result.model!.tables.find((item) => item.name === "invoices")!;
+    const columns = (table.ingest!.output as { columns?: { logicalType: string }[] }).columns!;
+    expect(columns.map((column) => column.logicalType)).toEqual(["string", "string"]);
+  });
+
+  it("refuse an unknown run value in any case", () => {
+    const refused = generate({ "standard.yaml": audited(["_x: Run.Started"]) });
+    expect(refused.result.diagnostics.map((item) => item.message).join("\n")).toContain(
+      '"Run.Started"',
+    );
+  });
+
   it("are left out when none are set", () => {
     const plain = generate();
     const source = json(plain.files, "pipeline/pl_erp_erp.json").properties.activities[0]
