@@ -115,10 +115,14 @@ describe("ADF setting metadata", () => {
     expect(at("runtime.location").example).toBe("UK South");
     const cores = at("runtime.data_flow.core_count").values!;
     expect(cores.map((item) => item.value)).toEqual([8, 16, 32, 48, 80, 144, 272]);
-    for (const item of cores) {
-      expect(item.description, String(item.value)).toMatch(
-        new RegExp(`^${String(item.value)} cores in total, driver and worker`),
-      );
-    }
+    expect(cores.map((item) => item.description)).toEqual([
+      "8 cores in total: 4 worker and 4 driver cores, the default size (small).",
+      "16 cores in total: 8 worker and 8 driver cores, medium.",
+      "32 cores in total: 16 worker and 16 driver cores, large.",
+      "48 cores in total: 32 worker and 16 driver cores.",
+      "80 cores in total: 64 worker and 16 driver cores.",
+      "144 cores in total: 128 worker and 16 driver cores.",
+      "272 cores in total: 256 worker and 16 driver cores.",
+    ]);
   });
 });

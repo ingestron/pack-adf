@@ -225,7 +225,9 @@ Accessed 2026-11-04:
   (updated 2025-03-31; cited 2026-11-05): a data flow runs on a Spark cluster
   defined by the runtime; "The default cluster size is four driver cores and
   four worker cores (small)", and the sizes 8, 16, 32, 48, 80, 144 and 272 are
-  total cores (driver and worker). "Time to live isn't available when using the
+  total cores (driver and worker). Its table gives worker and driver cores as
+  4 and 4 (small), 8 and 8 (medium), 16 and 16 (large), 32 and 16, 64 and 16,
+  128 and 16, and 256 and 16. "Time to live isn't available when using the
   auto-resolve integration runtime (default)." It describes no compute type,
   so the `compute_type` descriptions say only what the ARM reference above and
   the next entry show: `ComputeOptimized` is a value ADF accepts and nothing
