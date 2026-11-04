@@ -309,8 +309,14 @@ disagree, the pack follows the validator, which is what users run.
   post, [MGDC for SharePoint FAQ: What counts as an object?](https://techcommunity.microsoft.com/t5/microsoft-graph-data-connect-for/mgdc-for-sharepoint-faq-what-counts-as-an-object/ba-p/4074274)
   (2024-03-04), says the files have "a JSON file extension", with "one line per
   object", and that many objects are packed "as multiple “json” files". So the
-  pack reports `<object>/*.json` in the format `json`. **Disagreement:** the
-  connector page's JSON sink; the pack writes the binary one.
+  pack reports `<object>/*.json` in the format `json`. **Disagreements:** the
+  connector page's JSON sink; and the
+  [Binary format page](https://learn.microsoft.com/en-us/azure/data-factory/format-binary)
+  (2025-03-31, updated 2026-08-05): "When using Binary dataset in copy activity,
+  you can only copy from Binary dataset to Binary dataset", which an
+  `Office365Source` into a binary sink contradicts. The pack follows the
+  validator in both; whether the copy runs can be checked only against a live
+  tenant.
 - User-assigned managed identities.
   [Credentials](https://learn.microsoft.com/en-us/azure/data-factory/credentials)
   (2024-09-26, updated 2026-08-05): associate the identity with the factory,
@@ -333,8 +339,12 @@ disagree, the pack follows the validator, which is what users run.
   trigger name over 141 characters (pattern
   `^[^-\s][^\\/:*?"<>|]{1,140}$`), a dataset or pipeline name over 140
   ("factoryEntityNameLengthValidator", `^.{1,140}$`) and an activity name over
-  55 (`^.{1,55}$`); 140, 140 and 55 export. The pack keeps every resource to
-  140 and an activity to 55.
+  55 (`^.{1,55}$`); 140, 140 and 55 export.
+  [Pipelines and activities](https://learn.microsoft.com/en-us/azure/data-factory/concepts-pipelines-activities)
+  (2026-06-17, updated 2026-08-04) agrees for pipelines and activities: a
+  pipeline's name has "Maximum number of characters: 140", and an activity's
+  "Maximum number of characters: 55". The pack keeps every resource to 140 and
+  an activity to 55.
 - Regions. The export rewrites a managed runtime's `location` given as a
   short name, such as `uksouth`, to its display name, but leaves a parameter's
   value as given, so a fold whose environments differ in region deployed

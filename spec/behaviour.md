@@ -548,13 +548,30 @@ is `Started`.
    with `parameters/<environment>.json` and `factoryName`, and the
    post-deployment script, both scripts given `-ArmTemplateParameters
 parameters/<environment>.json`.
-8. Output Microsoft's export refused in 1.x changes: MongoDB datasets write
-   `collection`; Microsoft 365 lands through a binary copy into a folder, so a
-   Microsoft 365 table with `layout: snapshot` or a `path` sets `layout:
-increments`; a `UserAssignedManagedIdentity` connection adds `identity`, the
-   identity's resource ID, and the factory gets the credential; a resource name
-   over 140 characters, or a Copy activity name over 55, is shortened with
-   `resource_names`; a `runtime.location` short name becomes its display name.
+8. Output Microsoft's export refused in 1.x changes:
+   - MongoDB, MongoDB Atlas and Azure Cosmos DB for MongoDB datasets write
+     `collection`.
+   - Microsoft 365 lands through a binary copy into `<object>/`, in files
+     Microsoft names, so its tables use `layout: increments`; a `snapshot`
+     or `path` table sets it. Before the first 2.0 run, delete or move the
+     1.x file, `<object>/<object>.json` (or the files a `path` wrote),
+     because it matches the new location, `<object>/*.json`, and a store
+     reading the folder would load it again. Point readers of the old file
+     at `<object>/*.json`. A table without a date filter adds a whole
+     extract on each run, so its readers take only the latest run's files.
+   - A `UserAssignedManagedIdentity` connection needs `identity`, the
+     identity's resource ID; the factory gets the credential, and the
+     platform request asks for the identity to be assigned to the factory.
+     A credential of the same name created in Studio is replaced by the
+     template's.
+   - Resource names are at most 140 characters and Copy activity names 55;
+     a longer default name is refused with the `resource_names` role to
+     set. A renamed resource is recreated under its new name and the
+     post-deployment script deletes the old one, as for the PostgreSQL
+     recipe; a renamed tumbling-window trigger re-runs its past windows
+     from `start`.
+   - `runtime.location` takes the region's display name, as Data Factory
+     shows it, such as `UK South`, not its short name, such as `uksouth`.
 
 ### Known limits of Microsoft's export
 
