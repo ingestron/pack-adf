@@ -191,3 +191,38 @@ describe.runIf(required && !tool.bundle)(
     });
   },
 );
+
+describe.runIf(tool.bundle)(
+  "Microsoft's export of a deliberately wrong fold",
+  { timeout: 120_000 },
+  () => {
+    const models = fixtures["three environments"]!;
+    const built = fold(models);
+    const template = tool.bundle
+      ? exportTemplate(tool.bundle, `${writeFolder(built.files)}/factory`)
+      : {};
+    const declared = new Set(
+      Object.keys(template.parameters ?? {}).filter((name) => name !== "factoryName"),
+    );
+    const own = tool.bundle ? deployed(ownTemplate(tool.bundle, models, "prod"), {}) : [];
+    const url = "ls_erp_landing_properties_typeProperties_url";
+
+    it("fails both checks when prod's file renames a parameter", () => {
+      const values = parametersOf(built.files, "prod");
+      const renamed = Object.fromEntries(
+        Object.entries(values).map(([name, value]) => [name === url ? `${url}2` : name, value]),
+      );
+      expect(new Set(Object.keys(renamed))).not.toEqual(declared);
+      expect(deployed(template, renamed)).not.toEqual(own);
+    });
+
+    it("fails the deployment check when prod's file has dev's value", () => {
+      const values = {
+        ...parametersOf(built.files, "prod"),
+        [url]: parametersOf(built.files, "dev")[url],
+      };
+      expect(new Set(Object.keys(values))).toEqual(declared);
+      expect(deployed(template, values)).not.toEqual(own);
+    });
+  },
+);
