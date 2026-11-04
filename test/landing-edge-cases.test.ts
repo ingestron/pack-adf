@@ -6,7 +6,7 @@ import { base, generate, json, landing } from "./erp.js";
 import { tableProject } from "./table-project.js";
 
 const endAtFiles = (standard: string) =>
-  standard.replace("packs: [store@1, adf@1]", "packs: [adf@1]\nstore: { default: none }");
+  standard.replace("packs: [store@1, adf@2]", "packs: [adf@2]\nstore: { default: none }");
 const withSettings = (standard: string, settings: string) =>
   standard.replace(
     "      start: 2026-10-01T00:00:00Z\n",
