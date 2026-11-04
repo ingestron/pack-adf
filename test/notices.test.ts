@@ -60,6 +60,14 @@ describe("integration runtime notices", () => {
     expect(found[0]?.message).toContain("managed virtual network");
   });
 
+  it("are given for a single environment too, as buildEnvironments with one target", () => {
+    const models = resolveAll({ ...base, "project.yaml": erpProject(["  dev: {}"]) }, ["dev"]);
+    const { files, problems } = fold(models);
+    expect(Object.keys(files).length).toBeGreaterThan(0);
+    expect(problems.map((problem) => problem.code)).toEqual(["PACK_NOTICE"]);
+    expect(problems[0]?.message).toMatch(/^Integration runtime `shir-erp` \(self-hosted\)/);
+  });
+
   it("are warnings that leave the files written, at no location", () => {
     const models = resolveAll(managedRuntime(), ["dev", "prod"]);
     const { files, problems } = fold(models);
