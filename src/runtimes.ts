@@ -75,7 +75,9 @@ export function runtimeProblems(settings: Data): string[] {
     return ["runtime.shared links a self-hosted runtime; it needs runtime_kind: self-hosted"];
   if (settings.runtime_kind !== "azure" && azure.length > 0)
     return [
-      `runtime.${azure.join(", runtime.")} describe an Azure runtime; they need runtime_kind: azure`,
+      azure.length === 1
+        ? `runtime.${azure[0]} describes an Azure runtime; it needs runtime_kind: azure`
+        : `runtime.${azure.join(", runtime.")} describe an Azure runtime; they need runtime_kind: azure`,
     ];
   if (settings.integration_runtime === defaultRuntime && Object.keys(runtime).length > 0)
     return [
