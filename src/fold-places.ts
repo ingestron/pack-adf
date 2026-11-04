@@ -2,14 +2,11 @@
 // when deploying, becomes a place for an ARM parameter; anything else that differs is
 // refused (spec/behaviour.md, "Which values become parameters").
 import { isDeepStrictEqual } from "node:util";
-import {
-  splitDeployText,
-  type DeployValue,
-  type EnvironmentsProblem,
-} from "@ingestron/definitions";
+import type { DeployValue, EnvironmentsProblem } from "@ingestron/definitions";
 import { isExpression, valueAt, type Step } from "./arm-export.js";
 import type { Renders } from "./fold-files-compare.js";
 import {
+  deployPart,
   deployProblem,
   differ,
   inEach,
@@ -106,11 +103,10 @@ function leaf(walk: Walk, path: Step[], values: Record<string, unknown>): void {
   const deploy: Record<string, string> = {};
   for (const [target, value] of Object.entries(values)) {
     if (typeof value !== "string") continue;
-    const parts = splitDeployText(value, walk.models[target]!.deployValues ?? []);
-    const named = parts.find((part): part is DeployValue => typeof part !== "string");
-    if (!named) continue;
-    if (parts.length > 1) return void walk.problems.push(embedded(walk, path, value, named));
-    deploy[target] = named.name;
+    const part = deployPart(value, walk.models, target);
+    if (!part) continue;
+    if (!part.whole) return void walk.problems.push(embedded(walk, path, value, part.value));
+    deploy[target] = part.value.name;
   }
   if (new Set(Object.values(deploy)).size > 1)
     return void walk.problems.push(twoNames(walk, path, deploy));
@@ -129,8 +125,7 @@ function list(walk: Walk, path: Step[], values: Record<string, unknown[]>): void
   for (const [target, items] of Object.entries(values)) {
     const text = items.find((item) => typeof item === "string" && item.includes("${envvar:"));
     if (typeof text !== "string") continue;
-    const parts = splitDeployText(text, walk.models[target]!.deployValues ?? []);
-    const named = parts.find((part): part is DeployValue => typeof part !== "string");
+    const named = deployPart(text, walk.models, target)?.value;
     if (!named) continue;
     const message = `"${named.text}" is supplied only when deploying, but it is in a list, at ${propertyLabel(path)} of ${resourceLabel(walk.file)}; an ARM parameter replaces the whole list.`;
     return void walk.problems.push(deployProblem(message, named, wholeValue));

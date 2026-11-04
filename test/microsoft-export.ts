@@ -95,7 +95,7 @@ export function deployed(template: Template, values: Record<string, unknown>): u
  * factory leaves out, such as Square's refreshToken: each is a `secureString` parameter
  * with no default, described "Secure string for '<property>' of '<resource>'".
  */
-export function addedSecrets(template: Template): string[] {
+export function exportedSecrets(template: Template): string[] {
   return Object.entries(template.parameters as Record<string, { type: string; metadata?: unknown }>)
     .filter(
       ([, parameter]) =>

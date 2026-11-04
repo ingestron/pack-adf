@@ -1,15 +1,30 @@
 // The problems a fold of every environment into one factory reports, and the words
 // they use (spec/behaviour.md, "What is refused").
-import type {
-  DeployValue,
-  EnvironmentsProblem,
-  ResolvedModel,
-  TargetDifference,
+import {
+  splitDeployText,
+  type DeployValue,
+  type EnvironmentsProblem,
+  type ResolvedModel,
+  type TargetDifference,
 } from "@ingestron/definitions";
 import type { Step } from "./arm-export.js";
 
 /** Each target's model, by name, in the order project.yaml declares the environments. */
 export type Models = Readonly<Record<string, ResolvedModel>>;
+
+/**
+ * The first deploy-time value a target's text holds, and whether it is the whole text;
+ * undefined when it holds none.
+ */
+export function deployPart(
+  text: string,
+  models: Models,
+  target: string,
+): { value: DeployValue; whole: boolean } | undefined {
+  const parts = splitDeployText(text, models[target]!.deployValues ?? []);
+  const value = parts.find((part): part is DeployValue => typeof part !== "string");
+  return value && { value, whole: parts.length === 1 };
+}
 
 /** Where values that differ between environments are written. */
 export const valuesFile = "project.yaml";

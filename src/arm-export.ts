@@ -32,7 +32,7 @@ export const armTypes: Record<string, string> = {
 };
 
 /** Folders whose definitions are keyed by the resource's own `properties.type` first. */
-export const typedFolders = new Set(["linkedService", "dataset"]);
+const typedFolders = new Set(["linkedService", "dataset"]);
 
 type Data = Record<string, unknown>;
 
@@ -55,9 +55,8 @@ export function armParameters(
 ): ArmParameter[] {
   const found: ArmParameter[] = [];
   for (const file of Object.keys(files).sort()) {
-    const folder = file.split("/")[0]!;
     const resource = JSON.parse(files[file]!) as Data;
-    const template = templateFor(definition, folder, resource);
+    const template = templateFor(definition, file, resource);
     if (template === undefined) continue;
     const at = { file, resource: String(resource.name), found };
     walk(template, resource, at, [], []);
@@ -65,12 +64,22 @@ export function armParameters(
   return found;
 }
 
-function templateFor(definition: Definition, folder: string, resource: Data): unknown {
+/**
+ * The keys a resource's definition is under: its ARM resource type, then, for linked
+ * services and datasets, its own `properties.type`. Empty for a folder the export ignores.
+ */
+export function definitionKeys(file: string, resource: unknown): string[] {
+  const folder = file.split("/")[0]!;
   const kind = armTypes[folder];
-  if (!kind) return undefined;
-  const template = definition[kind] as Data | undefined;
-  if (!template || !typedFolders.has(folder)) return template;
-  return template[String((resource.properties as Data | undefined)?.type)];
+  if (!kind) return [];
+  if (!typedFolders.has(folder)) return [kind];
+  return [kind, String(((resource as Data).properties as Data | undefined)?.type)];
+}
+
+function templateFor(definition: Definition, file: string, resource: Data): unknown {
+  const keys = definitionKeys(file, resource);
+  if (keys.length === 0) return undefined;
+  return keys.reduce<unknown>((node, key) => (node as Data | undefined)?.[key], definition);
 }
 
 interface Walk {
