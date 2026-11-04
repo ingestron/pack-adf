@@ -91,11 +91,11 @@ describe("integration runtimes", () => {
         withRuntime(
           "shir-erp",
           "self-hosted",
-          "{ location: UK West, managed_virtual_network: true }",
+          "{ managed_virtual_network: true, data_flow: { core_count: 16 } }",
         ),
       ),
     ).toContain(
-      "runtime.location, runtime.managed_virtual_network describe an Azure runtime; they need runtime_kind: azure",
+      "runtime.managed_virtual_network, runtime.data_flow describe an Azure runtime; they need runtime_kind: azure",
     );
   });
 
