@@ -5,8 +5,8 @@ import { landedFile, landedLocation, layoutOf, pathProblems, replacesFile } from
 import { base, generate, landing } from "./erp.js";
 
 const landingOnly = base["standard.yaml"]!.replace(
-  "packs: [store@1, adf@1]",
-  "packs: [adf@1]\nstore: { default: none }",
+  "packs: [store@1, adf@2]",
+  "packs: [adf@2]\nstore: { default: none }",
 );
 
 /** The invoices table, resolved with the standard changed by `edit`. */
