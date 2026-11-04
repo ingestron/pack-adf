@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { adf } from "../src/index.js";
 import { base, generate, json } from "./erp.js";
+import { identityProject, resolveAll } from "./fold-helpers.js";
 
 const cases = JSON.parse(
   readFileSync(new URL("../spec/conformance/sql-family.json", import.meta.url), "utf8"),
@@ -110,6 +111,24 @@ describe("SQL family native resources", () => {
     expect(adf.request!(result.model!).flatMap((section) => section.lines)).toContain(
       `Credential \`source-identity\`: assign the user-assigned managed identity \`${identity}\` to the factory before deploying, with the Managed Identity Operator role for whoever deploys; the credential refers to it.`,
     );
+  });
+
+  it("refuses an identity that is not a resource ID, before deployment would", () => {
+    expect(managedIdentity("  credential: source-identity\n  identity: id-erp")).toEqual([
+      '"adf-copy" for table "invoices": the connection\'s identity "id-erp" is not a user-assigned managed identity\'s resource ID; give its resource ID, such as /subscriptions/<subscription>/resourceGroups/<group>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<name>.',
+    ]);
+    expect(
+      managedIdentity(`  credential: source-identity\n  identity: ${identity.toLowerCase()}`),
+    ).toEqual([]);
+  });
+
+  it("leaves an identity supplied when deploying to the deployment", () => {
+    const project = identityProject();
+    project["erp.yaml"] = project["erp.yaml"]!.replace(
+      "'${values.identity}'",
+      "'${envvar:ERP_IDENTITY}'",
+    );
+    expect(() => resolveAll(project, ["dev", "prod"])).not.toThrow();
   });
 
   it("refuses a credential name ADF does not accept", () => {
