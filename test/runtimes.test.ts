@@ -84,7 +84,18 @@ describe("integration runtimes", () => {
       "runtime.shared links a self-hosted runtime; it needs runtime_kind: self-hosted",
     );
     expect(messages(withRuntime("shir-erp", "self-hosted", "{ location: UK South }"))).toContain(
-      "runtime.location describe an Azure runtime; they need runtime_kind: azure",
+      "runtime.location describes an Azure runtime; it needs runtime_kind: azure",
+    );
+    expect(
+      messages(
+        withRuntime(
+          "shir-erp",
+          "self-hosted",
+          "{ location: uksouth, managed_virtual_network: true }",
+        ),
+      ),
+    ).toContain(
+      "runtime.location, runtime.managed_virtual_network describe an Azure runtime; they need runtime_kind: azure",
     );
   });
 
