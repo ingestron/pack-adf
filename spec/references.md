@@ -112,3 +112,84 @@ below is what the pack writes for `pattern`, `parallel`, `activity`,
 - **Annotations** (`annotations`):
   [Pipelines and activities, Pipeline JSON](https://learn.microsoft.com/en-us/azure/data-factory/concepts-pipelines-activities#pipeline-json):
   `annotations` is an optional array of tags on the pipeline.
+
+## One factory for every environment
+
+Accessed 2026-11-04, against current Microsoft documentation:
+
+- [Custom parameters in a Resource Manager template](https://learn.microsoft.com/en-us/azure/data-factory/continuous-integration-delivery-resource-manager-custom-parameters)
+  (updated 2026-08-05): the file is `arm-template-parameters-definition.json`
+  in the root folder, "You must use that exact file name"; "If no file is
+  found, the default template is used", which the page reproduces. The syntax
+  is `<action>:<name>:<stype>`: `=` keeps the current value as the default,
+  `-` does not keep a default, `|` is for Key Vault secrets; a blank name
+  takes the property's, one starting with `-` is shortened to
+  `<resource>_<name>`; types are `string` (the default), `securestring`,
+  `int`, `bool`, `object`, `secureobject` and `array`. `*` parameterises the
+  properties one level below it. "Specifying an array in the definition file
+  indicates that the matching property in the template is an array", and the
+  definition applies to every item. "A definition can't be specific to a
+  resource instance." Linked services and datasets take a section per type.
+  "By default, all secure strings … are parameterized." The custom file
+  "doesn't change the ARM template parameter limit of 256".
+- [Template limits](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/best-practices#template-limits)
+  (updated 2026-06-26): 256 parameters, 800 resources, 4 MB per template.
+  Neither that page nor
+  [Parameters in templates](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/parameters)
+  (updated 2026-06-26) states a limit on a parameter name's length; the export
+  wrote a 170-character name without shortening it.
+- [Continuous integration and delivery](https://learn.microsoft.com/en-us/azure/data-factory/continuous-integration-delivery)
+  (2026-07-29): "Data Factory expects you to have the same name, type, and
+  subtype of integration runtime across all stages of CI/CD"; keep a Key Vault
+  per environment with "the same secret names across all stages", so "the
+  only thing that changes is the key vault name"; unrelated files in the
+  repository's data folder "could cause resource loading errors"; only the
+  development factory is associated with Git.
+- [Automated publishing](https://learn.microsoft.com/en-us/azure/data-factory/continuous-integration-delivery-improvements)
+  (2026-07-29): `npm run build export <rootFolder> <factoryId> [outputFolder]`
+  validates, then writes the ARM template; the artefacts include the pre- and
+  post-deployment scripts. The `adf_publish` branch stays supported.
+- [Pre- and post-deployment scripts](https://learn.microsoft.com/en-us/azure/data-factory/continuous-integration-delivery-sample-script)
+  (2025-01-29), and the script itself,
+  [PrePostDeploymentScript.Ver2.ps1 at 507f4d4](https://github.com/Azure/Azure-DataFactory/blob/507f4d4a53da29edc684d934161aa880befd3e0c/SamplesV2/ContinuousIntegrationAndDelivery/PrePostDeploymentScript.Ver2.ps1)
+  (2024-07-11), the same as the `PrePostDeploymentScript.ps1` the export
+  writes apart from comments and the preview's trigger comparison: after
+  deployment it deletes every trigger, pipeline, data flow, dataset, linked
+  service and integration runtime that is not in the template; it reads
+  parameter values from `-ArmTemplateParameters` (by default
+  `ARMTemplateParametersForFactory.json` beside the template), substitutes a
+  parameterised `runtimeState`, and starts the triggers whose state is
+  `Started`.
+- [`@microsoft/azure-data-factory-utilities` 1.0.3](https://www.npmjs.com/package/@microsoft/azure-data-factory-utilities)
+  (MIT, published 2025-09-17): its `lib/bundle.manager.js` downloads the
+  build tool from `https://adf.azure.com/assets/cmd-api/main.js` on each run,
+  unless `--path` names a copy; the URL is not versioned. The copy tested on
+  2026-11-04 had SHA-256
+  `9c7cb2722b4dc516b5e906c7efd1672f24b6849a5492a42a92b63c602fbb76aa`.
+
+Experiments with that package and tool, on synthetic factories, 2026-11-04:
+
+- Parameter names: the resource's name, then the keys down to the value,
+  where an array's key gives way to the item's index:
+  `pl_erp_every_24_hour_properties_3_typeProperties_1_typeProperties_url`
+  for `activities[3].typeProperties.activities[1].typeProperties.url`. A whole
+  list made a parameter loses its own key (`…_typeProperties_source` for
+  `source.additionalColumns`, `…_properties_parameters_tables` for
+  `parameters.tables.defaultValue`).
+- `-` on an expression object puts the parameter in its `value` and keeps
+  `type: Expression`; the name has no `_value`.
+- With `-` the parameter has no `defaultValue`; with `=` it has one.
+- An empty definition, `{}`, gives a template whose only parameter is
+  `factoryName`; with no file, the default parameterisation applies.
+- A `connectVia` to an integration runtime that is not in the folder is
+  dropped from the exported linked service, with "reference is empty" in the
+  log, and validation still passes. With `integrationRuntime/<name>.json`
+  present, it is kept and the runtime is a resource of the template. A
+  `connectVia` to `AutoResolveIntegrationRuntime` is dropped either way, which
+  is ADF's default.
+- The export adds `annotations: []` and defaults such as an activity's
+  `headers: {}`, so the tests compare the folded factory's export with each
+  environment's own factory's export, not with the Git JSON.
+- A linked service with a credential that is not in the folder fails
+  validation, and so does a linked service name over 140 characters ("It
+  should be in the form `/^[^-\s][^\\/:*?"<>|]{1,140}$/`"); the pack allows 200.

@@ -262,3 +262,223 @@ The parent:
 of `timeout`, in seconds) and retry limit (1); and, because new triggers run
 every window since `start`, to set `start` to the next window when turning
 `after_copy` on.
+
+## One factory for every environment
+
+`adf@2` builds environments together (definitions specification, section 2.1):
+`buildEnvironments` gives one factory for every target, which Microsoft's
+CI/CD deploys unchanged: the npm package `@microsoft/azure-data-factory-utilities`
+exports one ARM template from the factory's folder, and each stage deploys it
+with its own parameter file. One factory serves one definitions project:
+Microsoft's post-deployment script deletes every pipeline, dataset, linked
+service, trigger and integration runtime in the target factory that the
+template does not hold.
+
+### Files
+
+Relative to the pack's output folder:
+
+- `factory/`, the factory's root folder, which the export reads: the resources
+  of the first target, in ADF's Git folders, with
+  `arm-template-parameters-definition.json`;
+- `parameters/<target>.json`, an ARM deployment parameter file
+  (`$schema` `https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#`,
+  `contentVersion` `1.0.0.0`) for each target.
+
+The factory holds the first target's values, so it reads and validates as a
+working factory. Where the first target takes a deploy-time value, the
+factory holds `<value of NAME>`. Every file is JSON written with tabs and a
+final new line. `factoryName` is in no parameter file: each stage supplies it.
+
+`build(model)` gives one target's resources in the same folders, without
+`factory/`: `render(e)` of the fold property.
+
+### Integration runtimes
+
+`build` writes `integrationRuntime/<name>.json` for each runtime a linked
+service connects through, other than `AutoResolveIntegrationRuntime`, with its
+type only: `{"type": "SelfHosted"}` for `runtime_kind: self-hosted`, and
+`{"type": "Managed", "typeProperties": {"computeProperties": {"location": "AutoResolve"}}}`
+for `azure`. The export drops a `connectVia` to a runtime it cannot find in
+the folder, and the post-deployment script deletes every runtime the template
+does not hold, so the folder holds each runtime the factory uses. A runtime
+name used with two kinds is a pack check problem. The deployment sets a
+runtime's type and nothing else, so a linked self-hosted runtime, or an Azure
+runtime with its own region, compute or virtual network, is not described.
+
+### Which values become parameters
+
+Each target's `build` is compared with the first target's as JSON. A value
+becomes a parameter where it differs between targets, or where a target holds
+a deploy-time value (definitions specification, section 1.1) as the whole
+value:
+
+- a text, number or flag;
+- an ADF expression object (`{"value": "@…", "type": "Expression"}`): its
+  `value`;
+- a list of plain values, as one parameter.
+
+Lists of objects, such as activities, are compared item by item. Everything
+else is written as it is.
+
+### The definition file
+
+`arm-template-parameters-definition.json` names the property of each value
+that becomes a parameter, under its ARM resource type
+(`Microsoft.DataFactory/factories/linkedServices`, `…/datasets`,
+`…/pipelines`, `…/triggers`); linked services and datasets are keyed by their
+`properties.type` first, such as `AzureBlobFS`. An index into a list is a
+one-item array, which the export applies to every item. The action is `-`,
+which keeps no default, so a stage that leaves a parameter out fails to deploy
+instead of taking the first environment's value; `-::int`, `-::bool` and
+`-::array` give numbers, flags and lists their type. An expression object is
+named by its key, and the export replaces its `value`. With no value that
+differs, the file is `{}`, which still replaces Microsoft's default
+parameterisation.
+
+A definition applies to every resource of its type, so a parameter can stand
+for a value that is the same in every target. Minimality, in this pack's
+terms: the definition names only properties where some resource differs or
+takes a deploy-time value. Each parameter file sets every parameter the
+template has, except those a target leaves for the deploying pipeline.
+
+### Parameter names
+
+Names are the export's own: the resource's name, then each key down to the
+value, joined with `_`, where a key whose value is a list gives way to the
+item's index; for example `ls_erp_landing_properties_typeProperties_url`,
+`tr_erp_erp_properties_runtimeState` and
+`pl_erp_erp_properties_0_typeProperties_0_typeProperties_source_0_value`.
+`conformance/arm-parameters.json` has the cases.
+
+### Deploy-time values
+
+A deploy-time value that is a whole value is a parameter that the targets
+where it is one leave out of their parameter file; the deploying pipeline
+supplies it, as `--parameters <name>=<value>` or the deployment task's
+override parameters. `deployValues` lists, for each such value, every
+parameter name it is supplied as, in the order the models first hold the
+values. An ARM parameter's name comes from where the value is, not from
+`NAME`, so a value used in several places is supplied under each name.
+
+### What is refused
+
+Before any file is written, in this order:
+
+1. `compareTargets` (definitions specification, section 2.1).
+2. `DEPLOY_VALUE` for a landing folder that holds a deploy-time value: ADF
+   splits it into the storage account's URL, the file system and the folder.
+3. `DEPLOY_VALUE` for a resource named after a deploy-time value, such as an
+   integration runtime.
+4. `ENVIRONMENTS_DIFFER` for integration runtimes whose names or types differ:
+   `The integration runtimes are <name> (<type>), … in <target> and … in <target>; Microsoft's CI/CD needs each runtime to have the same name and type in every environment.`
+5. `ENVIRONMENTS_DIFFER` for a resource whose name differs, each target
+   building as many resources in its folder, paired in the order built:
+   `The <kind> is named "<name>" in <target> and "<name>" in <target>.`;
+   otherwise for a resource some targets build:
+   `The <kind> "<name>" is built in <targets> but not in <targets>; every environment's factory must have the same resources.`
+6. `ENVIRONMENTS_DIFFER` for a resource that differs in more than a value: a
+   value of another JSON type, an object with other keys, or a list of objects
+   of another length:
+   `In the <kind> "<name>", <property> of the resource differs between environments in more than a value: it is <value> in <targets> and <value> in <targets>.`
+7. `DEPLOY_VALUE` for a deploy-time value inside a longer text, or in a list,
+   with the hint
+   `Make the variable hold the whole value, such as the full URL, or write the value in project.yaml for each environment.`;
+   and for two deploy-time values at one place.
+8. `ARM_PARAMETERS` when the template would have more than 256 parameters,
+   `factoryName` included:
+   `The ARM template would have <count> parameters: factoryName and <count - 1> for values that differ between environments. Azure Resource Manager allows 256.`
+
+Each `ENVIRONMENTS_DIFFER` message from 4 to 6 ends with the method and
+connection settings, and table objects, that differ between the targets, up
+to three, each with its value in each target:
+` Settings that differ: <setting> (<value> in <targets> and <value> in <targets>).`
+Value problems are located at `project.yaml`, where values differ between
+environments; deploy-time problems at the value's first use.
+
+`SECRET_NAME_DIFFERS` is a warning for a Key Vault secret name
+(`secretName` of an `AzureKeyVaultSecret`) that differs: it is a parameter
+and deploys, but Microsoft recommends a vault per environment with the same
+secret names.
+
+### The fold property
+
+- `render(e)` is `build(models[e])`.
+- `view(files, e)` is the factory's resources, out of `factory/`, with each
+  parameter the definition makes (by the export's rules above) set from
+  `parameters/e.json`, or, where the deploying pipeline supplies it, to the
+  deploy-time value's text. A parameter that neither sets keeps the factory's
+  value.
+- Files are compared as JSON data.
+
+`buildEnvironments` checks the property for every target before it returns,
+and reports a file whose view differs as `ENVIRONMENTS_DIFFER`.
+
+The tests check it with `checkFold` on fixtures of one, two and three targets,
+where a value is the same in test and prod but differs in dev, and show that
+three deliberately wrong folds fail. Independently of this pack's model of
+the export, they run Microsoft's export, version 1.0.3, on folded fixtures,
+the connector catalogue included: every parameter a parameter file sets or the
+pipeline supplies is declared in the exported template and no other, except
+the secure strings the export adds for optional secrets a linked service
+leaves out; and the template with a target's values deploys the same
+resources as that target's own factory exports to.
+
+### Triggers
+
+A trigger is stopped when `paused` says so, else when the platform's
+`schedule.paused` does, else unless the environment is `prod` or `production`.
+The environment's name decides, not `mode`, which with environments generated
+together defaults to `production` for every environment but `dev`.
+`runtimeState` becomes a parameter where it differs. The post-deployment
+script reads a parameterised `runtimeState` from the parameter file it is
+given with `-ArmTemplateParameters`, and starts only the triggers whose state
+is `Started`.
+
+### Upgrading from adf@1
+
+1. Change the standard to `adf@2`. The CLI then writes `build/adf/` and reports
+   each `build/<environment>/adf/` as no longer generated.
+2. Resource names are the same as in 1.x, so the first ARM deployment to each
+   factory updates its resources in place, and adds each integration runtime
+   resource. Before it, check each runtime in the test and production
+   factories: a linked self-hosted runtime, or an Azure runtime with its own
+   region, compute or virtual network, would be set to the type alone.
+3. Deploy each factory from one project only: the post-deployment script
+   deletes the factory's resources, runtimes included, that the template does
+   not hold.
+4. Triggers outside `prod` and `production` stay stopped, as in 1.x. A
+   platform that set `mode: production` for another environment to start its
+   triggers now sets `paused: false` in the ADF methods' settings instead.
+5. A landing folder or integration runtime given by `${envvar:…}` is refused
+   (`DEPLOY_VALUE`); write it in project.yaml for each environment. A Key
+   Vault URL or another whole value may stay `${envvar:…}`; the deploying
+   pipeline supplies it under the names `deployValues` gives.
+6. Names that differ between environments, such as the 1.x PostgreSQL recipe's
+   `_${environment.name}` suffix, are refused. Removing the suffix renames the
+   resources: the deployment creates them under the new names and the
+   post-deployment script deletes the old ones, with their trigger history.
+7. A pipeline that deployed `build/<environment>/adf/` as JSON moves to the
+   template: run the export on `build/adf/factory`, then for each stage the
+   pre-deployment script, `az deployment group create --mode Incremental`
+   with `parameters/<environment>.json` and `factoryName`, and the
+   post-deployment script, both scripts given `-ArmTemplateParameters
+parameters/<environment>.json`.
+
+### Known limits of Microsoft's export
+
+Found by running it on the connector catalogue (2026-11-04):
+
+- Its validator refuses the MongoDB, MongoDB Atlas and Azure Cosmos DB for
+  MongoDB collection datasets ("Collection name is required") and the
+  Microsoft 365 copy ("Microsoft 365 source only supports copying to binary
+  format dataset"), so a factory with them does not export.
+- A linked service authenticated with `UserAssignedManagedIdentity` references
+  a credential that is not in the folder, which the validator refuses ("Cannot
+  reference to an invalid or deleted Credential object").
+- For some connectors it adds a secure string parameter, with no default, for
+  an optional secret the linked service leaves out: Informix's and Microsoft
+  Access's `credential`, SharePoint Online List's
+  `servicePrincipalEmbeddedCertPassword`, Snowflake's `privateKeyPassphrase`,
+  Square's `refreshToken`, and Xero's `consumerKey` and `privateKey`. The
+  deploying pipeline must give each a value.
