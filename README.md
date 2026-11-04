@@ -40,7 +40,7 @@ closer to the table wins:
 
 | Setting                                               | Files                                                                                                       |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `layout: snapshot`                                    | One file per table, `<object>/<object>.parquet` (`.json` for Microsoft 365), replaced by each run           |
+| `layout: snapshot`                                    | One file per table, `<object>/<object>.parquet`, replaced by each run                                       |
 | `layout: increments`                                  | A new file per run under `<object>/`, named by the window's start and the run                               |
 | `path: "{object}/{yyyy}/{MM}/{object}_{run}.parquet"` | Your own path: `{object}`, `{connection}`, the window start's `{yyyy}`, `{MM}`, `{dd}`, `{HH}`, and `{run}` |
 
@@ -52,7 +52,10 @@ per run when it has `{run}`, or the date tokens down to the window's unit
 for monthly ones); otherwise each run replaces the file. Without a setting, a
 flow that ends at the landed files gets `snapshot`, unless each run holds only
 its window (`mode: incremental`, or Microsoft 365's date filter), which gets
-`increments`; a flow a store reads gets `increments`.
+`increments`; a flow a store reads gets `increments`. Microsoft 365 lands
+only as `increments`: Microsoft writes its JSON files into the table's folder
+and names them, and Microsoft's export accepts no file name for it, so a
+Microsoft 365 table without a date filter sets `layout: increments`.
 
 ADF alone can be the whole project when the landed files are what you need, for
 example for reports that read them directly:
@@ -167,7 +170,8 @@ Every pipeline and Copy activity has a description.
 ## Connector catalogue
 
 `recipesFolder` is a tested project with one connection and one flow for each
-connector the pack supports. `ingestron init --connector <id> --via adf` starts
+connector the pack supports, and the tests run all of it, in two environments,
+through Microsoft's export. `ingestron init --connector <id> --via adf` starts
 a project from it. Each connector's settings are on its page in the
 [documentation](https://docs.ingestron.io/docs/connectors).
 
@@ -190,11 +194,11 @@ settings:
       shared: /subscriptions/<id>/resourceGroups/rg-shared/providers/Microsoft.DataFactory/factories/adf-shared/integrationruntimes/shir-erp
 ```
 
-| Kind                           | Settings                                                                                                                                          | Written                                                                                                        |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Self-hosted, the factory's own | none                                                                                                                                              | `{"type": "SelfHosted"}`, as Data Factory Studio writes it                                                     |
-| Self-hosted, linked            | `runtime.shared`, the shared runtime's resource ID                                                                                                | `linkedInfo` with `RBAC`; a parameter where environments link to different ones                                |
-| Azure                          | `runtime.location` (default `AutoResolve`), `runtime.managed_virtual_network`, `runtime.data_flow` (`compute_type`, `core_count`, `time_to_live`) | `Managed`, with the factory's managed virtual network, `managedVirtualNetwork/default.json`, when it is in one |
+| Kind                           | Settings                                                                                                                                                                     | Written                                                                                                        |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Self-hosted, the factory's own | none                                                                                                                                                                         | `{"type": "SelfHosted"}`, as Data Factory Studio writes it                                                     |
+| Self-hosted, linked            | `runtime.shared`, the shared runtime's resource ID                                                                                                                           | `linkedInfo` with `RBAC`; a parameter where environments link to different ones                                |
+| Azure                          | `runtime.location`, the region's display name (default `AutoResolve`), `runtime.managed_virtual_network`, `runtime.data_flow` (`compute_type`, `core_count`, `time_to_live`) | `Managed`, with the factory's managed virtual network, `managedVirtualNetwork/default.json`, when it is in one |
 
 An ARM deployment sets a runtime's whole resource: what the settings leave out
 is reset to its default. An Azure runtime's copy and pipeline compute, and a
@@ -355,12 +359,21 @@ factories unconnected to Git, as Microsoft recommends.
   project started from it renames its resources when it drops the suffix: the
   deployment creates the new ones and the post-deployment script deletes the
   old ones.
+- Output Microsoft's export refused is fixed, so every connector exports:
+  - MongoDB, MongoDB Atlas and Azure Cosmos DB for MongoDB datasets write
+    `collection`.
+  - Microsoft 365 lands through a binary copy into a folder, so its tables use
+    `layout: increments`.
+  - A `UserAssignedManagedIdentity` connection needs `identity`, the
+    identity's resource ID; the factory gets the credential, and the platform
+    request asks for the identity to be assigned to the factory.
+  - Resource names are at most 140 characters and Copy activity names 55; a
+    longer default name is refused with the `resource_names` role to set.
+  - `runtime.location` takes the region's display name, as Data Factory
+    shows it, not its short name.
 - Needs `@ingestron/definitions` 1.8 or later.
 
-Microsoft's export refuses some connectors' resources: the MongoDB collection
-datasets, Microsoft 365, and a linked service with a credential (for
-`UserAssignedManagedIdentity`). The details and the rules are in
-[spec/behaviour.md](spec/behaviour.md).
+The details and the rules are in [spec/behaviour.md](spec/behaviour.md).
 
 Microsoft's published Data Factory resource schema (2018-06-01) predates the
 current linked services, so it cannot validate this output; the tests run
@@ -376,7 +389,8 @@ For one factory for every environment (accessed 2026-11-04):
 [pre- and post-deployment scripts](https://learn.microsoft.com/en-us/azure/data-factory/continuous-integration-delivery-sample-script),
 [template limits](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/best-practices#template-limits),
 [deployment modes](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/deployment-modes),
-[integration runtime resources](https://learn.microsoft.com/en-us/azure/templates/microsoft.datafactory/factories/integrationruntimes)
+[integration runtime resources](https://learn.microsoft.com/en-us/azure/templates/microsoft.datafactory/factories/integrationruntimes),
+[managed virtual network resources](https://learn.microsoft.com/en-us/azure/templates/microsoft.datafactory/factories/managedvirtualnetworks)
 and [managed virtual networks](https://learn.microsoft.com/en-us/azure/data-factory/managed-virtual-network-private-endpoint);
 the experiments with `@microsoft/azure-data-factory-utilities` 1.0.3 are in
 [spec/references.md](spec/references.md).
@@ -389,6 +403,18 @@ Accessed 2026-10-25: Microsoft Learn
 [Key Vault secrets](https://learn.microsoft.com/en-us/azure/data-factory/store-credentials-in-key-vault),
 [tumbling window triggers](https://learn.microsoft.com/en-us/azure/data-factory/how-to-create-tumbling-window-trigger),
 [source control](https://learn.microsoft.com/en-us/azure/data-factory/source-control).
+For the output Microsoft's export refused (accessed 2026-11-05):
+[dataset resources](https://learn.microsoft.com/en-us/azure/templates/microsoft.datafactory/factories/datasets),
+[credential resources](https://learn.microsoft.com/en-us/azure/templates/microsoft.datafactory/factories/credentials),
+[credentials](https://learn.microsoft.com/en-us/azure/data-factory/credentials),
+the [MongoDB](https://learn.microsoft.com/en-us/azure/data-factory/connector-mongodb),
+[MongoDB Atlas](https://learn.microsoft.com/en-us/azure/data-factory/connector-mongodb-atlas),
+[Azure Cosmos DB for MongoDB](https://learn.microsoft.com/en-us/azure/data-factory/connector-azure-cosmos-db-mongodb-api)
+and [Microsoft 365](https://learn.microsoft.com/en-us/azure/data-factory/connector-office-365) connectors,
+Microsoft Graph Data Connect [sinks](https://learn.microsoft.com/en-us/graph/data-connect-datasets#sinks)
+and [naming rules](https://learn.microsoft.com/en-us/azure/data-factory/naming-rules);
+where they and the export disagree, the pack follows the export, as
+[spec/references.md](spec/references.md) records.
 For `after_copy` (accessed 2026-11-01): Container Apps
 [Jobs - Start](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/jobs/start),
 [Job Execution](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/job-execution/job-execution),
