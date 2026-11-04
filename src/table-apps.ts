@@ -78,7 +78,12 @@ export const tableApps: TableSource[] = [
     dataset: "SquareObject",
     source: "SquareSource",
     object: ["tableName"],
-    fields: { host: text("host", "Square service URL."), ...client, access_token: token },
+    fields: {
+      host: text("host", "Square service URL."),
+      ...client,
+      access_token: token,
+      refresh_token: { ...refresh, optional: true },
+    },
     version: "2.0",
     runtime: "self-hosted",
   },

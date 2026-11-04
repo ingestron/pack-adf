@@ -47,6 +47,14 @@ export const databaseFields = {
   database: textField("database", "Database to read."),
   user: textField("username", "Account used to read the source."),
   password: secretField("password", "Key Vault secret holding the account password."),
+  /** The credential part of an ODBC connection string, which ADF keeps apart from it. */
+  odbcCredential: {
+    ...secretField(
+      "credential",
+      "Key Vault secret holding the credential part of the connection string, if the driver needs one.",
+    ),
+    optional: true,
+  },
 };
 
 /** An optional numeric port; the vendor default applies when omitted. */

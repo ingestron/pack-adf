@@ -1,7 +1,7 @@
 // The folded files: the factory's folder with the first target's values, the
 // parameter definition, and an ARM parameter file per target (spec/behaviour.md,
 // "Files").
-import { splitDeployText, type SuppliedValue } from "@ingestron/definitions";
+import type { SuppliedValue } from "@ingestron/definitions";
 import {
   armParameters,
   setValueAt,
@@ -10,7 +10,7 @@ import {
   type Definition,
 } from "./arm-export.js";
 import type { Renders } from "./fold-files-compare.js";
-import type { Models } from "./fold-problems.js";
+import { deployPart, type Models } from "./fold-problems.js";
 
 /** The factory's root folder, which Microsoft's export reads, relative to the pack's folder. */
 export const factoryFolder = "factory";
@@ -64,9 +64,8 @@ export function writeFold(renders: Renders, models: Models, definition: Definiti
 /** The deploy-time value's NAME when the value is one, whole. */
 function deployName(value: unknown, models: Models, target: string): string | undefined {
   if (typeof value !== "string") return undefined;
-  const parts = splitDeployText(value, models[target]!.deployValues ?? []);
-  const [part] = parts;
-  return parts.length === 1 && typeof part !== "string" ? part!.name : undefined;
+  const part = deployPart(value, models, target);
+  return part?.whole ? part.value.name : undefined;
 }
 
 /** The first target's files, with a placeholder where it takes a deploy-time value. */

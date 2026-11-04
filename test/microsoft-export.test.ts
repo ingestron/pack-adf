@@ -14,11 +14,12 @@ import {
   linkedRuntime,
   managedRuntime,
   parametersOf,
+  squareProject,
   resolveAll,
   type Models,
 } from "./fold-helpers.js";
 import {
-  addedSecrets,
+  exportedSecrets,
   deployed,
   exportTemplate,
   exportTool,
@@ -73,6 +74,10 @@ const fixtures: Record<string, Models> = {
   "three environments": resolveAll(erpEnvironments(), ["dev", "test", "prod"]),
   "a linked self-hosted runtime": resolveAll(linkedRuntime(), ["dev", "prod"]),
   "an Azure runtime in a managed virtual network": resolveAll(managedRuntime(), ["dev", "prod"]),
+  "Square's refresh token from Key Vault": resolveAll(
+    squareProject(", refresh_token: '${secret:refresh-token}'"),
+    ["dev", "prod"],
+  ),
   "a deploy-time vault": resolveAll(
     {
       ...base,
@@ -109,19 +114,17 @@ describe.skipIf(!tool.bundle).each(Object.entries(fixtures))(
       : {};
     const supplied = suppliedTexts(built.deployValues);
 
-    it("declares every parameter the environments' files set or the pipeline supplies, and no other", () => {
-      const added = tool.bundle ? addedSecrets(template) : [];
-      const declared = Object.keys(template.parameters).filter(
-        (name) => name !== "factoryName" && !added.includes(name),
-      );
+    it("declares exactly the parameters each environment's file sets and the pipeline supplies", () => {
+      const declared = Object.keys(template.parameters).filter((name) => name !== "factoryName");
       for (const target of Object.keys(models)) {
         const names = [...Object.keys(parametersOf(built.files, target)), ...Object.keys(supplied)];
         expect(new Set(names)).toEqual(new Set(declared));
       }
     });
 
-    it("adds a secure string of its own only for a secret a linked service leaves out", () => {
-      for (const name of addedSecrets(template)) {
+    it("lists each secure string the export adds, for a secret a linked service leaves out", () => {
+      for (const name of exportedSecrets(template)) {
+        expect(built.deployValues, name).toContainEqual({ name, suppliedAs: [name] });
         const metadata = String(template.parameters[name].metadata);
         const [, property, resource] = /^Secure string for '([^']+)' of '([^']+)'$/.exec(metadata)!;
         const service = JSON.parse(built.files[`factory/linkedService/${resource}.json`]!);
@@ -164,7 +167,7 @@ describe.skipIf(!tool.bundle).each(Object.entries(fixtures))(
       const [first, last] = [Object.keys(models)[0]!, Object.keys(models).at(-1)!];
       const values = { ...supplied, ...parametersOf(built.files, first) };
       expect(deployed(template, values)).not.toEqual(
-        deployed(ownTemplate(tool.bundle!, models, last), {}),
+        deployed(ownTemplate(tool.bundle!, models, last), supplied),
       );
     });
 
@@ -172,7 +175,7 @@ describe.skipIf(!tool.bundle).each(Object.entries(fixtures))(
       for (const target of Object.keys(models)) {
         const values = { ...supplied, ...parametersOf(built.files, target) };
         expect(deployed(template, values), target).toEqual(
-          deployed(ownTemplate(tool.bundle!, models, target), {}),
+          deployed(ownTemplate(tool.bundle!, models, target), supplied),
         );
       }
     });
