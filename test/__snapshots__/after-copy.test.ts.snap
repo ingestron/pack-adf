@@ -49,6 +49,13 @@ exports[`after_copy > generates as before without after_copy 1`] = `
 	}
 }
 ",
+  "integrationRuntime/shir-erp.json": "{
+	"name": "shir-erp",
+	"properties": {
+		"type": "SelfHosted"
+	}
+}
+",
   "linkedService/ls_erp_erp_erp.json": "{
 	"name": "ls_erp_erp_erp",
 	"properties": {

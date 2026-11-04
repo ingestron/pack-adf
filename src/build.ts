@@ -3,6 +3,7 @@ import { afterCopy } from "./after-copy.js";
 import { decorate } from "./design.js";
 import { foreachPipeline } from "./foreach.js";
 import { resourceName } from "./resource-names.js";
+import { addRuntimes } from "./runtimes.js";
 import { addResource, mergeResources } from "./resource-files.js";
 import { tableGroups, tableResources } from "./table-resources.js";
 import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
@@ -26,7 +27,8 @@ import {
 } from "./resources.js";
 
 /**
- * Every ADF resource file for one environment, in ADF's Git folder layout.
+ * Every ADF resource file for one environment, in ADF's Git folder layout, with the
+ * integration runtimes its linked services use.
  * @example
  * const files = build(model); // { "pipeline/pl_erp_erp.json": "{…}", … }
  */
@@ -67,6 +69,7 @@ export function build(model: ResolvedModel): Record<string, string> {
   mergeResources(files, tableResources(model, shared));
   afterCopy(files, model);
   decorate(files, model);
+  addRuntimes(files, model);
   return files;
 }
 

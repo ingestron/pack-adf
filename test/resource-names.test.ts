@@ -29,7 +29,8 @@ it.each(cases)("configures every generated name and reference for $id", (entry) 
   expect(result.model, JSON.stringify(result.diagnostics)).toBeDefined();
   const resources = Object.entries(files).map(([path, text]) => ({ path, ...JSON.parse(text) }));
   const names = new Set(Object.values(naming.names));
-  for (const resource of resources) {
+  // Integration runtimes keep the names the settings give them.
+  for (const resource of resources.filter((item) => !item.path.startsWith("integrationRuntime/"))) {
     expect(names.has(resource.name), resource.path).toBe(true);
     expect(resource.path).toContain(`/${resource.name}.json`);
     checkReferences(resource, files);
@@ -44,6 +45,7 @@ function checkReferences(value: unknown, files: Record<string, string>): void {
     LinkedServiceReference: "linkedService",
     DatasetReference: "dataset",
     PipelineReference: "pipeline",
+    IntegrationRuntimeReference: "integrationRuntime",
   };
   const folder = folders[String(object.type)];
   if (folder) expect(files[`${folder}/${String(object.referenceName)}.json`]).toBeDefined();
