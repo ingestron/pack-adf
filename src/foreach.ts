@@ -10,6 +10,7 @@ import {
   describePipeline,
   policyOf,
 } from "./design.js";
+import { defaultParallel } from "./design-settings.js";
 import { staticFile } from "./layout.js";
 import { selectOf, watermarkOf } from "./query.js";
 import { reference, type CopyGroup, type Shared } from "./resources.js";
@@ -51,7 +52,8 @@ export function foreachPipeline(
   shared: Shared,
   name: string,
 ): Data {
-  const parallel = (group.tables[0]!.ingest!.settings.parallel as number | undefined) ?? 4;
+  const parallel =
+    (group.tables[0]!.ingest!.settings.parallel as number | undefined) ?? defaultParallel;
   return {
     name,
     properties: {
