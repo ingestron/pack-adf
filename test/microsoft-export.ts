@@ -1,8 +1,11 @@
 // Microsoft's own export, @microsoft/azure-data-factory-utilities, run on folded
 // files: the package downloads its build tool, main.js, from Data Factory's site,
-// so the tests that use it are skipped, with the reason, when it cannot be had.
+// so the tests that use it are skipped, with the reason, when it cannot be had or is
+// not the tool they were written against; with INGESTRON_REQUIRE_ADF_EXPORT=1, as CI
+// sets it, they fail instead.
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -15,19 +18,42 @@ const factoryId =
   "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-data/providers/Microsoft.DataFactory/factories/adf-test";
 
 /**
- * The build tool's path, downloaded once into the system's temporary folder, or why it
- * cannot be had. `ADF_UTILITIES_BUNDLE` names a copy to use offline.
+ * The SHA-256 of the build tool the tests were written against (spec/references.md).
+ * The URL is not versioned, so a tool with another hash is a different oracle.
+ */
+export const bundleHash = "9c7cb2722b4dc516b5e906c7efd1672f24b6849a5492a42a92b63c602fbb76aa";
+
+const hashOf = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
+
+const mismatch = (where: string, hash: string) =>
+  `${where} has SHA-256 ${hash}, not the ${bundleHash} the tests were written against`;
+
+/**
+ * The build tool's path, downloaded once into the system's temporary folder under its
+ * hash and checked on every use, or why it cannot be had. `ADF_UTILITIES_BUNDLE` names
+ * a copy to use offline, which is checked the same way.
  */
 export async function exportTool(): Promise<{ bundle?: string; reason?: string }> {
   const given = process.env.ADF_UTILITIES_BUNDLE;
-  if (given) return existsSync(given) ? { bundle: given } : { reason: `${given} does not exist` };
-  const bundle = join(tmpdir(), "ingestron-adf-utilities", "main.js");
-  if (existsSync(bundle)) return { bundle };
+  if (given) {
+    if (!existsSync(given)) return { reason: `${given} does not exist` };
+    const hash = hashOf(readFileSync(given));
+    return hash === bundleHash ? { bundle: given } : { reason: mismatch(given, hash) };
+  }
+  const bundle = join(tmpdir(), "ingestron-adf-utilities", bundleHash, "main.js");
+  if (existsSync(bundle)) {
+    const hash = hashOf(readFileSync(bundle));
+    if (hash === bundleHash) return { bundle };
+    rmSync(bundle);
+  }
   try {
     const response = await fetch(bundleUrl, { signal: AbortSignal.timeout(60_000) });
     if (!response.ok) return { reason: `${bundleUrl} answered ${response.status}` };
+    const bytes = Buffer.from(await response.arrayBuffer());
+    const hash = hashOf(bytes);
+    if (hash !== bundleHash) return { reason: mismatch(bundleUrl, hash) };
     mkdirSync(dirname(bundle), { recursive: true });
-    writeFileSync(bundle, Buffer.from(await response.arrayBuffer()));
+    writeFileSync(bundle, bytes);
     return { bundle };
   } catch (error) {
     return { reason: `${bundleUrl} could not be downloaded (${(error as Error).message})` };
