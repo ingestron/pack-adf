@@ -1569,6 +1569,9 @@
       "properties": {
         "accountEndpoint": "https://source.example.test",
         "database": "sales"
+      },
+      "dataset_properties": {
+        "collectionName": "orders"
       }
     },
     "field_mapping": {
@@ -1596,6 +1599,9 @@
           "secretName": "source-connection-string"
         },
         "database": "sales"
+      },
+      "dataset_properties": {
+        "collection": "orders"
       }
     },
     "field_mapping": {
@@ -1622,6 +1628,9 @@
           "secretName": "source-connection-string"
         },
         "database": "sales"
+      },
+      "dataset_properties": {
+        "collection": "orders"
       }
     },
     "field_mapping": {
@@ -1648,6 +1657,9 @@
           "secretName": "source-connection-string"
         },
         "database": "sales"
+      },
+      "dataset_properties": {
+        "collection": "orders"
       }
     },
     "field_mapping": {

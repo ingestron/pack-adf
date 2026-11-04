@@ -16,6 +16,7 @@ const cases = JSON.parse(
     source: string;
     version?: string;
     properties: Record<string, unknown>;
+    dataset_properties?: Record<string, unknown>;
   };
 }[];
 const project = (entry: (typeof cases)[number]) => ({
@@ -44,7 +45,10 @@ describe.each(cases)("$id native conformance", (entry) => {
     expect(service).toBeDefined();
     expect(service.properties.typeProperties).toMatchObject(entry.expected.properties);
     if (entry.expected.version) expect(service.properties.version).toBe(entry.expected.version);
-    expect(resources.some((item) => item.properties.type === entry.expected.dataset)).toBe(true);
+    const dataset = resources.find((item) => item.properties.type === entry.expected.dataset);
+    expect(dataset).toBeDefined();
+    if (entry.expected.dataset_properties)
+      expect(dataset.properties.typeProperties).toEqual(entry.expected.dataset_properties);
     const pipeline = resources.find((item) => item.properties.activities);
     expect(pipeline.properties.activities[0].typeProperties.source.type).toBe(
       entry.expected.source,
