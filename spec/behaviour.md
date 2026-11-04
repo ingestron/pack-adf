@@ -368,7 +368,9 @@ the message is the request's line for the runtime, and the hint is the
 `what-if` check. When the environments describe a runtime in different words (a
 linked runtime's resource, a region), there is a notice for each environment,
 and its message starts with `In <environment>: `. A notice is a warning, so the
-files are still written.
+files are still written. The notices are the same for a single
+environment given to `buildEnvironments` as one target; the single-target
+`build` gives none.
 
 ### Which values become parameters
 
@@ -441,14 +443,20 @@ secrets from Key Vault. Each one still left out is listed in `deployValues`,
 with its parameter as its name and in `suppliedAs`, so that the deploying
 pipeline supplies it; the platform request names it; a `PACK_NOTICE` names it
 when the environments are generated together; and it counts toward the 256
-parameters. The notice's message is `ARM parameter` and the parameter in
-backticks, then `: Microsoft's export adds it, a secure string with no default,
-for the <type> linked service's optional` the property `, which` the linked
-service `leaves out.` Its hint is `Supply it when deploying each environment`,
-then, where a connection setting gives the secret from Key Vault, `, or set the
-connection's` the setting `to a Key Vault secret so the export does not add
-it`, then a full stop. The request's line is the message and the hint together. A parameter file cannot give it as a Key Vault reference,
-which needs the vault's resource ID and a secret the project does not name.
+parameters. A parameter file cannot give it as a Key Vault reference, which
+needs the vault's resource ID and a secret the project does not name.
+
+The notice has these words, where `<name>` is the parameter, `<type>` the
+linked service's type, `<property>` the optional secret and `<linked service>`
+the linked service that leaves it out:
+
+| Part    | Words                                                                                                                                                                                   |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Message | ``ARM parameter `<name>`: Microsoft's export adds it, a secure string with no default, for the <type> linked service's optional `<property>`, which `<linked service>` leaves out.``    |
+| Hint    | `Supply it when deploying each environment.`                                                                                                                                            |
+| Hint    | ``Supply it when deploying each environment, or set the connection's `<setting>` to a Key Vault secret so the export does not add it.``, when a setting gives the secret from Key Vault |
+
+The request's line is the message and the hint together, with a space between.
 
 ### What is refused
 
