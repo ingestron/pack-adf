@@ -14,6 +14,7 @@ import { build } from "./build.js";
 import { countProblems, landingProblems, namedProblems } from "./fold-checks.js";
 import { definitionFor } from "./fold-definition.js";
 import { fileProblems, type Renders } from "./fold-files-compare.js";
+import { addedSecretPackNotices, runtimePackNotices } from "./notices.js";
 import { findPlaces, type Place } from "./fold-places.js";
 import {
   differ,
@@ -54,7 +55,12 @@ export function buildEnvironments(models: Models): EnvironmentsBuild {
     ...folded.deployValues,
     ...secrets.map((secret) => ({ name: secret.name, suppliedAs: [secret.name] })),
   ];
-  return { files: folded.files, deployValues, problems: once(secretWarnings(places, renders)) };
+  const warnings = [
+    ...secretWarnings(places, renders),
+    ...runtimePackNotices(models),
+    ...addedSecretPackNotices(Object.values(renders)[0]!),
+  ];
+  return { files: folded.files, deployValues, problems: once(warnings) };
 }
 
 function failed(problems: EnvironmentsProblem[]): EnvironmentsBuild {

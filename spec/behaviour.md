@@ -360,8 +360,13 @@ The pack does not describe an Azure runtime's copy or pipeline compute, or a
 self-hosted runtime's description, so a deployment resets them. The platform
 request names each runtime, what the deployment does to it, and asks for
 `az deployment group what-if` before the first deployment to a factory that
-already has runtimes. The definitions interface has no warning code for this,
-so it is in the request only.
+already has runtimes. The same words are a `PACK_NOTICE` for each runtime
+except ADF's own Azure runtime, when every environment is generated together:
+the message is the request's line for the runtime, and the hint is the
+`what-if` check. When the environments describe a runtime in different words (a
+linked runtime's resource, a region), there is a notice for each environment,
+and its message starts with `In <environment>: `. A notice is a warning, so the
+files are still written.
 
 ### Which values become parameters
 
@@ -432,8 +437,15 @@ Access), `certificate_password` (SharePoint Online List),
 `private_key_password` (Snowflake) and `refresh_token` (Square) give these
 secrets from Key Vault. Each one still left out is listed in `deployValues`,
 with its parameter as its name and in `suppliedAs`, so that the deploying
-pipeline supplies it; the platform request names it; and it counts toward the
-256 parameters. A parameter file cannot give it as a Key Vault reference,
+pipeline supplies it; the platform request names it; a `PACK_NOTICE` names it
+when the environments are generated together; and it counts toward the 256
+parameters. The notice's message is `ARM parameter` and the parameter in
+backticks, then `: Microsoft's export adds it, a secure string with no default,
+for the <type> linked service's optional` the property `, which` the linked
+service `leaves out.` Its hint is `Supply it when deploying each environment`,
+then, where a connection setting gives the secret from Key Vault, `, or set the
+connection's` the setting `to a Key Vault secret so the export does not add
+it`, then a full stop. The request's line is the message and the hint together. A parameter file cannot give it as a Key Vault reference,
 which needs the vault's resource ID and a secret the project does not name.
 
 ### What is refused

@@ -4,6 +4,7 @@ import {
   splitDeployText,
   type DeployValue,
   type EnvironmentsProblem,
+  type PackNotice,
   type ResolvedModel,
   type TargetDifference,
 } from "@ingestron/definitions";
@@ -55,7 +56,9 @@ export function listOf(targets: readonly string[]): string {
 }
 
 /** Each problem once. */
-export function once(problems: EnvironmentsProblem[]): EnvironmentsProblem[] {
+export function once<Problem extends EnvironmentsProblem | PackNotice>(
+  problems: Problem[],
+): Problem[] {
   const seen = new Set<string>();
   return problems.filter((problem) => {
     const key = JSON.stringify([problem.code, problem.message, problem.file, problem.line]);

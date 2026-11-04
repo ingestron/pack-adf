@@ -52,10 +52,24 @@ export function addedSecretParameters(files: Readonly<Record<string, string>>): 
     });
 }
 
+/** What the export adds and what to do about it, for a parameter it adds. */
+function wording(secret: AddedSecret): { message: string; hint: string } {
+  return {
+    message: `ARM parameter \`${secret.name}\`: Microsoft's export adds it, a secure string with no default, for the ${secret.type} linked service's optional \`${secret.property}\`, which \`${secret.linkedService}\` leaves out.`,
+    hint: `Supply it when deploying each environment${secret.setting ? `, or set the connection's \`${secret.setting}\` to a Key Vault secret so the export does not add it` : ""}.`,
+  };
+}
+
 /** The platform request's line for each such parameter. */
 export function addedSecretLines(files: Readonly<Record<string, string>>): string[] {
-  return addedSecretParameters(files).map(
-    (secret) =>
-      `ARM parameter \`${secret.name}\`: Microsoft's export adds it, a secure string with no default, for the ${secret.type} linked service's optional \`${secret.property}\`, which \`${secret.linkedService}\` leaves out. Supply it when deploying each environment${secret.setting ? `, or set the connection's \`${secret.setting}\` to a Key Vault secret so the export does not add it` : ""}.`,
-  );
+  return addedSecretParameters(files)
+    .map(wording)
+    .map(({ message, hint }) => `${message} ${hint}`);
+}
+
+/** Each such parameter as a notice for the generated files: the message and what to do. */
+export function addedSecretNotices(
+  files: Readonly<Record<string, string>>,
+): { message: string; hint: string }[] {
+  return addedSecretParameters(files).map(wording);
 }
