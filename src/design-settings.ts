@@ -75,10 +75,11 @@ export const designRanges = {
 const between = ({ minimum, maximum }: { minimum: number; maximum: number }) =>
   `from ${minimum} to ${maximum}`;
 
-/** Each audit value with its type and meaning, for the audit_columns description. */
-const auditList = Object.entries(auditValues)
-  .map(([name, value]) => `\`${name}\` (${value.type}): ${value.description}`)
-  .join("; ");
+/** The audit values and what each means, for the values list of an audit column. */
+const auditNames = Object.keys(auditValues);
+const auditMeanings = Object.values(auditValues).map((value) =>
+  `${value.description} (${value.type}).`.replace(/^./, (letter) => letter.toUpperCase()),
+);
 
 /** The run or source value a written audit value names, in any case; undefined for literal text. */
 export function auditValueOf(written: string): AuditValue | undefined {
@@ -131,8 +132,19 @@ export const designSettings = {
   },
   audit_columns: {
     type: "object",
-    description: `Columns added to every landed row, by name, for \`adf-copy\` and \`adf-table\`. A value is one of these or literal text, such as \`\${environment.name}\`, which is written as it is. ADF fills in the run values when it runs. Values: ${auditList}.`,
-    additionalProperties: { type: "string", minLength: 1 },
+    description:
+      "Columns added to every landed row, by name, for `adf-copy` and `adf-table`. ADF fills in the run values when it runs.",
+    additionalProperties: {
+      anyOf: [
+        {
+          enum: auditNames,
+          enumDescriptions: auditMeanings,
+        },
+        { type: "string", minLength: 1 },
+      ],
+      description:
+        "What the column holds: one of these run or source values, in any case, or literal text, such as `${environment.name}`, which is written as it is.",
+    },
     examples: [{ _loaded_at: "run.trigger_time", _run_id: "run.id", _source: "source.object" }],
   },
   folder: {

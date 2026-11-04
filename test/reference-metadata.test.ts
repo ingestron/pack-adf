@@ -15,7 +15,9 @@ function nodeAt(schema: Schema, path: string[]): Schema | undefined {
     const properties = node?.properties as Record<string, Schema> | undefined;
     node = part === "*" ? (node?.additionalProperties as Schema | undefined) : properties?.[part];
   }
-  return node;
+  // A value that is one of a list or other text: the list is the first alternative.
+  const alternatives = node?.anyOf as Schema[] | undefined;
+  return alternatives?.find((alternative) => alternative.enum) ?? node;
 }
 
 const methods = Object.keys(adf.methods);
@@ -86,11 +88,16 @@ describe("ADF setting metadata", () => {
     expect(defaultParallel).toBe(4);
   });
 
-  it("lists every audit value, with its type and meaning, in audit_columns", () => {
-    const { description } = rows("adf-copy").find((field) => field.path[0] === "audit_columns")!;
-    for (const [name, value] of Object.entries(auditValues)) {
-      expect(description).toContain(`\`${name}\` (${value.type}): ${value.description}`);
-    }
+  it("lists every audit value, with its type and meaning, as the values of an audit column", () => {
+    const row = rows("adf-copy").find((field) => field.path.join(".") === "audit_columns.*")!;
+    expect(row.type).toBe("one of the values, or text");
+    expect(row.values).toEqual(
+      Object.entries(auditValues).map(([name, value]) => ({
+        value: name,
+        description: `${value.description.replace(/^./, (letter) => letter.toUpperCase())} (${value.type}).`,
+      })),
+    );
+    expect(row.description).toContain("literal text");
   });
 
   it("states how a layout is chosen and what each layout writes", () => {
