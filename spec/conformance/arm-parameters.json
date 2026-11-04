@@ -1,0 +1,424 @@
+[
+  {
+    "name": "an activity's value is named by the indexes of the activities, not by the arrays' keys; in an expression object, its value is replaced",
+    "definition": {
+      "Microsoft.DataFactory/factories/pipelines": {
+        "properties": {
+          "activities": [
+            {
+              "typeProperties": {
+                "url": "-"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "resources": {
+      "pipeline/pl_x.json": {
+        "name": "pl_x",
+        "properties": {
+          "activities": [
+            {
+              "name": "start",
+              "typeProperties": {
+                "url": "https://a/start"
+              }
+            },
+            {
+              "name": "stop",
+              "typeProperties": {
+                "url": {
+                  "value": "@concat('https://a', 'stop')",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "loop",
+              "typeProperties": {
+                "activities": [
+                  {
+                    "name": "copy",
+                    "outputs": [
+                      {
+                        "parameters": {
+                          "folder": "x/y"
+                        }
+                      }
+                    ],
+                    "typeProperties": {
+                      "source": {
+                        "additionalColumns": [
+                          {
+                            "name": "_e",
+                            "value": "dev"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "parameters": {
+            "tables": {
+              "type": "array",
+              "defaultValue": [
+                {
+                  "folder": "x/y"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "parameters": [
+      {
+        "name": "pl_x_properties_0_typeProperties_url",
+        "file": "pipeline/pl_x.json",
+        "path": ["properties", "activities", 0, "typeProperties", "url"],
+        "type": "string"
+      },
+      {
+        "name": "pl_x_properties_1_typeProperties_url",
+        "file": "pipeline/pl_x.json",
+        "path": ["properties", "activities", 1, "typeProperties", "url", "value"],
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "name": "nested activities and other arrays of objects are followed",
+    "definition": {
+      "Microsoft.DataFactory/factories/pipelines": {
+        "properties": {
+          "activities": [
+            {
+              "typeProperties": {
+                "activities": [
+                  {
+                    "outputs": [
+                      {
+                        "parameters": {
+                          "folder": "-"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "resources": {
+      "pipeline/pl_x.json": {
+        "name": "pl_x",
+        "properties": {
+          "activities": [
+            {
+              "name": "start",
+              "typeProperties": {
+                "url": "https://a/start"
+              }
+            },
+            {
+              "name": "stop",
+              "typeProperties": {
+                "url": {
+                  "value": "@concat('https://a', 'stop')",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "loop",
+              "typeProperties": {
+                "activities": [
+                  {
+                    "name": "copy",
+                    "outputs": [
+                      {
+                        "parameters": {
+                          "folder": "x/y"
+                        }
+                      }
+                    ],
+                    "typeProperties": {
+                      "source": {
+                        "additionalColumns": [
+                          {
+                            "name": "_e",
+                            "value": "dev"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "parameters": {
+            "tables": {
+              "type": "array",
+              "defaultValue": [
+                {
+                  "folder": "x/y"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "parameters": [
+      {
+        "name": "pl_x_properties_2_typeProperties_0_0_parameters_folder",
+        "file": "pipeline/pl_x.json",
+        "path": [
+          "properties",
+          "activities",
+          2,
+          "typeProperties",
+          "activities",
+          0,
+          "outputs",
+          0,
+          "parameters",
+          "folder"
+        ],
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "name": "a whole list's key is left out of its name",
+    "definition": {
+      "Microsoft.DataFactory/factories/pipelines": {
+        "properties": {
+          "activities": [
+            {
+              "typeProperties": {
+                "activities": [
+                  {
+                    "typeProperties": {
+                      "source": {
+                        "additionalColumns": "-::array"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "parameters": {
+            "tables": {
+              "defaultValue": "-::array"
+            }
+          }
+        }
+      }
+    },
+    "resources": {
+      "pipeline/pl_x.json": {
+        "name": "pl_x",
+        "properties": {
+          "activities": [
+            {
+              "name": "start",
+              "typeProperties": {
+                "url": "https://a/start"
+              }
+            },
+            {
+              "name": "stop",
+              "typeProperties": {
+                "url": {
+                  "value": "@concat('https://a', 'stop')",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "loop",
+              "typeProperties": {
+                "activities": [
+                  {
+                    "name": "copy",
+                    "outputs": [
+                      {
+                        "parameters": {
+                          "folder": "x/y"
+                        }
+                      }
+                    ],
+                    "typeProperties": {
+                      "source": {
+                        "additionalColumns": [
+                          {
+                            "name": "_e",
+                            "value": "dev"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "parameters": {
+            "tables": {
+              "type": "array",
+              "defaultValue": [
+                {
+                  "folder": "x/y"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "parameters": [
+      {
+        "name": "pl_x_properties_2_typeProperties_0_typeProperties_source",
+        "file": "pipeline/pl_x.json",
+        "path": [
+          "properties",
+          "activities",
+          2,
+          "typeProperties",
+          "activities",
+          0,
+          "typeProperties",
+          "source",
+          "additionalColumns"
+        ],
+        "type": "array"
+      },
+      {
+        "name": "pl_x_properties_parameters_tables",
+        "file": "pipeline/pl_x.json",
+        "path": ["properties", "parameters", "tables", "defaultValue"],
+        "type": "array"
+      }
+    ]
+  },
+  {
+    "name": "a linked service's definition applies to the linked services of that type only",
+    "definition": {
+      "Microsoft.DataFactory/factories/linkedServices": {
+        "AzureBlobFS": {
+          "properties": {
+            "typeProperties": {
+              "url": "-"
+            }
+          }
+        }
+      }
+    },
+    "resources": {
+      "linkedService/ls_lake.json": {
+        "name": "ls_lake",
+        "properties": {
+          "type": "AzureBlobFS",
+          "typeProperties": {
+            "url": "u"
+          }
+        }
+      },
+      "linkedService/ls_web.json": {
+        "name": "ls_web",
+        "properties": {
+          "type": "HttpServer",
+          "typeProperties": {
+            "url": "u"
+          }
+        }
+      }
+    },
+    "parameters": [
+      {
+        "name": "ls_lake_properties_typeProperties_url",
+        "file": "linkedService/ls_lake.json",
+        "path": ["properties", "typeProperties", "url"],
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "name": "a given name replaces the property's, or stands alone after the resource's after a dash (Microsoft's documented example)",
+    "definition": {
+      "Microsoft.DataFactory/factories/triggers": {
+        "properties": {
+          "typeProperties": {
+            "recurrence": {
+              "interval": "=:triggerSuffix:int",
+              "frequency": "=:-freq"
+            }
+          }
+        }
+      }
+    },
+    "resources": {
+      "trigger/tr.json": {
+        "name": "tr",
+        "properties": {
+          "typeProperties": {
+            "recurrence": {
+              "interval": 1,
+              "frequency": "Day"
+            }
+          }
+        }
+      }
+    },
+    "parameters": [
+      {
+        "name": "tr_properties_typeProperties_recurrence_triggerSuffix",
+        "file": "trigger/tr.json",
+        "path": ["properties", "typeProperties", "recurrence", "interval"],
+        "type": "int"
+      },
+      {
+        "name": "tr_freq",
+        "file": "trigger/tr.json",
+        "path": ["properties", "typeProperties", "recurrence", "frequency"],
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "name": "a trigger's runtimeState",
+    "definition": {
+      "Microsoft.DataFactory/factories/triggers": {
+        "properties": {
+          "runtimeState": "-"
+        }
+      }
+    },
+    "resources": {
+      "trigger/tr_erp_erp.json": {
+        "name": "tr_erp_erp",
+        "properties": {
+          "type": "TumblingWindowTrigger",
+          "runtimeState": "Stopped"
+        }
+      }
+    },
+    "parameters": [
+      {
+        "name": "tr_erp_erp_properties_runtimeState",
+        "file": "trigger/tr_erp_erp.json",
+        "path": ["properties", "runtimeState"],
+        "type": "string"
+      }
+    ]
+  }
+]
