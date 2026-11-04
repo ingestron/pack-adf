@@ -44,7 +44,8 @@ export const runtimeSchema = {
     location: {
       type: "string",
       minLength: 1,
-      description: "Azure: the runtime's region, such as UK South. Default: AutoResolve.",
+      description:
+        "Azure: the runtime's region, by the display name Data Factory shows, such as UK South. Default: AutoResolve.",
     },
     managed_virtual_network: {
       type: "boolean",
@@ -79,11 +80,20 @@ export function runtimeProblems(settings: Data): string[] {
         ? `runtime.${azure[0]} describes an Azure runtime; it needs runtime_kind: azure`
         : `runtime.${azure.join(", runtime.")} describe an Azure runtime; they need runtime_kind: azure`,
     ];
+  if (shortRegion(runtime.location))
+    return [
+      `runtime.location "${String(runtime.location)}" is a region's short name; use its display name, with capitals and spaces, as Data Factory writes it: Microsoft's export rewrites a short name only where every environment has the same region`,
+    ];
   if (settings.integration_runtime === defaultRuntime && Object.keys(runtime).length > 0)
     return [
       `${defaultRuntime} is ADF's own runtime, which the factory does not describe; remove runtime`,
     ];
   return [];
+}
+
+/** A region written as its short name, such as `westus2`, rather than its display name. */
+function shortRegion(location: unknown): boolean {
+  return typeof location === "string" && /^[a-z][a-z0-9]*$/.test(location);
 }
 
 /** The runtime resource's properties for its settings. */
