@@ -19,7 +19,8 @@ SQL and Windows authentication require `user` and a secret-reference
 Server. Azure SQL Database, Managed Instance and Synapse additionally accept
 `ServicePrincipal` (requiring `tenant`, `client_id`, `client_secret`),
 `SystemAssignedManagedIdentity`, and `UserAssignedManagedIdentity` (requiring
-`credential`, the name of an existing ADF credential resource).
+`credential`, the name of the factory credential, and `identity`, the resource
+ID of the user-assigned managed identity it holds).
 Unknown settings, unsupported authentication modes, empty values and literal
 credentials must fail validation before building files. Authentication fields
 that do not belong to the selected mode must also fail, avoiding ignored
@@ -34,6 +35,18 @@ Resource grouping, the landing folder, schedule, standards precedence
 and fixed settings apply. Two different sources must not share a landing
 folder accidentally: conflicting destinations fail with a message directing
 the user to choose a distinct landing path in the definitions.
+
+For each credential, `build` writes `credential/<credential>.json`:
+`{"name": <credential>, "properties": {"type": "ManagedIdentity", "typeProperties": {"resourceId": <identity>}}}`.
+Microsoft's export refuses a linked service whose credential is not in the
+folder. `identity` is optional in the connector's settings, but
+`UserAssignedManagedIdentity` without it is a method check problem whose
+message gives the resource ID's form. A credential name outside ARM's rule (1 to
+127 letters, digits, underscores and hyphens, starting and ending with a letter,
+digit or underscore) is a method check problem; one credential given two
+identities is a pack check problem naming both connections. An identity that
+differs between environments is a parameter, as any value. The platform request
+asks for each identity to be assigned to the factory before deploying.
 
 Conformance cases in `conformance/sql-family.json` cover native resource
 names and authentication requirements. Tests supplement these with output,
@@ -77,6 +90,15 @@ and a relative staging path; their linked service is generated from definitions.
 Restricted connectors require the matching declared runtime kind. Microsoft 365
 requires JSON landing and application authentication for both source and landing;
 its date-filter requirement is explicitly declared and uses the trigger window.
+Its copy is a `BinarySink` into a `Binary` dataset of a folder: Microsoft's
+export accepts no other sink for a Microsoft 365 source, and no file name.
+Microsoft writes the files as JSON, one object per line, and names them.
+
+The MongoDB, MongoDB Atlas and Azure Cosmos DB for MongoDB datasets write the
+collection as `typeProperties.collection`, the name in their ARM model and the
+one Microsoft's export requires; the connector pages say `collectionName`,
+which the export refuses. `conformance/native-sources.json` states their
+dataset properties.
 Resource paths and overlapping landing paths must be checked before building.
 
 REST accepts Anonymous, Basic or OAuth2ClientCredential authentication, with only
@@ -99,8 +121,8 @@ database or table.
 The configurable roles are Key Vault and landing linked services, Parquet,
 binary and HTTP landing datasets, source linked service and dataset, pipeline,
 trigger, staging linked service, Microsoft 365 JSON linked service and dataset,
-and Copy activity. Factory, runtime and credential resources are not generated; runtimes and
-credentials are referenced by their settings.
+and Copy activity. Runtimes and credentials take the names their settings give
+(`integration_runtime`, `credential`); the factory is not generated.
 
 Shared resource names must agree for every table using that resource; SQL
 source datasets are per connection/database, file datasets per connection,
@@ -114,8 +136,14 @@ fail. Supplying a name never creates an additional resource.
 
 The accepted portable subset starts with an ASCII letter and continues with
 letters, digits or underscores; pipelines, triggers and activities also allow
-hyphens. Names are limited to 200 characters to keep generated resource filenames
-portable. Invalid names, unknown name roles,
+hyphens. Names are limited to what Microsoft's export accepts: 140 characters
+for a linked service, dataset, pipeline or trigger (the export allows 141 for
+linked services and triggers) and 55 for an activity. The limit is in the
+`resource_names` schema, and a default name over it is a pack check problem
+that names the name, its length and the role to set. Names derived from others,
+such as after_copy's parent pipeline, and activities inside a ForEach are
+checked last, with the same limits. `conformance/resource-names.json` records
+them. Invalid names, unknown name roles,
 case-insensitive resource collisions and duplicate activities fail before
 writing. No sanitisation silently changes a supplied name. Renaming uses the
 generated manifest to create the new paths and remove the old ones it owns.
@@ -154,10 +182,9 @@ ends at the landed files (`store: none`) uses `snapshot`, and any other table
 incremental`, or a `source_options.date_filter_column`) always defaults to
 `increments`.
 
-- `snapshot` writes `<landing>/<object>/<object>.parquet` (`.json` for
-  Microsoft 365), replaced by each run.
+- `snapshot` writes `<landing>/<object>/<object>.parquet`, replaced by each run.
 - `increments` writes `<landing>/<object>/<windowStart yyyyMMddHHmmss>_<run id>.parquet`;
-  for Microsoft 365, ADF names the files in `<landing>/<object>/`.
+  for Microsoft 365, Microsoft names the files in `<landing>/<object>/`.
 - A `path` pattern is relative to the landing folder, includes `{object}`, ends
   in a file name with the format's extension, and uses only the tokens
   `{object}`, `{connection}`, `{yyyy}`, `{MM}`, `{dd}`, `{HH}` (the window's
@@ -183,9 +210,10 @@ the rows before anything merged them. A table whose path pattern lands where
 another tabular table's files land is a pack check problem; tables with
 `snapshot` or `increments` are checked by their `<landing>/<object>/` folders.
 
-Microsoft 365's JSON dataset is shared by a connection's tables: it takes a file
-name only when one of them names its file, and then every table passes one
-(increments pass the increment name ADF otherwise generates).
+Microsoft 365's landing dataset, shared by a connection's tables, takes only a
+folder. A Microsoft 365 table with `snapshot` (also its default without a date
+filter) or a `path` is a method check problem whose fix is `layout:
+increments`, with a date filter so that each run lands only its window.
 
 ## Copy activity policy
 
@@ -312,7 +340,7 @@ written as the platform settings describe it:
   A resource ID that differs between environments is a parameter, as any value.
 - `runtime_kind: azure`: `{"type": "Managed"}` with
   `typeProperties.computeProperties.location` from `runtime.location` (default
-  `AutoResolve`) and, when `runtime.data_flow` is set, `dataFlowProperties`
+  `AutoResolve`), the region's display name as Data Factory writes it and, when `runtime.data_flow` is set, `dataFlowProperties`
   (`computeType`, `coreCount`, `timeToLive` from `compute_type`, `core_count`,
   `time_to_live`). With `runtime.managed_virtual_network: true`, the runtime
   has `managedVirtualNetwork` `{"type": "ManagedVirtualNetworkReference", "referenceName": "default"}`
@@ -322,7 +350,10 @@ written as the platform settings describe it:
 
 `runtime.shared` with `runtime_kind: azure`, an Azure setting with
 `runtime_kind: self-hosted`, or any `runtime` with `AutoResolveIntegrationRuntime`
-is a method check problem. A runtime name described in two ways is a pack
+is a method check problem. So is a `runtime.location` in lower-case letters
+and digits only, a region's short name: Microsoft's export rewrites it to the
+display name where every environment has the same value, but not in a
+parameter, so environments would deploy different spellings. A runtime name described in two ways is a pack
 check problem.
 
 The pack does not describe an Azure runtime's copy or pipeline compute, or a
@@ -517,17 +548,24 @@ is `Started`.
    with `parameters/<environment>.json` and `factoryName`, and the
    post-deployment script, both scripts given `-ArmTemplateParameters
 parameters/<environment>.json`.
+8. Output Microsoft's export refused in 1.x changes: MongoDB datasets write
+   `collection`; Microsoft 365 lands through a binary copy into a folder, so a
+   Microsoft 365 table with `layout: snapshot` or a `path` sets `layout:
+increments`; a `UserAssignedManagedIdentity` connection adds `identity`, the
+   identity's resource ID, and the factory gets the credential; a resource name
+   over 140 characters, or a Copy activity name over 55, is shortened with
+   `resource_names`; a `runtime.location` short name becomes its display name.
 
 ### Known limits of Microsoft's export
 
-Found by running it on the connector catalogue (2026-11-04):
+Found by running it on the connector catalogue (2026-11-04 and 2026-11-05).
+Every connector in the catalogue now exports; the tests run the whole
+catalogue through it with no exceptions.
 
-- Its validator refuses the MongoDB, MongoDB Atlas and Azure Cosmos DB for
-  MongoDB collection datasets ("Collection name is required") and the
-  Microsoft 365 copy ("Microsoft 365 source only supports copying to binary
-  format dataset"), so a factory with them does not export.
-- A linked service authenticated with `UserAssignedManagedIdentity` references
-  a credential that is not in the folder, which the validator refuses ("Cannot
-  reference to an invalid or deleted Credential object").
+- Its validator, not the connector pages, decides some shapes: the MongoDB
+  family's `collection`, Microsoft 365's binary folder sink, and the
+  credential a `UserAssignedManagedIdentity` linked service references, which
+  the pack writes. Its name limits (140 or 141 characters, 55 for an activity)
+  are the pack's.
 - For some connectors it adds secure string parameters of its own (see
   "Secure strings the export adds").
