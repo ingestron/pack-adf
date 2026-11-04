@@ -2,12 +2,11 @@
 import { resourceName } from "./resource-names.js";
 import type { ResolvedTable } from "@ingestron/definitions";
 import { parseLanding } from "./landing.js";
-import { namesFiles } from "./layout.js";
 import { reference, type Shared } from "./resources.js";
 import { vaultSecret } from "./sql-auth.js";
 import type { TableSource } from "./table-source.js";
 type Data = Record<string, unknown>;
-/** Additional resources for staged exports and Microsoft 365 JSON landing. */
+/** Additional resources for staged exports and Microsoft 365's landing. */
 export function exportResources(
   tables: ResolvedTable[],
   source: TableSource,
@@ -62,24 +61,20 @@ function officeResources(tables: ResolvedTable[], shared: Shared, name: string):
   ];
 }
 
+/** A binary dataset of a folder: Microsoft writes the JSON files and names them. */
 function officeDataset(tables: ResolvedTable[], name: string, fileSystem: string): Data {
   const service = resourceName(tables, "json_landing_linked_service", `ls_${name}_json`);
-  // Files are named unless every table lands increments, which ADF names itself.
-  const named = namesFiles(tables);
   return {
     name: resourceName(tables, "json_landing_dataset", `ds_${name}_json`),
     properties: {
-      type: "Json",
+      type: "Binary",
       linkedServiceName: reference(service, "LinkedServiceReference"),
-      parameters: named
-        ? { folder: { type: "string" }, file: { type: "string" } }
-        : { folder: { type: "string" } },
+      parameters: { folder: { type: "string" } },
       typeProperties: {
         location: {
           type: "AzureBlobFSLocation",
           fileSystem,
           folderPath: { value: "@dataset().folder", type: "Expression" },
-          ...(named && { fileName: { value: "@dataset().file", type: "Expression" } }),
         },
       },
     },

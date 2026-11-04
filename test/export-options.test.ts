@@ -37,7 +37,7 @@ it("keeps REST authentication headers as secret references", () => {
   project["erp.yaml"] = project["erp.yaml"]!.replace("${secret:api-key}", "literal");
   expect(generate(project).result.model).toBeUndefined();
 });
-it("uses application credentials and native column objects for Microsoft 365 JSON", () => {
+it("uses application credentials, native column objects and a binary copy for Microsoft 365", () => {
   const project = tableProject(
     "microsoft-365",
     "  tenant: tenant\n  application_tenant: tenant\n  client_id: app\n  client_secret: ${secret:app-secret}",
@@ -50,7 +50,15 @@ it("uses application credentials and native column objects for Microsoft 365 JSO
   const copy = json(files, "pipeline/pl_erp_erp.json").properties.activities[0].typeProperties;
   expect(copy.source.outputColumns[0]).toEqual({ name: "invoice_id" });
   expect(copy.source.startTime.value).toBe("@pipeline().parameters.windowStart");
-  expect(copy.sink.type).toBe("JsonSink");
+  // Microsoft's export accepts only a binary sink for Microsoft 365; the files are JSON.
+  expect(copy.sink).toEqual({
+    type: "BinarySink",
+    storeSettings: { type: "AzureBlobFSWriteSettings" },
+  });
+  expect(json(files, "dataset/ds_erp_erp_json.json").properties).toMatchObject({
+    type: "Binary",
+    parameters: { folder: { type: "string" } },
+  });
   expect(copy.translator).toBeUndefined();
   expect(
     json(files, "linkedService/ls_erp_erp_json.json").properties.typeProperties.servicePrincipalKey
