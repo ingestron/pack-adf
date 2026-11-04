@@ -146,3 +146,40 @@ export function squareProject(settings: string): Record<string, string> {
     "project.yaml": erpProject(["  dev: {}", "  prod: {}"]),
   };
 }
+
+/** The ERP project in dev and prod, through an Azure runtime whose region and data flow compute differ. */
+export function regionalRuntime(): Record<string, string> {
+  return {
+    ...base,
+    "standard.yaml": base["standard.yaml"]!.replace(
+      "      integration_runtime: shir-erp\n",
+      "      integration_runtime: ir-erp\n      runtime_kind: azure\n      runtime: { location: '${values.region}', data_flow: { compute_type: '${values.compute}', core_count: 16 } }\n",
+    ),
+    "project.yaml": erpProject([
+      "  dev: { values: { region: AutoResolve, compute: General } }",
+      "  prod: { values: { region: UK South, compute: MemoryOptimized } }",
+    ]),
+  };
+}
+
+/** A user-assigned managed identity in a subscription. */
+export const managedIdentity = (subscription: number) =>
+  `/subscriptions/00000000-0000-0000-0000-00000000000${subscription}/resourceGroups/rg-data/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-erp`;
+
+/** The ERP project in dev and prod, reading Azure SQL Database as each environment's own identity. */
+export function identityProject(): Record<string, string> {
+  return {
+    ...base,
+    "erp.yaml": base["erp.yaml"]!.replace(
+      "connector: sqlserver",
+      "connector: azure-sql-database",
+    ).replace(
+      "  user: ingest_reader\n  password: ${secret:erp-sql-password}\n",
+      "  authentication: UserAssignedManagedIdentity\n  credential: cred-erp\n  identity: '${values.identity}'\n",
+    ),
+    "project.yaml": erpProject([
+      `  dev: { values: { identity: '${managedIdentity(1)}' } }`,
+      `  prod: { values: { identity: '${managedIdentity(2)}' } }`,
+    ]),
+  };
+}
