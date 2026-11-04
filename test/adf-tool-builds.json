@@ -1,0 +1,12 @@
+[
+  {
+    "sha256": "9c7cb2722b4dc516b5e906c7efd1672f24b6849a5492a42a92b63c602fbb76aa",
+    "firstSeen": "2026-11-04",
+    "where": "a maintainer's computer; 17000605 bytes, ETag \"0878b12cb62dd1:0\", Last-Modified 23 Oct 2026"
+  },
+  {
+    "sha256": "3329ccd91c23748ba0dae0863dace9835076b57bc6e4f4601cbb959b266b366f",
+    "firstSeen": "2026-11-05",
+    "where": "GitHub Actions, ubuntu-latest runner"
+  }
+]

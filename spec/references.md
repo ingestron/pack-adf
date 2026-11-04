@@ -163,9 +163,14 @@ Accessed 2026-11-04, against current Microsoft documentation:
 - [`@microsoft/azure-data-factory-utilities` 1.0.3](https://www.npmjs.com/package/@microsoft/azure-data-factory-utilities)
   (MIT, published 2025-09-17): its `lib/bundle.manager.js` downloads the
   build tool from `https://adf.azure.com/assets/cmd-api/main.js` on each run,
-  unless `--path` names a copy; the URL is not versioned. The copy tested on
-  2026-11-04 had SHA-256
-  `9c7cb2722b4dc516b5e906c7efd1672f24b6849a5492a42a92b63c602fbb76aa`.
+  unless `--path` names a copy; the URL is not versioned, and Microsoft serves
+  different builds at it: on 2026-11-04 and 2026-11-05 a maintainer's
+  computer got SHA-256
+  `9c7cb2722b4dc516b5e906c7efd1672f24b6849a5492a42a92b63c602fbb76aa`
+  (17000605 bytes, ETag `"0878b12cb62dd1:0"`, Last-Modified 23 Oct 2026),
+  while a GitHub Actions runner got
+  `3329ccd91c23748ba0dae0863dace9835076b57bc6e4f4601cbb959b266b366f` on
+  2026-11-05. `test/adf-tool-builds.json` lists the builds seen.
 
 Experiments with that package and tool, on synthetic factories, 2026-11-04:
 
@@ -229,7 +234,7 @@ property type is not supported` "is due to an integration runtime with the
   linked runtime's `resourceId` is a property, not a reference, so it may be a
   parameter; Microsoft's default parameterisation makes it one.
 
-Experiments with the export (`main.js` SHA-256 as above), 2026-11-04:
+Experiments with the export (`main.js` SHA-256 `9c7cb272…fbb76aa`), 2026-11-04:
 
 - A linked runtime written with `"authorizationType": "RBAC"` exports with its
   `linkedInfo`, the type written `Rbac`; with `linkedInfo.resourceId` in the
@@ -250,5 +255,8 @@ Experiments with the export (`main.js` SHA-256 as above), 2026-11-04:
   `AzureKeyVaultSecret` in its place it adds none. Each is described
   "Secure string for '<property>' of '<linked service>'".
 
-The tests check the build tool's SHA-256 after downloading it and on every use
-of the cached copy, which is kept under that hash.
+The tests run against the build the URL serves, as the package's users do,
+cached under its SHA-256 and downloaded again when a cached file does not match
+its key. They print the hash in use, and warn (a GitHub Actions `::warning::`
+annotation in CI) when it is not in `test/adf-tool-builds.json`, so that a
+maintainer checks the results and adds it.

@@ -1,11 +1,20 @@
 // Microsoft's own export, @microsoft/azure-data-factory-utilities, run on folded
-// files: the package downloads its build tool, main.js, from Data Factory's site,
-// so the tests that use it are skipped, with the reason, when it cannot be had or is
-// not the tool they were written against; with INGESTRON_REQUIRE_ADF_EXPORT=1, as CI
-// sets it, they fail instead.
+// files: the package downloads its build tool, main.js, from Data Factory's site, at
+// a URL with no version, and Microsoft serves different builds. The tests run against
+// the build served, as the package's users do, and warn when it is not a known one;
+// they are skipped, with the reason, when no build can be had, and with
+// INGESTRON_REQUIRE_ADF_EXPORT=1, as CI sets it, they fail instead.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -17,47 +26,101 @@ const bundleUrl = "https://adf.azure.com/assets/cmd-api/main.js";
 const factoryId =
   "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-data/providers/Microsoft.DataFactory/factories/adf-test";
 
-/**
- * The SHA-256 of the build tool the tests were written against (spec/references.md).
- * The URL is not versioned, so a tool with another hash is a different oracle.
- */
-export const bundleHash = "9c7cb2722b4dc516b5e906c7efd1672f24b6849a5492a42a92b63c602fbb76aa";
+/** A build of the tool seen served from the URL, which carries no version. */
+interface Build {
+  sha256: string;
+  firstSeen: string;
+  where: string;
+}
+
+/** The builds a maintainer has checked the tests against (test/adf-tool-builds.json). */
+export const knownBuilds = JSON.parse(
+  readFileSync(new URL("./adf-tool-builds.json", import.meta.url), "utf8"),
+) as Build[];
+
+/** The tool to run, its hash and whether it is a known build; or why there is none. */
+export interface Tool {
+  bundle?: string;
+  hash?: string;
+  reason?: string;
+}
 
 const hashOf = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 
-const mismatch = (where: string, hash: string) =>
-  `${where} has SHA-256 ${hash}, not the ${bundleHash} the tests were written against`;
+const cacheRoot = join(tmpdir(), "ingestron-adf-utilities");
 
 /**
- * The build tool's path, downloaded once into the system's temporary folder under its
- * hash and checked on every use, or why it cannot be had. `ADF_UTILITIES_BUNDLE` names
- * a copy to use offline, which is checked the same way.
+ * The build tool to run: `ADF_UTILITIES_BUNDLE` when set, else the build the URL
+ * serves now, cached under its hash. When the download fails, a cached build whose
+ * file matches its key, unless `required`. Prints the hash in use, and warns when it
+ * is not a known build, so that a maintainer checks it and adds it to the list.
  */
-export async function exportTool(): Promise<{ bundle?: string; reason?: string }> {
+export async function exportTool(required: boolean): Promise<Tool> {
+  const tool = await findTool(required);
+  if (tool.hash) announce(tool.hash, tool.bundle!);
+  return tool;
+}
+
+async function findTool(required: boolean): Promise<Tool> {
   const given = process.env.ADF_UTILITIES_BUNDLE;
   if (given) {
     if (!existsSync(given)) return { reason: `${given} does not exist` };
-    const hash = hashOf(readFileSync(given));
-    return hash === bundleHash ? { bundle: given } : { reason: mismatch(given, hash) };
-  }
-  const bundle = join(tmpdir(), "ingestron-adf-utilities", bundleHash, "main.js");
-  if (existsSync(bundle)) {
-    const hash = hashOf(readFileSync(bundle));
-    if (hash === bundleHash) return { bundle };
-    rmSync(bundle);
+    return { bundle: given, hash: hashOf(readFileSync(given)) };
   }
   try {
     const response = await fetch(bundleUrl, { signal: AbortSignal.timeout(60_000) });
-    if (!response.ok) return { reason: `${bundleUrl} answered ${response.status}` };
-    const bytes = Buffer.from(await response.arrayBuffer());
-    const hash = hashOf(bytes);
-    if (hash !== bundleHash) return { reason: mismatch(bundleUrl, hash) };
+    if (!response.ok) return fallback(`${bundleUrl} answered ${response.status}`, required);
+    return cache(Buffer.from(await response.arrayBuffer()));
+  } catch (error) {
+    return fallback(`${bundleUrl} could not be downloaded (${(error as Error).message})`, required);
+  }
+}
+
+/** Keeps a downloaded build under its hash, unless a matching copy is there already. */
+function cache(bytes: Buffer): Tool {
+  const hash = hashOf(bytes);
+  const bundle = join(cacheRoot, hash, "main.js");
+  if (!existsSync(bundle) || hashOf(readFileSync(bundle)) !== hash) {
     mkdirSync(dirname(bundle), { recursive: true });
     writeFileSync(bundle, bytes);
-    return { bundle };
-  } catch (error) {
-    return { reason: `${bundleUrl} could not be downloaded (${(error as Error).message})` };
   }
+  return { bundle, hash };
+}
+
+/** Offline: the newest cached build whose file matches its key; none when required. */
+function fallback(reason: string, required: boolean): Tool {
+  if (required || !existsSync(cacheRoot)) return { reason };
+  const cached = readdirSync(cacheRoot)
+    .map((hash) => ({ hash, bundle: join(cacheRoot, hash, "main.js") }))
+    .filter(({ hash, bundle }) => existsSync(bundle) && hashOf(readFileSync(bundle)) === hash)
+    .sort((a, b) => statSync(b.bundle).mtimeMs - statSync(a.bundle).mtimeMs);
+  if (cached.length === 0) return { reason };
+  say(`${reason}; using the cached build ${cached[0]!.hash}.`);
+  return cached[0]!;
+}
+
+/** The hash in use, and a warning for a build not in the list. */
+function announce(hash: string, bundle: string): void {
+  const known = knownBuilds.find((build) => build.sha256 === hash);
+  if (known) {
+    say(`Microsoft's ADF build tool: SHA-256 ${hash}, first seen ${known.firstSeen} (${bundle}).`);
+    return;
+  }
+  const message = `Microsoft's ADF build tool has SHA-256 ${hash}, which is not in test/adf-tool-builds.json. The tests run against it; check the results and add the build to the list.`;
+  say(
+    process.env.GITHUB_ACTIONS
+      ? `::warning title=New ADF build tool::${message}`
+      : `Warning: ${message}`,
+  );
+}
+
+/**
+ * Writes a line straight to the process's output, past the test runner's capture of
+ * the console, so that it shows (and GitHub Actions reads an annotation) when the
+ * tests pass.
+ */
+function say(line: string): void {
+  process.stdout.write(`${line}\n`);
 }
 
 /** The package's command-line entry point. */
