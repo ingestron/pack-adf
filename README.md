@@ -398,7 +398,7 @@ and [jobs and their roles](https://learn.microsoft.com/en-us/azure/container-app
 ## Dependencies
 
 - [`@ingestron/definitions`](https://www.npmjs.com/package/@ingestron/definitions) 1.8 or later, as a peer dependency.
-- For tests only, [`@microsoft/azure-data-factory-utilities`](https://www.npmjs.com/package/@microsoft/azure-data-factory-utilities) 1.0.3 (MIT), Microsoft's export. It downloads its build tool from `https://adf.azure.com/assets/cmd-api/main.js`; the tests check its SHA-256 and skip, saying why, when it cannot be had or differs. `ADF_UTILITIES_BUNDLE` names a downloaded copy; `INGESTRON_REQUIRE_ADF_EXPORT=1`, which CI sets, turns the skip into a failure.
+- For tests only, [`@microsoft/azure-data-factory-utilities`](https://www.npmjs.com/package/@microsoft/azure-data-factory-utilities) 1.0.3 (MIT), Microsoft's export. It downloads its build tool from `https://adf.azure.com/assets/cmd-api/main.js`; Microsoft serves different builds at that URL, so the tests run against the one served, print its SHA-256, and warn when it is not in `test/adf-tool-builds.json`; add a new build there once its results are checked. Without a build they are skipped and say why; `INGESTRON_REQUIRE_ADF_EXPORT=1`, which CI sets, makes that a failure. `ADF_UTILITIES_BUNDLE` names a downloaded copy to use instead.
 
 ## Working on this pack
 
