@@ -512,7 +512,9 @@ skipped when no build can be downloaded or run, and fail instead with
 A trigger is stopped when `paused` says so, else when the platform's
 `schedule.paused` does, else unless the environment is `prod` or `production`.
 The environment's name decides, not `mode`, which with environments generated
-together defaults to `production` for every environment but `dev`.
+together defaults to `production` for every environment but `dev`. The pack
+lists `schedule.paused`, the only Platform setting it reads, as
+`platformFields`.
 `runtimeState` becomes a parameter where it differs. The post-deployment
 script reads a parameterised `runtimeState` from the parameter file it is
 given with `-ArmTemplateParameters`, and starts only the triggers whose state

@@ -382,7 +382,7 @@ factories unconnected to Git, as Microsoft recommends.
     tumbling-window trigger re-runs its past windows from `start`.
   - `runtime.location` takes the region's display name, as Data Factory
     shows it, such as `UK South`, not its short name, such as `uksouth`.
-- Needs `@ingestron/definitions` 1.8 or later.
+- Needs `@ingestron/definitions` 1.9 or later.
 
 The details and the rules are in [spec/behaviour.md](spec/behaviour.md).
 
@@ -436,7 +436,7 @@ and [jobs and their roles](https://learn.microsoft.com/en-us/azure/container-app
 
 ## Dependencies
 
-- [`@ingestron/definitions`](https://www.npmjs.com/package/@ingestron/definitions) 1.8 or later, as a peer dependency.
+- [`@ingestron/definitions`](https://www.npmjs.com/package/@ingestron/definitions) 1.9 or later, as a peer dependency.
 - For tests only, [`@microsoft/azure-data-factory-utilities`](https://www.npmjs.com/package/@microsoft/azure-data-factory-utilities) 1.0.3 (MIT), Microsoft's export. It downloads its build tool from `https://adf.azure.com/assets/cmd-api/main.js`; Microsoft serves different builds at that URL, so the tests run against the one served, print its SHA-256, and warn when it is not in `test/adf-tool-builds.json`; add a new build there once its results are checked. Without a build they are skipped and say why; `INGESTRON_REQUIRE_ADF_EXPORT=1`, which CI sets, makes that a failure. `ADF_UTILITIES_BUNDLE` names a downloaded copy to use instead.
 
 ## Working on this pack
