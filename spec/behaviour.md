@@ -226,7 +226,9 @@ settings problem, so no generated file carries a timeout ADF would refuse.
 
 ## Design settings
 
-An audit column (`audit_columns`) names the value it holds. A value that is
+An audit column (`audit_columns`) names the value it holds. Its schema is
+either one of the pack's values or any other text, so that a reference lists
+the values with their meanings. A value that is
 `run.` or `source.` followed by one of the names the pack lists is matched in
 any case (`RUN.ID` and `run.id` are the same) and is generated in its canonical
 lower-case form: the ADF expression or literal for that name, with the column's
