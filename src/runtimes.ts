@@ -69,13 +69,13 @@ export const runtimeSchema = {
         core_count: {
           enum: [8, 16, 32, 48, 80, 144, 272],
           enumDescriptions: [
-            "8 cores in total, driver and worker cores together: 4 driver and 4 worker, the default size (small).",
-            "16 cores in total, driver and worker cores together.",
-            "32 cores in total, driver and worker cores together.",
-            "48 cores in total, driver and worker cores together.",
-            "80 cores in total, driver and worker cores together.",
-            "144 cores in total, driver and worker cores together.",
-            "272 cores in total, driver and worker cores together.",
+            "8 cores in total: 4 worker and 4 driver cores, the default size (small).",
+            "16 cores in total: 8 worker and 8 driver cores, medium.",
+            "32 cores in total: 16 worker and 16 driver cores, large.",
+            "48 cores in total: 32 worker and 16 driver cores.",
+            "80 cores in total: 64 worker and 16 driver cores.",
+            "144 cores in total: 128 worker and 16 driver cores.",
+            "272 cores in total: 256 worker and 16 driver cores.",
           ],
           description:
             "Azure: the total number of cores of the data flow cluster, driver and worker cores together. One of 8, 16, 32, 48, 80, 144 or 272. Default 8 (4 driver, 4 worker).",
