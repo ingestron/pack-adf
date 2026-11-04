@@ -362,15 +362,26 @@ factories unconnected to Git, as Microsoft recommends.
 - Output Microsoft's export refused is fixed, so every connector exports:
   - MongoDB, MongoDB Atlas and Azure Cosmos DB for MongoDB datasets write
     `collection`.
-  - Microsoft 365 lands through a binary copy into a folder, so its tables use
-    `layout: increments`.
+  - Microsoft 365 lands through a binary copy into `<object>/`, in files
+    Microsoft names, so its tables use `layout: increments`; a `snapshot` or
+    `path` table sets it. Before the first 2.0 run, delete or move the 1.x
+    file, `<object>/<object>.json` (or the files a `path` wrote), because it
+    matches the new location, `<object>/*.json`, and a store reading the
+    folder would load it again. Point readers of the old file at
+    `<object>/*.json`. A table without a date filter adds a whole extract on
+    each run, so its readers take only the latest run's files.
   - A `UserAssignedManagedIdentity` connection needs `identity`, the
-    identity's resource ID; the factory gets the credential, and the platform
-    request asks for the identity to be assigned to the factory.
+    identity's resource ID; the factory gets the credential, and the
+    platform request asks for the identity to be assigned to the factory. A
+    credential of the same name created in Studio is replaced by the
+    template's.
   - Resource names are at most 140 characters and Copy activity names 55; a
-    longer default name is refused with the `resource_names` role to set.
+    longer default name is refused with the `resource_names` role to set. A
+    renamed resource is recreated under its new name and the post-deployment
+    script deletes the old one, as for the PostgreSQL recipe; a renamed
+    tumbling-window trigger re-runs its past windows from `start`.
   - `runtime.location` takes the region's display name, as Data Factory
-    shows it, not its short name.
+    shows it, such as `UK South`, not its short name, such as `uksouth`.
 - Needs `@ingestron/definitions` 1.8 or later.
 
 The details and the rules are in [spec/behaviour.md](spec/behaviour.md).
@@ -411,8 +422,10 @@ the [MongoDB](https://learn.microsoft.com/en-us/azure/data-factory/connector-mon
 [MongoDB Atlas](https://learn.microsoft.com/en-us/azure/data-factory/connector-mongodb-atlas),
 [Azure Cosmos DB for MongoDB](https://learn.microsoft.com/en-us/azure/data-factory/connector-azure-cosmos-db-mongodb-api)
 and [Microsoft 365](https://learn.microsoft.com/en-us/azure/data-factory/connector-office-365) connectors,
-Microsoft Graph Data Connect [sinks](https://learn.microsoft.com/en-us/graph/data-connect-datasets#sinks)
-and [naming rules](https://learn.microsoft.com/en-us/azure/data-factory/naming-rules);
+Microsoft Graph Data Connect [sinks](https://learn.microsoft.com/en-us/graph/data-connect-datasets#sinks),
+[Binary format](https://learn.microsoft.com/en-us/azure/data-factory/format-binary),
+[naming rules](https://learn.microsoft.com/en-us/azure/data-factory/naming-rules)
+and [pipelines and activities](https://learn.microsoft.com/en-us/azure/data-factory/concepts-pipelines-activities);
 where they and the export disagree, the pack follows the export, as
 [spec/references.md](spec/references.md) records.
 For `after_copy` (accessed 2026-11-01): Container Apps
