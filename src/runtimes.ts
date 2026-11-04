@@ -59,18 +59,23 @@ export const runtimeSchema = {
         compute_type: {
           enum: ["General", "MemoryOptimized", "ComputeOptimized"],
           enumDescriptions: [
-            "ADF's General Purpose compute type. The default.",
-            "ADF's Memory Optimized compute type.",
-            "ADF's Compute Optimized compute type.",
+            "General Purpose compute. The default.",
+            "Memory Optimized compute, with more memory for each core. Microsoft suggests it, with more cores, when a data flow runs out of memory.",
+            "Compute Optimized compute. ADF accepts it, but Microsoft's guides do not describe it; General or MemoryOptimized are the documented types.",
           ],
-          description: "Azure: the data flow compute's type.",
+          description: "Azure: the type of Spark cluster that runs data flows.",
         },
         core_count: {
           enum: [8, 16, 32, 48, 80, 144, 272],
           description:
-            "Azure: how many cores the data flow compute has, one of the sizes ADF offers. Default 8.",
+            "Azure: the total number of cores of the data flow cluster, driver and worker cores together. One of 8, 16, 32, 48, 80, 144 or 272. Default 8 (4 driver, 4 worker).",
         },
-        time_to_live: { type: "integer", minimum: 0, description: "Minutes." },
+        time_to_live: {
+          type: "integer",
+          minimum: 0,
+          description:
+            "Azure: minutes the cluster stays warm after a data flow finishes, so the next one starts sooner.",
+        },
       },
     },
   },
