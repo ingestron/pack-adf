@@ -221,6 +221,19 @@ Accessed 2026-11-04:
   `computeProperties` (`location`, `dataFlowProperties` with `computeType`
   `ComputeOptimized`, `General` or `MemoryOptimized`, `coreCount` "8, 16, 32,
   48, 80, 144 and 272", and `timeToLive` in minutes, at least 0).
+- [Integration runtime performance](https://learn.microsoft.com/en-us/azure/data-factory/concepts-integration-runtime-performance)
+  (updated 2025-03-31; cited 2026-11-05): a data flow runs on a Spark cluster
+  defined by the runtime; "The default cluster size is four driver cores and
+  four worker cores (small)", and the sizes 8, 16, 32, 48, 80, 144 and 272 are
+  total cores (driver and worker). "Time to live isn't available when using the
+  auto-resolve integration runtime (default)." It describes no compute type,
+  so the `compute_type` descriptions say only what the ARM reference above and
+  the next entry show: `ComputeOptimized` is a value ADF accepts and nothing
+  more.
+- [Troubleshoot mapping data flows](https://learn.microsoft.com/en-us/azure/data-factory/data-flow-troubleshoot-guide)
+  (ms.date 2025-06-03; cited 2026-11-05): for out-of-memory errors, "Use an
+  integration runtime with more cores and/or the memory optimized compute
+  type."
 - [Microsoft.DataFactory/factories/managedVirtualNetworks](https://learn.microsoft.com/en-us/azure/templates/microsoft.datafactory/factories/managedvirtualnetworks)
   (updated 2026-10-20; cited 2026-11-05): `name` is required, 1 to 127
   characters, `^([_A-Za-z0-9]|([_A-Za-z0-9][-_A-Za-z0-9]{0,125}[_A-Za-z0-9]))$`,

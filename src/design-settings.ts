@@ -95,7 +95,7 @@ export const designSettings = {
       "One parameterised Copy inside a ForEach over the pipeline's tables parameter, whose default is the generated table list. Pass a shorter list to rerun some tables.",
     ],
     description:
-      "How each pipeline copies its tables. `foreach` is offered for `adf-copy`. The tables of one pipeline share `pattern`, `parallel`, `activity` and `audit_columns`.",
+      "How each pipeline copies its tables. `foreach` is offered for `adf-copy`. The `adf-copy` tables of one connection and database must use the same `pattern`; with `foreach` they must also use the same `parallel`, `activity` and `audit_columns`.",
   },
   parallel: {
     type: "integer",
@@ -124,14 +124,14 @@ export const designSettings = {
       timeout: {
         type: "integer",
         ...designRanges.timeout,
-        description: `Minutes a copy may run before ADF stops it, ${between(designRanges.timeout)}. ADF's own minimum is 10, so a smaller value is a settings problem.`,
+        description: `Minutes a copy may run before ADF stops it, ${between(designRanges.timeout)}. ADF's own minimum is ${designRanges.timeout.minimum}; a smaller value is refused.`,
         examples: [120],
       },
     },
   },
   audit_columns: {
     type: "object",
-    description: `Columns added to every landed row, by name, for \`adf-copy\` and \`adf-table\`. A value is a run value that ADF fills in when it runs, or a source value: ${auditList}. Any other text is written as it is, such as \`\${environment.name}\`.`,
+    description: `Columns added to every landed row, by name, for \`adf-copy\` and \`adf-table\`. A value is one of these or literal text, such as \`\${environment.name}\`, which is written as it is. ADF fills in the run values when it runs. Values: ${auditList}.`,
     additionalProperties: { type: "string", minLength: 1 },
     examples: [{ _loaded_at: "run.trigger_time", _run_id: "run.id", _source: "source.object" }],
   },
