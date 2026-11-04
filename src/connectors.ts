@@ -39,7 +39,13 @@ const sqlSettings: Connector["settings"] = [
     name: "credential",
     optional: true,
     description:
-      "Existing ADF credential name; required for UserAssignedManagedIdentity authentication.",
+      "Name of the factory credential for the user-assigned managed identity; required for UserAssignedManagedIdentity authentication. The pack writes the credential.",
+  },
+  {
+    name: "identity",
+    optional: true,
+    description:
+      "Resource ID of the user-assigned managed identity the credential holds, such as /subscriptions/<subscription>/resourceGroups/<group>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<name>; required for UserAssignedManagedIdentity authentication. Each environment may name its own.",
   },
   {
     name: "host_name_in_certificate",
@@ -81,7 +87,7 @@ export const connectors: Connector[] = [
       .filter(
         (field) =>
           id.startsWith("azure-") ||
-          !["tenant", "client_id", "client_secret", "credential"].includes(field.name),
+          !["tenant", "client_id", "client_secret", "credential", "identity"].includes(field.name),
       )
       .map((field) =>
         field.name === "authentication" ? { ...field, values: sqlAuthentication(id) } : field,

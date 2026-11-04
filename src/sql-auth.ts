@@ -7,9 +7,16 @@ const modeFields: Record<string, string[]> = {
   Windows: ["user", "password"],
   ServicePrincipal: ["tenant", "client_id", "client_secret"],
   SystemAssignedManagedIdentity: [],
-  UserAssignedManagedIdentity: ["credential"],
+  UserAssignedManagedIdentity: ["credential", "identity"],
 };
 const secretFields = new Set(["password", "client_secret"]);
+/** What a missing field is, where the bare name does not say how to fill it in. */
+const fieldHints: Record<string, string> = {
+  identity:
+    ", the resource ID of the user-assigned managed identity, such as /subscriptions/<subscription>/resourceGroups/<group>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<name>: the pack writes the factory's credential with it, because Microsoft's export refuses a linked service whose credential the factory does not hold",
+};
+/** A credential name ADF accepts (ARM's factories/credentials name rule). */
+const credentialName = /^([_A-Za-z0-9]|([_A-Za-z0-9][-_A-Za-z0-9]{0,125}[_A-Za-z0-9]))$/;
 
 /** Non-empty text, including names supplied through project/environment values. */
 export function nonEmpty(value: unknown): value is string {
@@ -112,6 +119,11 @@ export function nativeValue(
 
 function credentialFields(settings: Data, fields: string[]): string[] {
   const problems: string[] = [];
+  const credential = settings.credential;
+  if (fields.includes("credential") && nonEmpty(credential) && !credentialName.test(credential))
+    problems.push(
+      `the connection's credential "${credential}" is not a name ADF accepts: 1 to 127 letters, digits, underscores and hyphens, starting and ending with a letter, digit or underscore`,
+    );
   for (const key of [
     ...fields.filter((key) => secretFields.has(key)),
     "server",
@@ -122,7 +134,8 @@ function credentialFields(settings: Data, fields: string[]): string[] {
         problems.push(
           `the connection's ${key} must be \${secret:…}, the name of a Key Vault secret`,
         );
-    } else if (!nonEmpty(settings[key])) problems.push(`the connection needs "settings.${key}"`);
+    } else if (!nonEmpty(settings[key]))
+      problems.push(`the connection needs "settings.${key}"${fieldHints[key] ?? ""}`);
   }
   return problems;
 }
