@@ -3,12 +3,33 @@ import type { RequestSection, ResolvedModel } from "@ingestron/definitions";
 import { connectors } from "./connectors.js";
 import { afterCopyOf, timeoutSeconds } from "./after-copy-settings.js";
 import { addedSecretLines } from "./added-secrets.js";
+import { credentialLines } from "./credentials.js";
 import { runtimeLines } from "./runtime-request.js";
 /** Shared ADF infrastructure, source-specific access and values to supply, for the platform request. */
 export function prerequisites(
   model: ResolvedModel,
   files: Readonly<Record<string, string>>,
 ): RequestSection[] {
+  const { infrastructure, sources } = tableLines(model);
+  return [
+    {
+      title: "ADF prerequisites",
+      intro:
+        "Provision these before running the generated assets. Generation does not inspect Azure or validate source credentials.",
+      lines: [
+        ...runtimeLines(model),
+        ...credentialLines(model),
+        ...infrastructure,
+        ...jobLines(model),
+        ...addedSecretLines(files),
+        ...sources,
+      ],
+    },
+  ];
+}
+
+/** The shared infrastructure and each connection's source access, from the ADF tables. */
+function tableLines(model: ResolvedModel): { infrastructure: Set<string>; sources: Set<string> } {
   const tables = model.tables.filter((table) => table.ingest?.pack === "adf");
   const infrastructure = new Set<string>();
   const sources = new Set<string>();
@@ -30,20 +51,7 @@ export function prerequisites(
         "Azure Blob staging storage with a SAS secret permitting source export, runtime reads and cleanup.",
       );
   }
-  return [
-    {
-      title: "ADF prerequisites",
-      intro:
-        "Provision these before running the generated assets. Generation does not inspect Azure or validate source credentials.",
-      lines: [
-        ...runtimeLines(model),
-        ...infrastructure,
-        ...jobLines(model),
-        ...addedSecretLines(files),
-        ...sources,
-      ],
-    },
-  ];
+  return { infrastructure, sources };
 }
 
 /** The job after the copies: the factory's role on it, and its limits within after_copy.timeout. */
