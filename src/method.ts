@@ -99,12 +99,12 @@ export const layoutSettings = {
       "A new file per run under `<object>/`, named by the window's start and the run, so no run replaces another's rows.",
     ],
     description:
-      "How each table's files are laid out in the landing folder. Without it, a flow that ends at the landed files gets `snapshot`; one whose runs hold only their window's rows (`mode: incremental`, or a Microsoft 365 date filter), or that a store reads, gets `increments`. A layout that would lose rows is refused. Setting `layout` and `path` in the same place is refused; the one set nearer the table wins.",
+      "How each table's files are laid out in the landing folder. Without it, a flow that ends at the landed files gets `snapshot`, unless its runs hold only their window's rows (`mode: incremental`, or a Microsoft 365 date filter); every other flow gets `increments`. `snapshot` for runs that hold only their window's rows is refused, unless a store reads each file before the next run replaces it.",
   },
   path: {
     type: "string",
     description:
-      "A path of your own under the landing folder for each table's file, ending in `.parquet` (`.json` for Microsoft 365). It must include `{object}`; its other tokens are `{connection}`, the window start's `{yyyy}`, `{MM}`, `{dd}` and `{HH}`, and `{run}`. Each run adds a file when the path has `{run}`, or the date tokens down to the window's unit, such as `{HH}` for hourly windows; otherwise each run replaces it. Setting `path` and `layout` in the same place is refused; the one set nearer the table wins.",
+      "A path of your own for each table's file under the landing folder, instead of `layout`. It must include `{object}` and end in `.parquet` (`.json` for Microsoft 365). Its other tokens are `{connection}`, the window start's `{yyyy}`, `{MM}`, `{dd}` and `{HH}`, and `{run}`. A run adds a file when the path has `{run}`, or the date tokens down to the window's unit, such as `{HH}` for hourly windows; otherwise it replaces the file. Setting `path` and `layout` in the same place is refused; set in different places, the one nearer the table wins.",
     examples: ["{object}/{yyyy}/{MM}/{dd}/{object}_{run}.parquet"],
   },
 };

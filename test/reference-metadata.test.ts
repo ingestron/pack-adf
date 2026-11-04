@@ -55,7 +55,12 @@ describe("ADF setting metadata", () => {
       return node?.maximum !== undefined && node.minimum !== undefined;
     });
     expect(ranged.map((field) => field.path.join("."))).toEqual(
-      expect.arrayContaining(["parallel", "activity.retries", "activity.retry_interval"]),
+      expect.arrayContaining([
+        "parallel",
+        "activity.retries",
+        "activity.retry_interval",
+        "activity.timeout",
+      ]),
     );
     for (const field of ranged) {
       const node = nodeAt(adf.methods[method]!.settings as Schema, field.path)!;
