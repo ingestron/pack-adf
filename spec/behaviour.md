@@ -296,15 +296,41 @@ final new line. `factoryName` is in no parameter file: each stage supplies it.
 ### Integration runtimes
 
 `build` writes `integrationRuntime/<name>.json` for each runtime a linked
-service connects through, other than `AutoResolveIntegrationRuntime`, with its
-type only: `{"type": "SelfHosted"}` for `runtime_kind: self-hosted`, and
-`{"type": "Managed", "typeProperties": {"computeProperties": {"location": "AutoResolve"}}}`
-for `azure`. The export drops a `connectVia` to a runtime it cannot find in
-the folder, and the post-deployment script deletes every runtime the template
-does not hold, so the folder holds each runtime the factory uses. A runtime
-name used with two kinds is a pack check problem. The deployment sets a
-runtime's type and nothing else, so a linked self-hosted runtime, or an Azure
-runtime with its own region, compute or virtual network, is not described.
+service connects through, other than `AutoResolveIntegrationRuntime`. The
+export drops a `connectVia` to a runtime it cannot find in the folder, and the
+post-deployment script deletes every runtime the template does not hold, so the
+folder holds each runtime the factory uses. An ARM deployment applies a
+resource's whole definition and resets what it leaves out, so each runtime is
+written as the platform settings describe it:
+
+- `integration_runtime` is its name: 3 to 63 letters, digits and single
+  hyphens (`^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$`), as ADF requires.
+- `runtime_kind: self-hosted`: `{"type": "SelfHosted"}`, as Data Factory Studio
+  writes a runtime of the factory's own. With `runtime.shared`, the resource ID
+  of a shared runtime in another factory, it is a linked runtime:
+  `typeProperties.linkedInfo` is `{"authorizationType": "RBAC", "resourceId": <shared>}`.
+  A resource ID that differs between environments is a parameter, as any value.
+- `runtime_kind: azure`: `{"type": "Managed"}` with
+  `typeProperties.computeProperties.location` from `runtime.location` (default
+  `AutoResolve`) and, when `runtime.data_flow` is set, `dataFlowProperties`
+  (`computeType`, `coreCount`, `timeToLive` from `compute_type`, `core_count`,
+  `time_to_live`). With `runtime.managed_virtual_network: true`, the runtime
+  has `managedVirtualNetwork` `{"type": "ManagedVirtualNetworkReference", "referenceName": "default"}`
+  and the folder has `managedVirtualNetwork/default.json`,
+  `{"name": "default", "properties": {}}`, which the export needs to keep the
+  reference.
+
+`runtime.shared` with `runtime_kind: azure`, an Azure setting with
+`runtime_kind: self-hosted`, or any `runtime` with `AutoResolveIntegrationRuntime`
+is a method check problem. A runtime name described in two ways is a pack
+check problem.
+
+The pack does not describe an Azure runtime's copy or pipeline compute, or a
+self-hosted runtime's description, so a deployment resets them. The platform
+request names each runtime, what the deployment does to it, and asks for
+`az deployment group what-if` before the first deployment to a factory that
+already has runtimes. The definitions interface has no warning code for this,
+so it is in the request only.
 
 ### Which values become parameters
 
@@ -361,6 +387,24 @@ parameter name it is supplied as, in the order the models first hold the
 values. An ARM parameter's name comes from where the value is, not from
 `NAME`, so a value used in several places is supplied under each name.
 
+### Secure strings the export adds
+
+For some linked service types the export adds a `secureString` parameter with
+no default, named `<linked service>_<property>`, for an optional secret the
+linked service leaves out; leaving it out, writing `null` or an empty secure
+string does not stop it, and a Key Vault reference in its place does. The
+pack keeps the list, by type: Informix and MicrosoftAccess `credential`,
+SharePointOnlineList `servicePrincipalEmbeddedCertPassword`, SnowflakeV2
+`privateKeyPassphrase`, Square `refreshToken`, and Xero `consumerKey` and
+`privateKey`. The connection settings `credential` (Informix, Microsoft
+Access), `certificate_password` (SharePoint Online List),
+`private_key_password` (Snowflake) and `refresh_token` (Square) give these
+secrets from Key Vault. Each one still left out is listed in `deployValues`,
+with its parameter as its name and in `suppliedAs`, so that the deploying
+pipeline supplies it; the platform request names it; and it counts toward the
+256 parameters. A parameter file cannot give it as a Key Vault reference,
+which needs the vault's resource ID and a secret the project does not name.
+
 ### What is refused
 
 Before any file is written, in this order:
@@ -368,8 +412,11 @@ Before any file is written, in this order:
 1. `compareTargets` (definitions specification, section 2.1).
 2. `DEPLOY_VALUE` for a landing folder that holds a deploy-time value: ADF
    splits it into the storage account's URL, the file system and the folder.
+   Hint: `Write the landing folder in project.yaml for each environment, such as abfss://landing@<account>.dfs.core.windows.net/<folder>.`
 3. `DEPLOY_VALUE` for a resource named after a deploy-time value, such as an
-   integration runtime.
+   integration runtime, with the hint
+   `Write the integration runtime's name in project.yaml for each environment.`
+   or, for another resource, `Write the value this resource is named after in project.yaml for each environment.`
 4. `ENVIRONMENTS_DIFFER` for integration runtimes whose names or types differ:
    `The integration runtimes are <name> (<type>), … in <target> and … in <target>; Microsoft's CI/CD needs each runtime to have the same name and type in every environment.`
 5. `ENVIRONMENTS_DIFFER` for a resource whose name differs, each target
@@ -386,8 +433,10 @@ Before any file is written, in this order:
    `Make the variable hold the whole value, such as the full URL, or write the value in project.yaml for each environment.`;
    and for two deploy-time values at one place.
 8. `ARM_PARAMETERS` when the template would have more than 256 parameters,
-   `factoryName` included:
-   `The ARM template would have <count> parameters: factoryName and <count - 1> for values that differ between environments. Azure Resource Manager allows 256.`
+   `factoryName` and the secure strings the export adds included:
+   `The ARM template would have <count> parameters: factoryName, <n> for values that differ between environments and <m> secure strings the export adds. Azure Resource Manager allows 256. The most come from <property> of each <kind> (<count>), …`,
+   naming the three properties with the most parameters, with the hint
+   `Microsoft suggests three ways: make fewer values differ between environments, such as an audit column that holds the environment's name; give values that are the same in many places one global parameter; or split the definitions into more than one factory.`
 
 Each `ENVIRONMENTS_DIFFER` message from 4 to 6 ends with the method and
 connection settings, and table objects, that differ between the targets, up
@@ -419,10 +468,11 @@ where a value is the same in test and prod but differs in dev, and show that
 three deliberately wrong folds fail. Independently of this pack's model of
 the export, they run Microsoft's export, version 1.0.3, on folded fixtures,
 the connector catalogue included: every parameter a parameter file sets or the
-pipeline supplies is declared in the exported template and no other, except
-the secure strings the export adds for optional secrets a linked service
-leaves out; and the template with a target's values deploys the same
-resources as that target's own factory exports to.
+pipeline supplies is declared in the exported template and no other; and the template with a target's values deploys the same
+resources as that target's own factory exports to. A parameter file with a
+renamed parameter, or another environment's value, fails those checks. The
+tests pin the export's build tool by its SHA-256, skip with both hashes when it
+differs, and fail instead with `INGESTRON_REQUIRE_ADF_EXPORT=1`, which CI sets.
 
 ### Triggers
 
@@ -440,10 +490,11 @@ is `Started`.
 1. Change the standard to `adf@2`. The CLI then writes `build/adf/` and reports
    each `build/<environment>/adf/` as no longer generated.
 2. Resource names are the same as in 1.x, so the first ARM deployment to each
-   factory updates its resources in place, and adds each integration runtime
-   resource. Before it, check each runtime in the test and production
-   factories: a linked self-hosted runtime, or an Azure runtime with its own
-   region, compute or virtual network, would be set to the type alone.
+   factory updates its resources in place, and writes each integration
+   runtime as the settings describe it. Describe a linked runtime with
+   `runtime.shared`, and an Azure runtime's region, data flow compute and
+   managed virtual network with `runtime`, then run `az deployment group what-if`
+   against each factory before the first deployment.
 3. Deploy each factory from one project only: the post-deployment script
    deletes the factory's resources, runtimes included, that the template does
    not hold.
@@ -476,9 +527,5 @@ Found by running it on the connector catalogue (2026-11-04):
 - A linked service authenticated with `UserAssignedManagedIdentity` references
   a credential that is not in the folder, which the validator refuses ("Cannot
   reference to an invalid or deleted Credential object").
-- For some connectors it adds a secure string parameter, with no default, for
-  an optional secret the linked service leaves out: Informix's and Microsoft
-  Access's `credential`, SharePoint Online List's
-  `servicePrincipalEmbeddedCertPassword`, Snowflake's `privateKeyPassphrase`,
-  Square's `refreshToken`, and Xero's `consumerKey` and `privateKey`. The
-  deploying pipeline must give each a value.
+- For some connectors it adds secure string parameters of its own (see
+  "Secure strings the export adds").

@@ -26,10 +26,11 @@ environment's values, and an ARM parameter file per environment,
 linked services with secrets as Key Vault references, a pipeline per connection
 with a copy per table or file set into `<landing>/<object>/`, and a tumbling
 window trigger, started in `prod` and `production` and stopped elsewhere.
-Key Vaults are shared infrastructure, referenced by name. Each integration
-runtime the linked services use is written by name and type only, because
-Microsoft's export and deployment scripts need it in the folder; it is never
-configured.
+Key Vaults are shared infrastructure, referenced by name. The factory also holds
+each integration runtime its linked services use, because Microsoft's export
+drops a reference to a runtime it cannot find and its post-deployment script
+deletes every runtime the template does not hold. A deployment sets each
+runtime as the definitions describe it (see [Integration runtimes](#integration-runtimes)).
 
 ## Landing layouts
 
@@ -170,6 +171,42 @@ connector the pack supports. `ingestron init --connector <id> --via adf` starts
 a project from it. Each connector's settings are on its page in the
 [documentation](https://docs.ingestron.io/docs/connectors).
 
+## Integration runtimes
+
+Each runtime is written as `integrationRuntime/<name>.json`, from the
+platform settings `integration_runtime` (3 to 63 letters, digits and single
+hyphens), `runtime_kind` and `runtime`. ADF's own
+`AutoResolveIntegrationRuntime` is never written.
+
+```yaml
+# platform.yaml
+settings:
+  adf-copy:
+    integration_runtime: shir-erp
+    runtime_kind: self-hosted
+    # A runtime linked to a shared one in another factory, as Microsoft
+    # recommends for sharing a runtime across stages:
+    runtime:
+      shared: /subscriptions/<id>/resourceGroups/rg-shared/providers/Microsoft.DataFactory/factories/adf-shared/integrationruntimes/shir-erp
+```
+
+| Kind                           | Settings                                                                                                                                          | Written                                                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Self-hosted, the factory's own | none                                                                                                                                              | `{"type": "SelfHosted"}`, as Data Factory Studio writes it                                                     |
+| Self-hosted, linked            | `runtime.shared`, the shared runtime's resource ID                                                                                                | `linkedInfo` with `RBAC`; a parameter where environments link to different ones                                |
+| Azure                          | `runtime.location` (default `AutoResolve`), `runtime.managed_virtual_network`, `runtime.data_flow` (`compute_type`, `core_count`, `time_to_live`) | `Managed`, with the factory's managed virtual network, `managedVirtualNetwork/default.json`, when it is in one |
+
+An ARM deployment sets a runtime's whole resource: what the settings leave out
+is reset to its default. An Azure runtime's copy and pipeline compute, and a
+self-hosted runtime's description, are not described, so they are reset. A
+runtime written with another type than the factory's fails to deploy; a
+linked runtime written without `runtime.shared` loses its link or fails; and an
+Azure runtime cannot move into or out of a managed virtual network. Before
+the first deployment to a factory that already has its runtimes, run
+`az deployment group what-if` with the template and that environment's
+parameter file; `ingestron request` says what each deployment does to each
+runtime.
+
 ## Example
 
 Most people use this through the [`ingestron`](https://www.npmjs.com/package/ingestron) command, which writes the factory to `build/adf/`. In code:
@@ -250,25 +287,48 @@ Values in a pipeline, such as the after-copy job or an audit column holding
 A whole value written as `${envvar:NAME}` is left out of the environments
 where it is one; `deployValues` names the ARM parameters to supply it as.
 
+For Informix, Microsoft Access, SharePoint Online List, Snowflake, Square and
+Xero, Microsoft's export adds a secure string parameter with no default for an
+optional secret the linked service leaves out, such as Square's
+`refreshToken`. Give the connection that secret from Key Vault (`credential`,
+`certificate_password`, `private_key_password` or `refresh_token`) and the
+export does not add it; otherwise `deployValues` and `ingestron request` name
+the parameter, and the deploying pipeline supplies it.
+
 ## Deploy
 
 One factory serves one project: Microsoft's post-deployment script deletes
 every pipeline, dataset, linked service, trigger and integration runtime in
-the factory that the template does not hold. Leave the factories unconnected
-to Git, or Studio writes files of its own into the folder.
+the factory that the template does not hold. Leave the test and production
+factories unconnected to Git, as Microsoft recommends.
 
-1. Build the template once, from `build/adf/factory`, with
-   [`@microsoft/azure-data-factory-utilities`](https://www.npmjs.com/package/@microsoft/azure-data-factory-utilities):
-   `npm run build export build/adf/factory <factory resource ID> arm`.
-2. For each environment, in order:
-   - the pre-deployment script `arm/PrePostDeploymentScript.ps1`, in PowerShell
-     Core, with `-PreDeployment $true` and
-     `-ArmTemplateParameters build/adf/parameters/<environment>.json`;
-   - `az deployment group create --mode Incremental --template-file arm/ARMTemplateForFactory.json --parameters @build/adf/parameters/<environment>.json factoryName=<factory>`,
-     adding `<name>=<value>` for each value supplied when deploying;
-   - the same script with `-PreDeployment $false`, which deletes what the
-     template no longer holds and starts the triggers whose `runtimeState` is
-     `Started`.
+1. Build the template once, with
+   [`@microsoft/azure-data-factory-utilities`](https://www.npmjs.com/package/@microsoft/azure-data-factory-utilities),
+   from a `package.json` with Microsoft's build script:
+
+   ```json
+   {
+     "scripts": { "build": "node node_modules/@microsoft/azure-data-factory-utilities/lib/index" },
+     "dependencies": { "@microsoft/azure-data-factory-utilities": "1.0.3" }
+   }
+   ```
+
+   Then `npm install` and
+   `npm run build export build/adf/factory <dev factory resource ID> arm`, on
+   Node 20 or 22. It validates every resource and writes
+   `arm/ARMTemplateForFactory.json` and `arm/PrePostDeploymentScript.ps1`.
+
+2. For each environment, in order, signed in to that environment's
+   subscription:
+   - the pre-deployment script, in PowerShell Core:
+     `./arm/PrePostDeploymentScript.ps1 -ArmTemplate arm/ARMTemplateForFactory.json -ArmTemplateParameters build/adf/parameters/<environment>.json -ResourceGroupName <group> -DataFactoryName <factory> -PreDeployment $true -DeleteDeployment $false`;
+   - `az deployment group create --resource-group <group> --mode Incremental --template-file arm/ARMTemplateForFactory.json --parameters @build/adf/parameters/<environment>.json factoryName=<factory>`,
+     adding `<name>=<value>` for each name in `deployValues`;
+   - the same script with `-PreDeployment $false -DeleteDeployment $true`,
+     which deletes what the template no longer holds and starts the triggers
+     whose `runtimeState` is `Started`.
+3. Where the deployment creates a self-hosted runtime in a factory that had
+   none, register a node with it before the copies run.
 
 ## What changed in 2.0
 
@@ -277,11 +337,10 @@ to Git, or Studio writes files of its own into the folder.
   `adf@2`. Deploying the JSON directly is no longer supported; use the ARM
   template above.
 - Resource names are the same as in 1.x, so the first deployment updates each
-  factory's resources in place. It also adds each integration runtime the
-  linked services use, by name and type only: check first that no runtime in
-  test or production is a linked self-hosted runtime, or an Azure runtime with
-  its own region, compute or virtual network, which the deployment would set
-  to its type alone.
+  factory's resources in place. It also writes each integration runtime the
+  linked services use, as the platform settings describe it: describe linked
+  and Azure runtimes with `runtime` first, and run `az deployment group what-if`
+  before the first deployment (see [Integration runtimes](#integration-runtimes)).
 - Environments may differ only in values. Resource names, integration runtime
   names and kinds, and resources built in some environments only are
   `ENVIRONMENTS_DIFFER`; more than 256 parameters is `ARM_PARAMETERS`; a Key
@@ -300,19 +359,46 @@ to Git, or Studio writes files of its own into the folder.
 
 Microsoft's export refuses some connectors' resources: the MongoDB collection
 datasets, Microsoft 365, and a linked service with a credential (for
-`UserAssignedManagedIdentity`). For a few others it adds a secure parameter for
-an optional secret that the pipeline must give a value. The details and the
-rules are in [spec/behaviour.md](spec/behaviour.md).
+`UserAssignedManagedIdentity`). The details and the rules are in
+[spec/behaviour.md](spec/behaviour.md).
 
 Microsoft's published Data Factory resource schema (2018-06-01) predates the
 current linked services, so it cannot validate this output; the tests run
 Microsoft's export, which validates every resource, and check the shapes in
 the sources below and in [spec/references.md](spec/references.md).
 
+## Sources
+
+For one factory for every environment (accessed 2026-11-04):
+[custom parameters](https://learn.microsoft.com/en-us/azure/data-factory/continuous-integration-delivery-resource-manager-custom-parameters),
+[CI/CD best practices](https://learn.microsoft.com/en-us/azure/data-factory/continuous-integration-delivery),
+[automated publishing](https://learn.microsoft.com/en-us/azure/data-factory/continuous-integration-delivery-improvements),
+[pre- and post-deployment scripts](https://learn.microsoft.com/en-us/azure/data-factory/continuous-integration-delivery-sample-script),
+[template limits](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/best-practices#template-limits),
+[deployment modes](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/deployment-modes),
+[integration runtime resources](https://learn.microsoft.com/en-us/azure/templates/microsoft.datafactory/factories/integrationruntimes)
+and [managed virtual networks](https://learn.microsoft.com/en-us/azure/data-factory/managed-virtual-network-private-endpoint);
+the experiments with `@microsoft/azure-data-factory-utilities` 1.0.3 are in
+[spec/references.md](spec/references.md).
+
+Accessed 2026-10-25: Microsoft Learn
+[connector overview](https://learn.microsoft.com/en-us/azure/data-factory/connector-overview),
+[SQL Server connector](https://learn.microsoft.com/en-us/azure/data-factory/connector-sql-server),
+[Parquet format](https://learn.microsoft.com/en-us/azure/data-factory/format-parquet),
+[ADLS Gen2 connector](https://learn.microsoft.com/en-us/azure/data-factory/connector-azure-data-lake-storage),
+[Key Vault secrets](https://learn.microsoft.com/en-us/azure/data-factory/store-credentials-in-key-vault),
+[tumbling window triggers](https://learn.microsoft.com/en-us/azure/data-factory/how-to-create-tumbling-window-trigger),
+[source control](https://learn.microsoft.com/en-us/azure/data-factory/source-control).
+For `after_copy` (accessed 2026-11-01): Container Apps
+[Jobs - Start](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/jobs/start),
+[Job Execution](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/job-execution/job-execution),
+[Jobs - Stop Execution](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/jobs/stop-execution)
+and [jobs and their roles](https://learn.microsoft.com/en-us/azure/container-apps/jobs).
+
 ## Dependencies
 
 - [`@ingestron/definitions`](https://www.npmjs.com/package/@ingestron/definitions) 1.8 or later, as a peer dependency.
-- For tests only, [`@microsoft/azure-data-factory-utilities`](https://www.npmjs.com/package/@microsoft/azure-data-factory-utilities) 1.0.3 (MIT), Microsoft's export. It downloads its build tool from `https://adf.azure.com/assets/cmd-api/main.js`; without a network, set `ADF_UTILITIES_BUNDLE` to a downloaded copy, or its tests are skipped and say why.
+- For tests only, [`@microsoft/azure-data-factory-utilities`](https://www.npmjs.com/package/@microsoft/azure-data-factory-utilities) 1.0.3 (MIT), Microsoft's export. It downloads its build tool from `https://adf.azure.com/assets/cmd-api/main.js`; the tests check its SHA-256 and skip, saying why, when it cannot be had or differs. `ADF_UTILITIES_BUNDLE` names a downloaded copy; `INGESTRON_REQUIRE_ADF_EXPORT=1`, which CI sets, turns the skip into a failure.
 
 ## Working on this pack
 
