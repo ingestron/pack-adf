@@ -196,8 +196,10 @@ Experiments with that package and tool, on synthetic factories, 2026-11-04:
   `headers: {}`, so the tests compare the folded factory's export with each
   environment's own factory's export, not with the Git JSON.
 - A linked service with a credential that is not in the folder fails
-  validation, and so does a linked service name over 140 characters ("It
-  should be in the form `/^[^-\s][^\\/:*?"<>|]{1,140}$/`"); the pack allows 200.
+  validation, and so does a linked service name over 141 characters ("It
+  should be in the form `/^[^-\s][^\\/:*?"<>|]{1,140}$/`", a first character
+  then up to 140). Both are fixed since; see "Output Microsoft's export
+  refused".
 
 ## Integration runtimes and the export's secure strings
 
@@ -219,6 +221,12 @@ Accessed 2026-11-04:
   `computeProperties` (`location`, `dataFlowProperties` with `computeType`
   `ComputeOptimized`, `General` or `MemoryOptimized`, `coreCount` "8, 16, 32,
   48, 80, 144 and 272", and `timeToLive` in minutes, at least 0).
+- [Microsoft.DataFactory/factories/managedVirtualNetworks](https://learn.microsoft.com/en-us/azure/templates/microsoft.datafactory/factories/managedvirtualnetworks)
+  (updated 2026-10-20; cited 2026-11-05): `name` is required, 1 to 127
+  characters, `^([_A-Za-z0-9]|([_A-Za-z0-9][-_A-Za-z0-9]{0,125}[_A-Za-z0-9]))$`,
+  which `default` meets; `properties` is required, and its
+  `ManagedVirtualNetwork` type has no named properties, so the pack writes
+  `{"name": "default", "properties": {}}`.
 - [Managed virtual network and managed private endpoints](https://learn.microsoft.com/en-us/azure/data-factory/managed-virtual-network-private-endpoint)
   (2026-07-29): "An existing global integration runtime can't switch to an
   integration runtime in a Data Factory managed virtual network and vice
@@ -260,3 +268,79 @@ cached under its SHA-256 and downloaded again when a cached file does not match
 its key. They print the hash in use, and warn (a GitHub Actions `::warning::`
 annotation in CI) when it is not in `test/adf-tool-builds.json`, so that a
 maintainer checks the results and adds it.
+
+## Output Microsoft's export refused
+
+Accessed 2026-11-05. Where a Microsoft Learn page and the export's validator
+disagree, the pack follows the validator, which is what users run.
+
+- MongoDB collections. The connector pages for
+  [MongoDB](https://learn.microsoft.com/en-us/azure/data-factory/connector-mongodb)
+  (2026-08-06),
+  [MongoDB Atlas](https://learn.microsoft.com/en-us/azure/data-factory/connector-mongodb-atlas)
+  (2025-12-25) and
+  [Azure Cosmos DB for MongoDB](https://learn.microsoft.com/en-us/azure/data-factory/connector-azure-cosmos-db-mongodb-api)
+  (2025-12-25) give the dataset's `collectionName`, "Name of the collection in
+  MongoDB database. Required: Yes". The
+  [dataset resource reference](https://learn.microsoft.com/en-us/azure/templates/microsoft.datafactory/factories/datasets)
+  (updated 2026-10-20) gives `collection`, required, for
+  `MongoDbV2CollectionDatasetTypeProperties`,
+  `MongoDbAtlasCollectionDatasetTypeProperties` and
+  `CosmosDbMongoDbApiCollectionDatasetTypeProperties`. The export refuses
+  `collectionName` ("Collection name is required"); its build tool reads the
+  collection as `collection` for these three datasets, and as `collectionName`
+  for Cosmos DB for NoSQL, which the reference agrees with. **Disagreement:**
+  the connector pages are wrong for these three; the pack writes `collection`.
+- Microsoft 365. The
+  [connector page](https://learn.microsoft.com/en-us/azure/data-factory/connector-office-365)
+  (2025-04-27, updated 2026-08-05) says a copy can "only ingest data from
+  Microsoft 365 (Office 365) into Azure Blob Storage, Azure Data Lake Storage
+  Gen1, and Azure Data Lake Storage Gen2 in JSON format (type setOfObjects)".
+  The export refuses a JSON sink dataset: "Microsoft 365 source only supports
+  copying to binary format dataset. Please select binary format for sink
+  dataset." With a `Binary` dataset it refuses a file name: "Microsoft 365
+  source only supports copying to a folder." A `BinarySink` into a binary
+  dataset of a folder exports, keeping the source's `outputColumns` and date
+  filter. Graph Data Connect's
+  [sinks](https://learn.microsoft.com/en-us/graph/data-connect-datasets#sinks)
+  (2024-11-07, updated 2025-08-06): "For copy activity, the output files are
+  formatted as JSON. This format is fixed and modifying the format isn't
+  supported." The file names are not documented; a Microsoft Tech Community
+  post, [MGDC for SharePoint FAQ: What counts as an object?](https://techcommunity.microsoft.com/t5/microsoft-graph-data-connect-for/mgdc-for-sharepoint-faq-what-counts-as-an-object/ba-p/4074274)
+  (2024-03-04), says the files have "a JSON file extension", with "one line per
+  object", and that many objects are packed "as multiple “json” files". So the
+  pack reports `<object>/*.json` in the format `json`. **Disagreement:** the
+  connector page's JSON sink; the pack writes the binary one.
+- User-assigned managed identities.
+  [Credentials](https://learn.microsoft.com/en-us/azure/data-factory/credentials)
+  (2024-09-26, updated 2026-08-05): associate the identity with the factory,
+  then create a credential for it; "Users must have the Managed Identity
+  Operator (Azure RBAC) role … to configure a user assigned managed identity as
+  a credential". The
+  [credential resource reference](https://learn.microsoft.com/en-us/azure/templates/microsoft.datafactory/factories/credentials)
+  (updated 2026-07-20): `type` `ManagedIdentity` with
+  `typeProperties.resourceId`, "The resource id of user assigned managed
+  identity"; the name 1 to 127 characters,
+  `^([_A-Za-z0-9]|([_A-Za-z0-9][-_A-Za-z0-9]{0,125}[_A-Za-z0-9]))$`. The
+  export reads `credential/<name>.json`; with it, the linked service exports
+  with its `CredentialReference`, the template holds a
+  `Microsoft.DataFactory/factories/credentials` resource, and with
+  `properties.typeProperties.resourceId` under that type in the definition the
+  identity is the parameter `<credential>_properties_typeProperties_resourceId`.
+- Names. [Naming rules](https://learn.microsoft.com/en-us/azure/data-factory/naming-rules)
+  (2025-03-31, updated 2026-08-05) give no length for linked services,
+  datasets, pipelines or triggers. The export refuses a linked service or
+  trigger name over 141 characters (pattern
+  `^[^-\s][^\\/:*?"<>|]{1,140}$`), a dataset or pipeline name over 140
+  ("factoryEntityNameLengthValidator", `^.{1,140}$`) and an activity name over
+  55 (`^.{1,55}$`); 140, 140 and 55 export. The pack keeps every resource to
+  140 and an activity to 55.
+- Regions. The export rewrites a managed runtime's `location` given as a
+  short name, such as `uksouth`, to its display name, but leaves a parameter's
+  value as given, so a fold whose environments differ in region deployed
+  `uksouth` where the environment's own export had the display name. The pack
+  refuses the short name.
+
+Experiments with the export (`main.js` SHA-256 `9c7cb272…fbb76aa`), 2026-11-05,
+on the connector catalogue and on hand-written factories for each case above;
+the tests now run every case through it.
