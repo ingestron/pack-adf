@@ -46,6 +46,7 @@ export const runtimeSchema = {
       minLength: 1,
       description:
         "Azure: the runtime's region, by the display name Data Factory shows, such as UK South. Default: AutoResolve.",
+      examples: ["UK South"],
     },
     managed_virtual_network: {
       type: "boolean",
@@ -67,6 +68,15 @@ export const runtimeSchema = {
         },
         core_count: {
           enum: [8, 16, 32, 48, 80, 144, 272],
+          enumDescriptions: [
+            "8 cores in total, driver and worker cores together: 4 driver and 4 worker, the default size (small).",
+            "16 cores in total, driver and worker cores together.",
+            "32 cores in total, driver and worker cores together.",
+            "48 cores in total, driver and worker cores together.",
+            "80 cores in total, driver and worker cores together.",
+            "144 cores in total, driver and worker cores together.",
+            "272 cores in total, driver and worker cores together.",
+          ],
           description:
             "Azure: the total number of cores of the data flow cluster, driver and worker cores together. One of 8, 16, 32, 48, 80, 144 or 272. Default 8 (4 driver, 4 worker).",
         },

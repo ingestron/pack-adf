@@ -108,4 +108,17 @@ describe("ADF setting metadata", () => {
       expect(layout.description).toContain("`increments`");
     }
   });
+
+  it("gives the runtime's region an example and each data flow core count its meaning", () => {
+    const found = rows("adf-copy");
+    const at = (path: string) => found.find((field) => field.path.join(".") === path)!;
+    expect(at("runtime.location").example).toBe("UK South");
+    const cores = at("runtime.data_flow.core_count").values!;
+    expect(cores.map((item) => item.value)).toEqual([8, 16, 32, 48, 80, 144, 272]);
+    for (const item of cores) {
+      expect(item.description, String(item.value)).toMatch(
+        new RegExp(`^${String(item.value)} cores in total, driver and worker`),
+      );
+    }
+  });
 });
