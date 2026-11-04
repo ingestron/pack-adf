@@ -32,6 +32,7 @@ import {
 type Json = Record<string, any>;
 
 const tool = await exportTool();
+const required = process.env.INGESTRON_REQUIRE_ADF_EXPORT === "1";
 const title = tool.bundle
   ? "Microsoft's export of the folded factory"
   : `Microsoft's export of the folded factory (skipped: ${tool.reason})`;
@@ -178,6 +179,15 @@ describe.skipIf(!tool.bundle).each(Object.entries(fixtures))(
           deployed(ownTemplate(tool.bundle!, models, target), supplied),
         );
       }
+    });
+  },
+);
+
+describe.runIf(required && !tool.bundle)(
+  "Microsoft's export, required by INGESTRON_REQUIRE_ADF_EXPORT=1",
+  () => {
+    it("is available and is the tool the tests were written against", () => {
+      expect.fail(tool.reason);
     });
   },
 );
