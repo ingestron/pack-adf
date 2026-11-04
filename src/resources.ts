@@ -201,8 +201,16 @@ export function windowTrigger(
   };
 }
 
-/** Whether the trigger stays stopped: its own setting, else the platform's schedule, else not in production. */
+/** Environments whose triggers run unless a setting stops them. */
+const running = new Set(["prod", "production"]);
+
+/**
+ * Whether the trigger stays stopped: its own setting, else the platform's schedule, else
+ * unless the environment is prod or production. The environment's name decides, not the
+ * platform's mode, whose default for environments generated together is production for
+ * every environment but dev.
+ */
 export function paused(model: ResolvedModel, settings: Record<string, unknown>): boolean {
   if (typeof settings.paused === "boolean") return settings.paused;
-  return model.platform.schedule?.paused ?? model.platform.mode !== "production";
+  return model.platform.schedule?.paused ?? !running.has(model.project.environment);
 }
