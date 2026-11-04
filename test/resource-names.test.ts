@@ -120,9 +120,9 @@ it("refuses a derived name longer than Microsoft's export accepts, inside a ForE
   });
   expect(() => checkNameLengths(pipeline(named(140, "p"), named(55, "a")))).not.toThrow();
   expect(() => checkNameLengths(pipeline(named(141, "p"), "copy"))).toThrow(
-    `The ADF pipeline name "${named(141, "p")}" is longer than the 140 characters Microsoft's export accepts; shorten the project id or the resource_names it is made from`,
+    `The ADF pipeline name "${named(141, "p")}" has 141 characters, more than the 140 Microsoft's export accepts; shorten the project id, which after_copy's parent pipeline and trigger are named from, or the resource_names role the name comes from`,
   );
   expect(() => checkNameLengths(pipeline("pl_erp", named(56, "a")))).toThrow(
-    `The ADF activity name "${named(56, "a")}" in pipeline pl_erp is longer than the 55 characters Microsoft's export accepts`,
+    `The ADF activity name "${named(56, "a")}" has 56 characters, more than the 55 Microsoft's export accepts; shorten it in pipeline pl_erp with resource_names.copy_activity, or shorten the table name it is made from`,
   );
 });

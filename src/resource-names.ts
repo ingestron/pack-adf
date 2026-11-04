@@ -95,5 +95,14 @@ function tooLong(role: NameRole, name: string, given: boolean): string {
   const fix = given
     ? `shorten resource_names.${role}`
     : `set resource_names.${role} to a shorter name, or shorten the ids the name is made from`;
-  return `The ADF ${kindOf(role)} name "${name}" has ${name.length} characters, more than the ${maximumLength(role)} Microsoft's export accepts; ${fix}`;
+  return nameTooLong(kindOf(role), name, maximumLength(role), fix);
+}
+
+/**
+ * The refusal of a name longer than Microsoft's export accepts: its kind, the name, its
+ * length, the limit and the fix.
+ * @example nameTooLong("pipeline", name, 140, "shorten the project id")
+ */
+export function nameTooLong(kind: string, name: string, limit: number, fix: string): string {
+  return `The ADF ${kind} name "${name}" has ${name.length} characters, more than the ${limit} Microsoft's export accepts; ${fix}`;
 }

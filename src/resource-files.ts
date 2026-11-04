@@ -1,5 +1,5 @@
 // A resource has one owner; duplicate paths never silently replace earlier output.
-import { nameLimits } from "./resource-names.js";
+import { nameLimits, nameTooLong } from "./resource-names.js";
 /** Add one native file, refusing case-insensitive resource or activity collisions. */
 export function addResource(
   files: Record<string, string>,
@@ -30,8 +30,19 @@ function assertUnused(files: Record<string, string>, path: string): void {
     );
 }
 
-/** The folders whose resources Microsoft's export limits to `nameLimits.resource` characters. */
-const limitedFolders = ["linkedService", "dataset", "pipeline", "trigger"];
+/** The folders whose resources Microsoft's export limits to `nameLimits.resource` characters, by kind. */
+const limitedFolders: Record<string, string> = {
+  linkedService: "linked service",
+  dataset: "dataset",
+  pipeline: "pipeline",
+  trigger: "trigger",
+};
+
+/** How to shorten a name the pack derives: after_copy's parent is named from the project id. */
+const derivedFix = (folder: string) =>
+  folder === "pipeline" || folder === "trigger"
+    ? "shorten the project id, which after_copy's parent pipeline and trigger are named from, or the resource_names role the name comes from"
+    : "shorten the resource_names role or the ids the name is made from";
 
 /**
  * Refuses a name longer than Microsoft's export accepts, for names the pack derives
@@ -40,20 +51,22 @@ const limitedFolders = ["linkedService", "dataset", "pipeline", "trigger"];
 export function checkNameLengths(files: Readonly<Record<string, string>>): void {
   for (const [path, text] of Object.entries(files)) {
     const folder = path.split("/")[0]!;
-    if (!limitedFolders.includes(folder)) continue;
+    const kind = limitedFolders[folder];
+    if (!kind) continue;
     const resource = JSON.parse(text) as { name: string; properties: { activities?: unknown[] } };
     if (resource.name.length > nameLimits.resource)
-      throw new Error(tooLong(`${folder} name "${resource.name}"`, nameLimits.resource));
+      throw new Error(nameTooLong(kind, resource.name, nameLimits.resource, derivedFix(folder)));
     for (const name of activityNames(resource.properties.activities ?? []))
       if (name.length > nameLimits.activity)
         throw new Error(
-          tooLong(`activity name "${name}" in pipeline ${resource.name}`, nameLimits.activity),
+          nameTooLong(
+            "activity",
+            name,
+            nameLimits.activity,
+            `shorten it in pipeline ${resource.name} with resource_names.copy_activity, or shorten the table name it is made from`,
+          ),
         );
   }
-}
-
-function tooLong(what: string, limit: number): string {
-  return `The ADF ${what} is longer than the ${limit} characters Microsoft's export accepts; shorten the project id or the resource_names it is made from`;
 }
 
 /** Every activity's name, with those inside ForEach, If and Until activities. */
