@@ -5,7 +5,7 @@ import { foreachPipeline } from "./foreach.js";
 import { resourceName } from "./resource-names.js";
 import { addCredentials } from "./credentials.js";
 import { addRuntimes } from "./runtimes.js";
-import { addResource, mergeResources } from "./resource-files.js";
+import { addResource, checkNameLengths, mergeResources } from "./resource-files.js";
 import { tableGroups, tableResources } from "./table-resources.js";
 import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
 import {
@@ -72,12 +72,13 @@ export function build(model: ResolvedModel): Record<string, string> {
   return files;
 }
 
-/** What reads the whole factory: the after-copy parent, design, runtimes and credentials. */
+/** What reads the whole factory: the after-copy parent, design, runtimes and credentials, and the name limits. */
 function addFactoryWide(files: Record<string, string>, model: ResolvedModel): void {
   afterCopy(files, model);
   decorate(files, model);
   addRuntimes(files, model);
   addCredentials(files, model);
+  checkNameLengths(files);
 }
 
 function copyResources(

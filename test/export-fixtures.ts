@@ -39,6 +39,25 @@ function catalogue(): Record<string, string> {
   };
 }
 
+/** The ERP project with each resource name at the longest the pack allows. */
+function longestNames(): Record<string, string> {
+  const name = (letter: string, length: number) => letter + "x".repeat(length - 1);
+  const names = {
+    source_linked_service: name("l", 140),
+    source_dataset: name("d", 140),
+    pipeline: name("p", 140),
+    trigger: name("t", 140),
+    copy_activity: name("c", 55),
+  };
+  return {
+    ...base,
+    "standard.yaml": base["standard.yaml"]!.replace(
+      "      start: 2026",
+      `      resource_names: ${JSON.stringify(names)}\n      start: 2026`,
+    ),
+  };
+}
+
 /** Each project the export tests fold, by what it shows. */
 export const exportFixtures: Record<string, Models> = {
   "the connector catalogue": resolveAll(catalogue(), ["dev", "prod"]),
@@ -53,6 +72,7 @@ export const exportFixtures: Record<string, Models> = {
     "dev",
     "prod",
   ]),
+  "the longest names Microsoft's export accepts": resolveAll(longestNames(), ["dev", "prod"]),
   "Square's refresh token from Key Vault": resolveAll(
     squareProject(", refresh_token: '${secret:refresh-token}'"),
     ["dev", "prod"],

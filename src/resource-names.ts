@@ -26,8 +26,20 @@ const descriptions = {
     "Copy activity per table. Default: copy_<table>. Must be unique within its pipeline.",
 };
 type NameRole = keyof typeof descriptions;
-// ASCII names of this length keep the generated .json filenames portable.
-const maximumNameLength = 200;
+/**
+ * The longest name Microsoft's export accepts: 55 characters for an activity, 140 for a
+ * dataset or pipeline (141 for a linked service or trigger; the pack keeps to 140).
+ */
+export const nameLimits = { activity: 55, resource: 140 };
+const maximumLength = (role: string) =>
+  role === "copy_activity" ? nameLimits.activity : nameLimits.resource;
+/** What a role names, for messages. */
+function kindOf(role: string): string {
+  if (role === "copy_activity") return "activity";
+  if (role.endsWith("linked_service")) return "linked service";
+  if (role.endsWith("dataset")) return "dataset";
+  return role;
+}
 const pattern = (role: string) =>
   ["pipeline", "trigger", "copy_activity"].includes(role)
     ? "^[A-Za-z][A-Za-z0-9_-]*$"
@@ -44,9 +56,9 @@ export const resourceNamesSchema: Method["settings"] = {
       {
         type: "string",
         minLength: 1,
-        maxLength: maximumNameLength,
+        maxLength: maximumLength(role),
         pattern: pattern(role),
-        description: `${description} Start with a letter; use letters, digits or underscores${["pipeline", "trigger", "copy_activity"].includes(role) ? ", or hyphens" : ""}; at most ${maximumNameLength} characters.`,
+        description: `${description} Start with a letter; use letters, digits or underscores${["pipeline", "trigger", "copy_activity"].includes(role) ? ", or hyphens" : ""}; at most ${maximumLength(role)} characters, the most Microsoft's export accepts.`,
         examples: [`custom_${role}`],
       },
     ]),
@@ -70,9 +82,18 @@ export function resourceName(
     throw new Error(
       `ADF resource_names.${role} must agree for tables sharing this resource: ${owners.map((table) => table.name).join(", ")}`,
     );
-  if (!new RegExp(pattern(role)).test(name) || name.length > maximumNameLength)
+  if (!new RegExp(pattern(role)).test(name))
     throw new Error(
-      `ADF resource_names.${role} gives invalid name "${name}"; use a letter followed by letters, digits or underscores${["pipeline", "trigger", "copy_activity"].includes(role) ? ", or hyphens" : ""}, at most ${maximumNameLength} characters`,
+      `ADF resource_names.${role} gives invalid name "${name}"; use a letter followed by letters, digits or underscores${["pipeline", "trigger", "copy_activity"].includes(role) ? ", or hyphens" : ""}, at most ${maximumLength(role)} characters`,
     );
+  if (name.length > maximumLength(role)) throw new Error(tooLong(role, name, name !== fallback));
   return name;
+}
+
+/** A name longer than Microsoft's export accepts, and how to shorten it. */
+function tooLong(role: NameRole, name: string, given: boolean): string {
+  const fix = given
+    ? `shorten resource_names.${role}`
+    : `set resource_names.${role} to a shorter name, or shorten the ids the name is made from`;
+  return `The ADF ${kindOf(role)} name "${name}" has ${name.length} characters, more than the ${maximumLength(role)} Microsoft's export accepts; ${fix}`;
 }
