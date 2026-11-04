@@ -193,3 +193,62 @@ Experiments with that package and tool, on synthetic factories, 2026-11-04:
 - A linked service with a credential that is not in the folder fails
   validation, and so does a linked service name over 140 characters ("It
   should be in the form `/^[^-\s][^\\/:*?"<>|]{1,140}$/`"); the pack allows 200.
+
+## Integration runtimes and the export's secure strings
+
+Accessed 2026-11-04:
+
+- [Deployment modes](https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/deployment-modes)
+  (updated 2026-06-26): "When redeploying an existing resource in incremental
+  mode, all properties are reapplied. The properties aren't incrementally
+  added. … Properties that aren't included in the template are reset to the
+  default values. Specify all non-default values for the resource, not just
+  the ones you're updating." This is why each runtime is written as the
+  settings describe it, and why the request asks for `az deployment group what-if`.
+- [Microsoft.DataFactory/factories/integrationRuntimes](https://learn.microsoft.com/en-us/azure/templates/microsoft.datafactory/factories/integrationruntimes)
+  (updated 2026-10-20): the name's "Min length = 3 Max length = 63 Pattern =
+  `^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$`"; a self-hosted runtime's `linkedInfo`
+  with `authorizationType` `RBAC` and `resourceId`, "The resource identifier of
+  the integration runtime to be shared"; a managed runtime's
+  `managedVirtualNetwork` (`ManagedVirtualNetworkReference`) and
+  `computeProperties` (`location`, `dataFlowProperties` with `computeType`
+  `ComputeOptimized`, `General` or `MemoryOptimized`, `coreCount` "8, 16, 32,
+  48, 80, 144 and 272", and `timeToLive` in minutes, at least 0).
+- [Managed virtual network and managed private endpoints](https://learn.microsoft.com/en-us/azure/data-factory/managed-virtual-network-private-endpoint)
+  (2026-07-29): "An existing global integration runtime can't switch to an
+  integration runtime in a Data Factory managed virtual network and vice
+  versa"; its PowerShell example creates `managedVirtualNetworks/default` with
+  empty properties and a runtime with
+  `managedVirtualNetwork = @{ type = "ManagedVirtualNetworkReference"; referenceName = "default" }`.
+- [Troubleshoot CI-CD](https://learn.microsoft.com/en-us/azure/data-factory/ci-cd-github-troubleshoot-guide)
+  (updated 2026-08-05): `DataFactoryPropertyUpdateNotSupported: Updating
+property type is not supported` "is due to an integration runtime with the
+  same name in the target service instance, but with a different type"; and
+  "Parameterizing an entity reference (Integration runtime in Linked service,
+  …) isn't supported", which is why runtime names that differ are refused. A
+  linked runtime's `resourceId` is a property, not a reference, so it may be a
+  parameter; Microsoft's default parameterisation makes it one.
+
+Experiments with the export (`main.js` SHA-256 as above), 2026-11-04:
+
+- A linked runtime written with `"authorizationType": "RBAC"` exports with its
+  `linkedInfo`, the type written `Rbac`; with `linkedInfo.resourceId` in the
+  definition it is the parameter
+  `<runtime>_properties_typeProperties_linkedInfo_resourceId`.
+- A managed runtime with `managedVirtualNetwork` keeps the reference, and the
+  template holds a `Microsoft.DataFactory/factories/managedVirtualNetworks`
+  resource, only when `managedVirtualNetwork/default.json` is in the folder;
+  without it the reference is dropped.
+- A managed runtime without `dataFlowProperties` exports with
+  `{"computeType": "General", "coreCount": 8, "timeToLive": 0}`.
+- `integration_runtime: shir_erp` fails validation: "Integration runtime name
+  cannot be 'shir_erp'".
+- For Square's `refreshToken`, Informix's `credential`, Snowflake's
+  `privateKeyPassphrase` and Xero's `consumerKey` and `privateKey`, the export
+  adds a `secureString` parameter with no default whether the property is left
+  out, `null`, or `{"type": "SecureString", "value": ""}`; with an
+  `AzureKeyVaultSecret` in its place it adds none. Each is described
+  "Secure string for '<property>' of '<linked service>'".
+
+The tests check the build tool's SHA-256 after downloading it and on every use
+of the cached copy, which is kept under that hash.
