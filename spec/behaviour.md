@@ -471,8 +471,10 @@ the connector catalogue included: every parameter a parameter file sets or the
 pipeline supplies is declared in the exported template and no other; and the template with a target's values deploys the same
 resources as that target's own factory exports to. A parameter file with a
 renamed parameter, or another environment's value, fails those checks. The
-tests pin the export's build tool by its SHA-256, skip with both hashes when it
-differs, and fail instead with `INGESTRON_REQUIRE_ADF_EXPORT=1`, which CI sets.
+tests run against the build tool Microsoft serves, print its SHA-256, and warn
+when it is not one of the builds listed in `test/adf-tool-builds.json`. They are
+skipped when no build can be downloaded or run, and fail instead with
+`INGESTRON_REQUIRE_ADF_EXPORT=1`, which CI sets.
 
 ### Triggers
 

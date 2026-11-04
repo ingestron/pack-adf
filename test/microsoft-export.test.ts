@@ -31,8 +31,8 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Json = Record<string, any>;
 
-const tool = await exportTool();
 const required = process.env.INGESTRON_REQUIRE_ADF_EXPORT === "1";
+const tool = await exportTool(required);
 const title = tool.bundle
   ? "Microsoft's export of the folded factory"
   : `Microsoft's export of the folded factory (skipped: ${tool.reason})`;
@@ -186,7 +186,7 @@ describe.skipIf(!tool.bundle).each(Object.entries(fixtures))(
 describe.runIf(required && !tool.bundle)(
   "Microsoft's export, required by INGESTRON_REQUIRE_ADF_EXPORT=1",
   () => {
-    it("is available and is the tool the tests were written against", () => {
+    it("can be downloaded and run", () => {
       expect.fail(tool.reason);
     });
   },
