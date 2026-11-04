@@ -109,7 +109,7 @@ describe("one environment", () => {
 
   it("is the environment's own factory, with an empty definition and parameter file", () => {
     const { files, problems } = fold(one);
-    expect(problems).toEqual([]);
+    expect(problems.filter((problem) => problem.code !== "PACK_NOTICE")).toEqual([]);
     expect(jsonOf(files, "factory/arm-template-parameters-definition.json")).toEqual({});
     expect(parametersOf(files, "dev")).toEqual({});
     for (const [path, text] of Object.entries(adf.build(one.dev!)))

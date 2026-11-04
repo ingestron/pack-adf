@@ -209,7 +209,7 @@ Azure runtime cannot move into or out of a managed virtual network. Before
 the first deployment to a factory that already has its runtimes, run
 `az deployment group what-if` with the template and that environment's
 parameter file; `ingestron request` says what each deployment does to each
-runtime.
+runtime, and generating the factory warns about each one.
 
 ## Example
 
@@ -296,8 +296,8 @@ Xero, Microsoft's export adds a secure string parameter with no default for an
 optional secret the linked service leaves out, such as Square's
 `refreshToken`. Give the connection that secret from Key Vault (`credential`,
 `certificate_password`, `private_key_password` or `refresh_token`) and the
-export does not add it; otherwise `deployValues` and `ingestron request` name
-the parameter, and the deploying pipeline supplies it.
+export does not add it; otherwise `deployValues`, a warning when generating and
+`ingestron request` name the parameter, and the deploying pipeline supplies it.
 
 ## Deploy
 

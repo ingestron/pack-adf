@@ -165,7 +165,7 @@ describe("folded", () => {
       ["dev", "prod"],
     );
     const { files, deployValues, problems } = fold(models);
-    expect(problems).toEqual([]);
+    expect(problems.filter((problem) => problem.code !== "PACK_NOTICE")).toEqual([]);
     const parameter = "ls_erp_keyvault_properties_typeProperties_baseUrl";
     expect(deployValues).toEqual([{ name: "DEV_VAULT", suppliedAs: [parameter] }]);
     expect(parametersOf(files, "dev")[parameter]).toBeUndefined();
@@ -181,7 +181,7 @@ describe("folded", () => {
       "{ password: '${secret:erp-prod}' }",
       { "erp.yaml": erp },
     );
-    expect(problems).toEqual([
+    expect(problems.filter((problem) => problem.code !== "PACK_NOTICE")).toEqual([
       {
         code: "SECRET_NAME_DIFFERS",
         severity: "warning",

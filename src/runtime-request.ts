@@ -5,15 +5,28 @@ import { defaultRuntime, runtimeDescriptions } from "./runtimes.js";
 
 type Data = Record<string, unknown>;
 
+/** The check to run before the first deployment to a factory that already has the runtimes. */
+const whatIf =
+  "Before the first deployment to a factory that already has these integration runtimes, run `az deployment group what-if` with the template and that environment's parameter file, and check that it changes no runtime in a way you did not describe.";
+
 /** One line per runtime, and the check to run before the first deployment. */
 export function runtimeLines(model: ResolvedModel): string[] {
   const described = runtimeDescriptions(model);
   const lines = [...described].map(([name, properties]) => line(name, properties));
-  if ([...described.keys()].some((name) => name !== defaultRuntime))
-    lines.push(
-      "Before the first deployment to a factory that already has these integration runtimes, run `az deployment group what-if` with the template and that environment's parameter file, and check that it changes no runtime in a way you did not describe.",
-    );
+  if ([...described.keys()].some((name) => name !== defaultRuntime)) lines.push(whatIf);
   return lines;
+}
+
+/**
+ * The runtimes a deployment writes or resets, each as a notice for the generated files: what the
+ * deployment does to it, and the check to run first. ADF's own Azure runtime needs neither.
+ */
+export function runtimeNotices(
+  model: ResolvedModel,
+): { name: string; message: string; hint: string }[] {
+  return [...runtimeDescriptions(model)]
+    .filter(([name]) => name !== defaultRuntime)
+    .map(([name, properties]) => ({ name, message: line(name, properties), hint: whatIf }));
 }
 
 function line(name: string, properties: Data): string {
