@@ -54,6 +54,7 @@ export const adf: Pack = {
     "adf-table": checkingAfterCopy(adfTable),
   },
   connectors,
+  platformFields: ["schedule.paused"],
   contract,
   check: checkShared,
   build,
