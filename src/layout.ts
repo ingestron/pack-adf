@@ -56,14 +56,6 @@ export function windowed(table: ResolvedTable): boolean {
 }
 
 /**
- * True when one of the tables names its file, so a dataset they share needs a file parameter.
- * @example namesFiles(tables) // true
- */
-export function namesFiles(tables: ResolvedTable[]): boolean {
-  return tables.some((table) => layoutOf(table) !== "increments");
-}
-
-/**
  * ADF expressions for the sink: the folder under the landing file system,
  * and the file name.
  * @example landedFile(table, "parquet") // { folder: "erp/erp.dbo.Invoices", file: "erp.dbo.Invoices.parquet" }

@@ -21,7 +21,7 @@ const descriptions = {
   json_landing_linked_service:
     "Microsoft 365 application landing service. Default: ls_<project>_<connection>_json.",
   json_landing_dataset:
-    "Microsoft 365 JSON landing dataset. Default: ds_<project>_<connection>_json.",
+    "Microsoft 365 landing dataset: a binary folder, as Microsoft's export requires, for the JSON files Microsoft writes. Default: ds_<project>_<connection>_json.",
   copy_activity:
     "Copy activity per table. Default: copy_<table>. Must be unique within its pipeline.",
 };

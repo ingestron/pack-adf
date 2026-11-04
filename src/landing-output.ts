@@ -49,6 +49,8 @@ export function layoutProblems(table: ResolvedTable): string[] {
   if (both.length > 0) return both;
   const object = expressionProblems(`the object "${table.ingest!.object}"`, [table.ingest!.object]);
   if (object.length > 0) return object;
+  const office = officeLayoutProblems(table);
+  if (office.length > 0) return office;
   if (layoutOf(table) === "path") {
     const problems = pathProblems(String(path), extensionOf(table));
     if (problems.length > 0) return problems;
@@ -81,6 +83,19 @@ export function samePathProblems(tables: ResolvedTable[]): string[] {
       );
   });
   return problems;
+}
+
+/**
+ * Microsoft 365 lands through a binary copy into a folder, in files Microsoft names: its
+ * export refuses any other dataset, and a file name ("only supports copying to a folder").
+ */
+function officeLayoutProblems(table: ResolvedTable): string[] {
+  const layout = layoutOf(table);
+  if (table.ingest!.connection.connector !== "microsoft-365" || layout === "increments") return [];
+  const named = layout === "path" ? "a path pattern" : "layout: snapshot";
+  return [
+    `Microsoft 365 lands its files in a folder and Microsoft names them, so ${named} cannot name the file; set layout: increments, so that each run adds its own files (with source_options.date_filter_column, only its window's rows)`,
+  ];
 }
 
 /** Layout and path both set: refused in the same place, or where the standard fixes one. */

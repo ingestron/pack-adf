@@ -2,7 +2,7 @@
 import type { ResolvedModel } from "@ingestron/definitions";
 import { describe, expect, it } from "vitest";
 import { pathProblems } from "../src/layout.js";
-import { base, generate, json, landing } from "./erp.js";
+import { base, generate, landing } from "./erp.js";
 import { tableProject } from "./table-project.js";
 
 const endAtFiles = (standard: string) =>
@@ -98,29 +98,36 @@ describe("loads that hold only the window's changes", () => {
     expect((result.model as ResolvedModel).tables[0]!.ingest!.output?.loads).toBe("add");
   });
 
-  it("refuses one replaced file when a date filter makes each run hold one window", () => {
+  const folderOnly = (named: string) =>
+    `"adf-table" for table "invoices": Microsoft 365 lands its files in a folder and Microsoft names them, so ${named} cannot name the file; set layout: increments, so that each run adds its own files (with source_options.date_filter_column, only its window's rows).`;
+
+  it("refuses one replaced Microsoft 365 file: Microsoft names its files in a folder", () => {
     expect(problems(office(`${dateFilter}      layout: snapshot\n`))).toEqual([
-      { code: "METHOD_CHECK", message: `"adf-table" for table "invoices": ${lost}.` },
+      { code: "METHOD_CHECK", message: folderOnly("layout: snapshot") },
     ]);
   });
 
-  it("names every file of a Microsoft 365 connection once one table names its file", () => {
-    const project = office(dateFilter);
-    project["flow.yaml"] = twoTables(
-      project["flow.yaml"]!,
-      '  copies:\n    object: BasicDataSet_v0.Event_v1\n    contract: invoices\n    ingest: { with: { path: "{object}/{object}_{run}.json" } }\n',
+  it("refuses a Microsoft 365 path pattern, which would name the file", () => {
+    expect(problems(office(`${dateFilter}      path: "{object}/{object}_{run}.json"\n`))).toEqual([
+      { code: "METHOD_CHECK", message: folderOnly("a path pattern") },
+    ]);
+  });
+
+  it("lands a Microsoft 365 dataset with no date filter as increments when asked", () => {
+    const { result } = generate(
+      office("      source_options: { requires_date_filter: false }\n      layout: increments\n"),
     );
-    project["invoices.yaml"] = withCopies(project["invoices.yaml"] ?? base["invoices.yaml"]!);
-    const { result, files } = generate(project);
-    expect(result.model, JSON.stringify(result.diagnostics)).toBeDefined();
-    const [first, second] = json(files, "pipeline/pl_erp_erp.json").properties.activities;
-    expect(first.outputs[0].parameters).toEqual({
-      folder: "erp/BasicDataSet_v0.Message_v1",
-      file: "@{concat(formatDateTime(pipeline().parameters.windowStart, 'yyyyMMddHHmmss'), '_', pipeline().RunId, '.json')}",
+    expect(result.diagnostics).toEqual([]);
+    expect((result.model as ResolvedModel).tables[0]!.ingest!.output).toMatchObject({
+      location: `${landing}/BasicDataSet_v0.Message_v1/*.json`,
+      format: "json",
+      loads: "add",
     });
-    expect(second.outputs[0].parameters).toEqual({
-      folder: "erp/BasicDataSet_v0.Event_v1",
-      file: "BasicDataSet_v0.Event_v1_@{pipeline().RunId}.json",
-    });
+  });
+
+  it("refuses a Microsoft 365 snapshot by default when no date filter keeps a file per run", () => {
+    expect(problems(office("      source_options: { requires_date_filter: false }\n"))).toEqual([
+      { code: "METHOD_CHECK", message: folderOnly("layout: snapshot") },
+    ]);
   });
 });
