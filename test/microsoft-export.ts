@@ -147,18 +147,34 @@ export type Template = Record<string, any>;
 /** `npm run start export <folder> <factoryId> <output>`, as the package's README says: the ARM template. */
 export function exportTemplate(bundle: string, factory: string): Template {
   const output = mkdtempSync(join(tmpdir(), "ingestron-arm-"));
-  execFileSync(
-    process.execPath,
-    // The output folder is relative to the working folder.
-    [utilities(), "--path", bundle, "export", factory, factoryId, "arm"],
-    {
-      cwd: output,
-      stdio: "pipe",
-    },
-  );
+  try {
+    execFileSync(
+      process.execPath,
+      // The output folder is relative to the working folder.
+      [utilities(), "--path", bundle, "export", factory, factoryId, "arm"],
+      {
+        cwd: output,
+        stdio: "pipe",
+      },
+    );
+  } catch (error) {
+    throw new Error(`Microsoft's export refused ${factory}:\n${refusals(error)}`);
+  }
   return JSON.parse(
     readFileSync(join(output, "arm", "ARMTemplateForFactory.json"), "utf8"),
   ) as Template;
+}
+
+/**
+ * The lines of a failed export's output that say what it refused: its validator logs
+ * each problem as "Resource '<name>' has the following validation error: …", among
+ * many lines of progress; without them, the output's last lines.
+ */
+function refusals(error: unknown): string {
+  const { stdout, stderr } = error as { stdout?: Buffer; stderr?: Buffer };
+  const lines = `${stdout ?? ""}\n${stderr ?? ""}`.split("\n");
+  const errors = lines.filter((line) => /validation error/.test(line));
+  return (errors.length > 0 ? errors : lines.slice(-20)).join("\n");
 }
 
 /**
