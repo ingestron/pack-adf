@@ -60,7 +60,7 @@ export const runtimeSchema = {
           enum: ["General", "MemoryOptimized", "ComputeOptimized"],
           enumDescriptions: [
             "General Purpose compute. The default.",
-            "Memory Optimized compute, with more memory for each core. Microsoft suggests it, with more cores, when a data flow runs out of memory.",
+            "Memory Optimized compute. Microsoft suggests it, with more cores, when a data flow runs out of memory.",
             "Compute Optimized compute. ADF accepts it, but Microsoft's guides do not describe it; General or MemoryOptimized are the documented types.",
           ],
           description: "Azure: the type of Spark cluster that runs data flows.",
