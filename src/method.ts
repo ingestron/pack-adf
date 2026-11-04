@@ -5,6 +5,7 @@ import type { Method, ResolvedTable } from "@ingestron/definitions";
 import { afterCopySchema } from "./after-copy-settings.js";
 import { designPlacement, designSettings, fileDesignSettings } from "./design-settings.js";
 import { resourceNamesSchema } from "./resource-names.js";
+import { runtimeName, runtimeSchema } from "./runtimes.js";
 import { sqlTypes } from "./sql-types.js";
 import { sqlConnectionProblems, nonEmpty } from "./sql-auth.js";
 import { layoutProblems, tableOutput } from "./landing-output.js";
@@ -21,12 +22,8 @@ export const windowSettings = {
     description: "Landing folder, abfss://<container>@<account>.dfs.core.windows.net/<path>.",
     examples: ["abfss://landing@erplake.dfs.core.windows.net/erp"],
   },
-  integration_runtime: {
-    type: "string",
-    description:
-      "Name of the existing Azure or self-hosted integration runtime that reaches the source.",
-    examples: ["shir-erp"],
-  },
+  integration_runtime: runtimeName,
+  runtime: runtimeSchema,
   key_vault: {
     type: "string",
     pattern: "^https://[^/]+\\.vault\\.azure\\.net/?$",
@@ -75,7 +72,15 @@ export const windowSettings = {
 
 /** Shared infrastructure belongs in the platform, the schedule in the standard. */
 export const placement = {
-  platform: ["landing", "integration_runtime", "runtime_kind", "key_vault", "paused", "after_copy"],
+  platform: [
+    "landing",
+    "integration_runtime",
+    "runtime_kind",
+    "runtime",
+    "key_vault",
+    "paused",
+    "after_copy",
+  ],
   standard: ["every", "start", "retries", "resource_names", ...Object.keys(fileDesignSettings)],
 };
 

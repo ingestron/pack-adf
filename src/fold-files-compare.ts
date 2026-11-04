@@ -23,7 +23,7 @@ export function fileProblems(renders: Renders): EnvironmentsProblem[] {
   return [...folders].flatMap((folder) => folderProblems(renders, targets, folder));
 }
 
-/** Runtimes must have the same names, and the same JSON, in every target. */
+/** Runtimes must have the same names and types in every target; other differences are values or shapes. */
 function runtimeProblems(renders: Renders, targets: string[]): EnvironmentsProblem[] {
   const runtimes = targets.map((target) =>
     Object.entries(renders[target]!)
