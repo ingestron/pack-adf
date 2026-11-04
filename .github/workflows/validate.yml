@@ -19,5 +19,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm validate
+        env:
+          # Microsoft's export is the fold's independent check: CI fails without it.
+          INGESTRON_REQUIRE_ADF_EXPORT: "1"
       - if: github.event_name == 'pull_request'
         run: pnpm dco:check origin/${{ github.base_ref }}
