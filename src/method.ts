@@ -66,7 +66,7 @@ export const windowSettings = {
   paused: {
     type: "boolean",
     description:
-      "Keep the trigger stopped. Default: the platform's schedule.paused, so it pauses with the Databricks job; without a schedule, stopped outside production.",
+      "Keep the trigger stopped. Default: the platform's `schedule.paused`, so it pauses with the Databricks job; without a schedule, stopped unless the environment is named `prod` or `production`.",
   },
 };
 
@@ -95,15 +95,16 @@ export const layoutSettings = {
   layout: {
     enum: ["snapshot", "increments"],
     enumDescriptions: [
-      "One file per table, <object>/<object>.parquet (.json for Microsoft 365), replaced by each run. The default when the flow ends at the landed files.",
-      "A new file per run under <object>/. The default when a store reads the files.",
+      "One file per table, `<object>/<object>.parquet` (`.json` for Microsoft 365), replaced by each run, so a report reads the same path after every load.",
+      "A new file per run under `<object>/`, named by the window's start and the run, so no run replaces another's rows.",
     ],
-    description: "How each table's files are laid out in the landing folder.",
+    description:
+      "How each table's files are laid out in the landing folder. Without it, a flow that ends at the landed files gets `snapshot`; one whose runs hold only their window's rows (`mode: incremental`, or a Microsoft 365 date filter), or that a store reads, gets `increments`. A layout that would lose rows is refused. Setting `layout` and `path` in the same place is refused; the one set nearer the table wins.",
   },
   path: {
     type: "string",
     description:
-      "A path under the landing folder for each table's file, with tokens {object}, {connection}, the window start's {yyyy}, {MM}, {dd}, {HH}, and {run}. With a date or run token each run adds a file; without, each run replaces it. Replaces layout.",
+      "A path of your own under the landing folder for each table's file, ending in `.parquet` (`.json` for Microsoft 365). It must include `{object}`; its other tokens are `{connection}`, the window start's `{yyyy}`, `{MM}`, `{dd}` and `{HH}`, and `{run}`. Each run adds a file when the path has `{run}`, or the date tokens down to the window's unit, such as `{HH}` for hourly windows; otherwise each run replaces it. Setting `path` and `layout` in the same place is refused; the one set nearer the table wins.",
     examples: ["{object}/{yyyy}/{MM}/{dd}/{object}_{run}.parquet"],
   },
 };

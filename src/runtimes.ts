@@ -56,8 +56,20 @@ export const runtimeSchema = {
       additionalProperties: false,
       description: "Azure: the data flow compute. Default: General, 8 cores, no time to live.",
       properties: {
-        compute_type: { enum: ["General", "MemoryOptimized", "ComputeOptimized"] },
-        core_count: { enum: [8, 16, 32, 48, 80, 144, 272] },
+        compute_type: {
+          enum: ["General", "MemoryOptimized", "ComputeOptimized"],
+          enumDescriptions: [
+            "ADF's General Purpose compute type. The default.",
+            "ADF's Memory Optimized compute type.",
+            "ADF's Compute Optimized compute type.",
+          ],
+          description: "Azure: the data flow compute's type.",
+        },
+        core_count: {
+          enum: [8, 16, 32, 48, 80, 144, 272],
+          description:
+            "Azure: how many cores the data flow compute has, one of the sizes ADF offers. Default 8.",
+        },
         time_to_live: { type: "integer", minimum: 0, description: "Minutes." },
       },
     },

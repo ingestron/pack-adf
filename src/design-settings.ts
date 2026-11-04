@@ -60,6 +60,26 @@ export const auditValues: Record<string, AuditValue> = {
 
 const known = Object.keys(auditValues).join(", ");
 
+/** What `parallel` copies at once when it is not set. */
+export const defaultParallel = 4;
+
+/** The allowed whole numbers of the numeric design settings, for the schema and its descriptions. */
+export const designRanges = {
+  parallel: { minimum: 1, maximum: 50 },
+  retries: { minimum: 0, maximum: 10 },
+  retry_interval: { minimum: 30, maximum: 86400 },
+  timeout: { minimum: 10, maximum: 10080 },
+};
+
+/** "from 1 to 50", the range a description states. */
+const between = ({ minimum, maximum }: { minimum: number; maximum: number }) =>
+  `from ${minimum} to ${maximum}`;
+
+/** Each audit value with its type and meaning, for the audit_columns description. */
+const auditList = Object.entries(auditValues)
+  .map(([name, value]) => `\`${name}\` (${value.type}): ${value.description}`)
+  .join("; ");
+
 /** The run or source value a written audit value names, in any case; undefined for literal text. */
 export function auditValueOf(written: string): AuditValue | undefined {
   const key = written.toLowerCase();
@@ -74,15 +94,15 @@ export const designSettings = {
       "One Copy activity per table. The default.",
       "One parameterised Copy inside a ForEach over the pipeline's tables parameter, whose default is the generated table list. Pass a shorter list to rerun some tables.",
     ],
-    description: "How each pipeline copies its tables. foreach is offered for adf-copy.",
+    description:
+      "How each pipeline copies its tables. `foreach` is offered for `adf-copy`. The tables of one pipeline share `pattern`, `parallel`, `activity` and `audit_columns`.",
   },
   parallel: {
     type: "integer",
-    minimum: 1,
-    maximum: 50,
-    description:
-      "pattern: foreach: how many tables are copied at once (the ForEach batch count). Default 4.",
-    examples: [4],
+    ...designRanges.parallel,
+    default: defaultParallel,
+    description: `With \`pattern: foreach\`, how many tables are copied at once (the ForEach's batch count), ${between(designRanges.parallel)}.`,
+    examples: [defaultParallel],
   },
   activity: {
     type: "object",
@@ -91,30 +111,27 @@ export const designSettings = {
     properties: {
       retries: {
         type: "integer",
-        minimum: 0,
-        maximum: 10,
-        description: "How often a failed copy is tried again within the run.",
+        ...designRanges.retries,
+        description: `How often a failed copy is tried again within the run, ${between(designRanges.retries)}. The window's \`retries\` still retries the whole window.`,
         examples: [2],
       },
       retry_interval: {
         type: "integer",
-        minimum: 30,
-        maximum: 86400,
-        description: "Seconds between tries.",
+        ...designRanges.retry_interval,
+        description: `Seconds between tries, ${between(designRanges.retry_interval)}.`,
         examples: [60],
       },
       timeout: {
         type: "integer",
-        minimum: 10,
-        maximum: 10080,
-        description: "Minutes (10 or more) a copy may run before ADF stops it.",
+        ...designRanges.timeout,
+        description: `Minutes a copy may run before ADF stops it, ${between(designRanges.timeout)}. ADF's own minimum is 10, so a smaller value is a settings problem.`,
         examples: [120],
       },
     },
   },
   audit_columns: {
     type: "object",
-    description: `Columns added to every landed row, by name. A value is one of ${known}, filled in by ADF when it runs, or literal text such as \${environment.name}.`,
+    description: `Columns added to every landed row, by name, for \`adf-copy\` and \`adf-table\`. A value is a run value that ADF fills in when it runs, or a source value: ${auditList}. Any other text is written as it is, such as \`\${environment.name}\`.`,
     additionalProperties: { type: "string", minLength: 1 },
     examples: [{ _loaded_at: "run.trigger_time", _run_id: "run.id", _source: "source.object" }],
   },
