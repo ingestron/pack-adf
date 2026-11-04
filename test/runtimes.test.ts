@@ -101,7 +101,7 @@ describe("integration runtimes", () => {
 
   it("refuses a region's short name, which Microsoft's export rewrites only when it is the same everywhere", () => {
     expect(messages(withRuntime("ir-azure", "azure", "{ location: uksouth }"))).toContain(
-      "runtime.location \"uksouth\" is a region's short name; use its display name, with capitals and spaces, as Data Factory writes it: Microsoft's export rewrites a short name only where every environment has the same region",
+      "runtime.location \"uksouth\" is a region's short name; use its display name, with capitals and spaces, such as UK South, as Data Factory writes it: Microsoft's export rewrites a short name only where every environment has the same region",
     );
   });
 
