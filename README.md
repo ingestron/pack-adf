@@ -5,7 +5,7 @@ cannot reach into a landing folder, where a store pack loads it. Use it after
 the pack that stores the landed files, such as Databricks:
 
 ```yaml
-packs: [databricks@1, adf@1]
+packs: [databricks@2, adf@2]
 ```
 
 ## Methods
@@ -19,13 +19,17 @@ packs: [databricks@1, adf@1]
 The pack's rules choose them for private sources (`connectivity: private`); a
 flow can name one for any connectivity.
 
-The output is ADF's own resource JSON, in the folders ADF keeps in Git
-(`linkedService/`, `dataset/`, `pipeline/`, `trigger/`), so it can be added to a
-factory's repository and published as usual: linked services with secrets as
-Key Vault references, a pipeline per connection with a copy per table or file
-set into `<landing>/<object>/`, and a tumbling window trigger, started in
-production and stopped elsewhere. Self-hosted integration runtimes and Key
-Vaults are shared infrastructure: they are referenced by name, never created.
+The output is one factory for every environment, which Microsoft's CI/CD
+deploys unchanged: the factory's Git folder, `factory/`, with the first
+environment's values, and an ARM parameter file per environment,
+`parameters/<environment>.json`, with the values that differ. In the factory:
+linked services with secrets as Key Vault references, a pipeline per connection
+with a copy per table or file set into `<landing>/<object>/`, and a tumbling
+window trigger, started in `prod` and `production` and stopped elsewhere.
+Key Vaults are shared infrastructure, referenced by name. Each integration
+runtime the linked services use is written by name and type only, because
+Microsoft's export and deployment scripts need it in the folder; it is never
+configured.
 
 ## Landing layouts
 
@@ -53,7 +57,7 @@ ADF alone can be the whole project when the landed files are what you need, for
 example for reports that read them directly:
 
 ```yaml
-packs: [adf@1]
+packs: [adf@2]
 store: { default: none }
 ```
 
@@ -168,39 +172,147 @@ a project from it. Each connector's settings are on its page in the
 
 ## Example
 
+Most people use this through the [`ingestron`](https://www.npmjs.com/package/ingestron) command, which writes the factory to `build/adf/`. In code:
+
 ```ts
-import { loadDefinitions, type Pack } from "@ingestron/definitions";
+import { loadDefinitions, type Pack, type ResolvedModel } from "@ingestron/definitions";
 import { adf } from "@ingestron/pack-adf";
 
 // The platform pack that stores what ADF lands, such as @ingestron/pack-databricks.
 declare const platform: Pack;
 
-const result = loadDefinitions("definitions", { packs: [platform, adf], environment: "prod" });
-if (result.model) for (const path of Object.keys(adf.build(result.model))) console.log(path);
+const models: Record<string, ResolvedModel> = {};
+for (const environment of ["dev", "prod"]) {
+  const result = loadDefinitions("definitions", {
+    packs: [platform, adf],
+    environment,
+    deployTime: true,
+    environmentsTogether: true,
+  });
+  if (result.model) models[environment] = result.model;
+}
+const { files, problems } = adf.buildEnvironments!(models);
+for (const problem of problems) console.log(problem.code, problem.message);
+for (const path of Object.keys(files)) console.log(path);
 ```
 
+For a SQL Server connection `erp` this prints:
+
+```text
+factory/arm-template-parameters-definition.json
+factory/dataset/ds_erp_erp_erp.json
+factory/dataset/ds_erp_landing.json
+factory/integrationRuntime/shir-erp.json
+factory/linkedService/ls_erp_erp_erp.json
+factory/linkedService/ls_erp_keyvault.json
+factory/linkedService/ls_erp_landing.json
+factory/pipeline/pl_erp_erp.json
+factory/trigger/tr_erp_erp.json
+parameters/dev.json
+parameters/prod.json
+```
+
+`arm-template-parameters-definition.json` replaces Microsoft's default
+parameterisation, so the template has a parameter only for a value that
+differs between environments, with no default:
+
+```json
+{
+  "Microsoft.DataFactory/factories/linkedServices": {
+    "AzureKeyVault": { "properties": { "typeProperties": { "baseUrl": "-" } } },
+    "AzureBlobFS": { "properties": { "typeProperties": { "url": "-" } } }
+  },
+  "Microsoft.DataFactory/factories/triggers": { "properties": { "runtimeState": "-" } }
+}
+```
+
+Each environment's file sets every one, under the name Microsoft's export
+gives it:
+
+```json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "ls_erp_keyvault_properties_typeProperties_baseUrl": {
+      "value": "https://kv-erp-prod.vault.azure.net"
+    },
+    "ls_erp_landing_properties_typeProperties_url": {
+      "value": "https://erplake.dfs.core.windows.net"
+    },
+    "tr_erp_erp_properties_runtimeState": { "value": "Started" }
+  }
+}
+```
+
+Values in a pipeline, such as the after-copy job or an audit column holding
+`${environment.name}`, are parameters of the activity that holds them.
+A whole value written as `${envvar:NAME}` is left out of the environments
+where it is one; `deployValues` names the ARM parameters to supply it as.
+
+## Deploy
+
+One factory serves one project: Microsoft's post-deployment script deletes
+every pipeline, dataset, linked service, trigger and integration runtime in
+the factory that the template does not hold. Leave the factories unconnected
+to Git, or Studio writes files of its own into the folder.
+
+1. Build the template once, from `build/adf/factory`, with
+   [`@microsoft/azure-data-factory-utilities`](https://www.npmjs.com/package/@microsoft/azure-data-factory-utilities):
+   `npm run build export build/adf/factory <factory resource ID> arm`.
+2. For each environment, in order:
+   - the pre-deployment script `arm/PrePostDeploymentScript.ps1`, in PowerShell
+     Core, with `-PreDeployment $true` and
+     `-ArmTemplateParameters build/adf/parameters/<environment>.json`;
+   - `az deployment group create --mode Incremental --template-file arm/ARMTemplateForFactory.json --parameters @build/adf/parameters/<environment>.json factoryName=<factory>`,
+     adding `<name>=<value>` for each value supplied when deploying;
+   - the same script with `-PreDeployment $false`, which deletes what the
+     template no longer holds and starts the triggers whose `runtimeState` is
+     `Started`.
+
+## What changed in 2.0
+
+- One factory in `build/adf/` for every environment, in place of a factory
+  per environment in `build/<environment>/adf/`. Change the standard to
+  `adf@2`. Deploying the JSON directly is no longer supported; use the ARM
+  template above.
+- Resource names are the same as in 1.x, so the first deployment updates each
+  factory's resources in place. It also adds each integration runtime the
+  linked services use, by name and type only: check first that no runtime in
+  test or production is a linked self-hosted runtime, or an Azure runtime with
+  its own region, compute or virtual network, which the deployment would set
+  to its type alone.
+- Environments may differ only in values. Resource names, integration runtime
+  names and kinds, and resources built in some environments only are
+  `ENVIRONMENTS_DIFFER`; more than 256 parameters is `ARM_PARAMETERS`; a Key
+  Vault secret name that differs is the warning `SECRET_NAME_DIFFERS`.
+- `${envvar:…}` in the landing folder, in a name, or inside a longer value is
+  `DEPLOY_VALUE`: write those values in project.yaml for each environment.
+- Triggers outside `prod` and `production` stay stopped, decided by the
+  environment's name. A platform that set `mode: production` to start another
+  environment's triggers sets `paused: false` in the ADF methods' settings
+  instead.
+- The PostgreSQL recipe no longer adds `_<environment>` to its names. A
+  project started from it renames its resources when it drops the suffix: the
+  deployment creates the new ones and the post-deployment script deletes the
+  old ones.
+- Needs `@ingestron/definitions` 1.8 or later.
+
+Microsoft's export refuses some connectors' resources: the MongoDB collection
+datasets, Microsoft 365, and a linked service with a credential (for
+`UserAssignedManagedIdentity`). For a few others it adds a secure parameter for
+an optional secret that the pipeline must give a value. The details and the
+rules are in [spec/behaviour.md](spec/behaviour.md).
+
 Microsoft's published Data Factory resource schema (2018-06-01) predates the
-current linked services, so it cannot validate this output; the tests check
-the shapes in the sources below and in [spec/references.md](spec/references.md).
-
-## Sources (accessed 2026-10-25)
-
-Microsoft Learn: [connector overview](https://learn.microsoft.com/en-us/azure/data-factory/connector-overview),
-[SQL Server connector](https://learn.microsoft.com/en-us/azure/data-factory/connector-sql-server),
-[Parquet format](https://learn.microsoft.com/en-us/azure/data-factory/format-parquet),
-[ADLS Gen2 connector](https://learn.microsoft.com/en-us/azure/data-factory/connector-azure-data-lake-storage),
-[Key Vault secrets](https://learn.microsoft.com/en-us/azure/data-factory/store-credentials-in-key-vault),
-[tumbling window triggers](https://learn.microsoft.com/en-us/azure/data-factory/how-to-create-tumbling-window-trigger),
-[source control](https://learn.microsoft.com/en-us/azure/data-factory/source-control).
-For `after_copy` (accessed 2026-11-01): Container Apps
-[Jobs - Start](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/jobs/start),
-[Job Execution](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/job-execution/job-execution),
-[Jobs - Stop Execution](https://learn.microsoft.com/en-us/rest/api/resource-manager/containerapps/jobs/stop-execution)
-and [jobs and their roles](https://learn.microsoft.com/en-us/azure/container-apps/jobs).
+current linked services, so it cannot validate this output; the tests run
+Microsoft's export, which validates every resource, and check the shapes in
+the sources below and in [spec/references.md](spec/references.md).
 
 ## Dependencies
 
-[`@ingestron/definitions`](https://www.npmjs.com/package/@ingestron/definitions), as a peer dependency.
+- [`@ingestron/definitions`](https://www.npmjs.com/package/@ingestron/definitions) 1.8 or later, as a peer dependency.
+- For tests only, [`@microsoft/azure-data-factory-utilities`](https://www.npmjs.com/package/@microsoft/azure-data-factory-utilities) 1.0.3 (MIT), Microsoft's export. It downloads its build tool from `https://adf.azure.com/assets/cmd-api/main.js`; without a network, set `ADF_UTILITIES_BUNDLE` to a downloaded copy, or its tests are skipped and say why.
 
 ## Working on this pack
 
