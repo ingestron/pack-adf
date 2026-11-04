@@ -1,7 +1,7 @@
 // The sources this pack reads, described for the documentation site.
 import { nativeFileConnectors } from "./native-file-resources.js";
 import { tableConnectors } from "./table-method.js";
-import { sqlAuthentication } from "./sql-auth.js";
+import { identityExample, sqlAuthentication } from "./sql-auth.js";
 import { sqlTypes } from "./sql-types.js";
 import type { Connector } from "@ingestron/definitions";
 
@@ -44,8 +44,7 @@ const sqlSettings: Connector["settings"] = [
   {
     name: "identity",
     optional: true,
-    description:
-      "Resource ID of the user-assigned managed identity the credential holds, such as /subscriptions/<subscription>/resourceGroups/<group>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<name>; required for UserAssignedManagedIdentity authentication. Each environment may name its own.",
+    description: `Resource ID of the user-assigned managed identity the credential holds, such as ${identityExample}; required for UserAssignedManagedIdentity authentication. Each environment may name its own.`,
   },
   {
     name: "host_name_in_certificate",
