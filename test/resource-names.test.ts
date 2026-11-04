@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
+import { checkNameLengths } from "../src/resource-files.js";
 import { base, generate } from "./erp.js";
 const read = (name: string) =>
   JSON.parse(readFileSync(new URL(`../spec/conformance/${name}.json`, import.meta.url), "utf8"));
@@ -7,6 +8,7 @@ const naming = read("resource-names") as {
   names: Record<string, string>;
   invalid_names: string[];
   invalid_role: string;
+  name_limits: { resource: number; copy_activity: number };
 };
 const cases = read("native-sources") as {
   id: string;
@@ -81,5 +83,46 @@ it("keeps fixed resource names protected", () => {
   changes["flow.yaml"] += "ingest:\n  with:\n    resource_names: { pipeline: Override }\n";
   expect(generate(changes).result.diagnostics.some((item) => item.code === "FIXED_SETTING")).toBe(
     true,
+  );
+});
+
+const named = (length: number, letter = "n") => letter + "x".repeat(length - 1);
+it.each([
+  ["source_linked_service", naming.name_limits.resource],
+  ["copy_activity", naming.name_limits.copy_activity],
+])(
+  "accepts a %s name of the most characters Microsoft's export accepts, and no more",
+  (role, limit) => {
+    expect(generate(project(cases[0]!, { [role]: named(limit) })).result.model).toBeDefined();
+    const { result } = generate(project(cases[0]!, { [role]: named(limit + 1) }));
+    expect(result.model).toBeUndefined();
+    expect(result.diagnostics.map((item) => item.message).join("\n")).toContain(role);
+  },
+);
+it("refuses a default name longer than Microsoft's export accepts, naming it and the fix", () => {
+  const connection = named(140, "c");
+  const changes = project(cases[0]!, {});
+  changes["erp.yaml"] = changes["erp.yaml"]!.replace("id: erp", `id: ${connection}`);
+  changes["flow.yaml"] = changes["flow.yaml"]!.replace("source: erp", `source: ${connection}`);
+  const messages = generate(changes).result.diagnostics.map((item) => item.message);
+  expect(messages).toContain(
+    `The ADF linked service name "ls_erp_${connection}" has ${connection.length + 7} characters, more than the 140 Microsoft's export accepts; set resource_names.source_linked_service to a shorter name, or shorten the ids the name is made from.`,
+  );
+});
+it("refuses a derived name longer than Microsoft's export accepts, inside a ForEach too", () => {
+  const pipeline = (name: string, inner: string) => ({
+    [`pipeline/${name}.json`]: JSON.stringify({
+      name,
+      properties: {
+        activities: [{ name: "for_each_table", typeProperties: { activities: [{ name: inner }] } }],
+      },
+    }),
+  });
+  expect(() => checkNameLengths(pipeline(named(140, "p"), named(55, "a")))).not.toThrow();
+  expect(() => checkNameLengths(pipeline(named(141, "p"), "copy"))).toThrow(
+    `The ADF pipeline name "${named(141, "p")}" is longer than the 140 characters Microsoft's export accepts; shorten the project id or the resource_names it is made from`,
+  );
+  expect(() => checkNameLengths(pipeline("pl_erp", named(56, "a")))).toThrow(
+    `The ADF activity name "${named(56, "a")}" in pipeline pl_erp is longer than the 55 characters Microsoft's export accepts`,
   );
 });

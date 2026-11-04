@@ -25,5 +25,10 @@
     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   ],
   "invalid_role": "not_a_resource",
-  "shared_group": "connection and database for adf-copy; connection for adf-files and adf-table"
+  "shared_group": "connection and database for adf-copy; connection for adf-files and adf-table",
+  "name_limits": {
+    "resource": 140,
+    "copy_activity": 55,
+    "source": "Microsoft's export, 2026-11-05: 141 characters for linked services and triggers, 140 for datasets and pipelines, 55 for activities; the pack keeps every resource to 140"
+  }
 }
