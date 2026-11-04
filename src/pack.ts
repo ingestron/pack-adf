@@ -14,15 +14,15 @@ import { request } from "./request.js";
 import { checkingAfterCopy } from "./after-copy-settings.js";
 
 /**
- * The Azure Data Factory pack, version 1. Use it with a platform pack:
- * `packs: [databricks@1, adf@1]`.
+ * The Azure Data Factory pack, version 2. Use it with a platform pack:
+ * `packs: [databricks@2, adf@2]`.
  * @example
  * const result = loadDefinitions("definitions", { packs: [databricks, adf], environment: "dev" });
  * if (result.model) console.log(Object.keys(adf.build(result.model)));
  */
 export const adf: Pack = {
   id: "adf",
-  version: 1,
+  version: 2,
   // Used only when this pack is listed first, which a standard should not do:
   // ADF only copies, so another pack must store the data.
   defaults: {

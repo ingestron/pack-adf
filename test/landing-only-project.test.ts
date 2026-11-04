@@ -7,8 +7,8 @@ import { base, json } from "./erp.js";
 
 it("resolves and builds a project with only the ADF pack", () => {
   const standard = base["standard.yaml"]!.replace(
-    "packs: [store@1, adf@1]",
-    "packs: [adf@1]\nstore: { default: none }",
+    "packs: [store@1, adf@2]",
+    "packs: [adf@2]\nstore: { default: none }",
   );
   const result = resolveDefinitions(memoryFiles({ ...base, "standard.yaml": standard }), {
     packs: [adf],
@@ -19,6 +19,8 @@ it("resolves and builds a project with only the ADF pack", () => {
   const copy = json(files, "pipeline/pl_erp_erp.json").properties.activities[0];
   expect(copy.outputs[0].parameters.file).toBe("erp.dbo.Invoices.parquet");
   expect(
-    Object.keys(files).every((path) => /^(linkedService|dataset|pipeline|trigger)\//.test(path)),
+    Object.keys(files).every((path) =>
+      /^(linkedService|dataset|integrationRuntime|pipeline|trigger)\//.test(path),
+    ),
   ).toBe(true);
 });

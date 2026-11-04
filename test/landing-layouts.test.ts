@@ -4,7 +4,7 @@ import { base, generate, json } from "./erp.js";
 import { tableProject } from "./table-project.js";
 
 const endAtFiles = (standard: string) =>
-  standard.replace("packs: [store@1, adf@1]", "packs: [adf@1]\nstore: { default: none }");
+  standard.replace("packs: [store@1, adf@2]", "packs: [adf@2]\nstore: { default: none }");
 
 function sink(changes: Record<string, string>) {
   const { result, files } = generate(changes);
