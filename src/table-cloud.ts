@@ -13,6 +13,10 @@ const mongoFields = {
   ),
   database: text("database", "Database to read."),
 };
+// The MongoDB datasets' ARM model and Microsoft's export name the collection
+// `collection`; the connector pages say `collectionName`, which the export refuses
+// ("Collection name is required"). spec/references.md records both.
+const mongoCollection = ["collection"];
 const fabricFields = {
   workspace_id: text("workspaceId", "Microsoft Fabric workspace ID."),
   artifact_id: text("artifactId", "Microsoft Fabric item ID."),
@@ -86,7 +90,7 @@ export const tableCloud: TableSource[] = [
     service: "CosmosDbMongoDbApi",
     dataset: "CosmosDbMongoDbApiCollection",
     source: "CosmosDbMongoDbApiSource",
-    object: ["collectionName"],
+    object: mongoCollection,
     fields: mongoFields,
     defaults: { isServerVersionAbove32: true },
     hierarchical: true,
@@ -98,7 +102,7 @@ export const tableCloud: TableSource[] = [
     service: "MongoDbV2",
     dataset: "MongoDbV2Collection",
     source: "MongoDbV2Source",
-    object: ["collectionName"],
+    object: mongoCollection,
     fields: mongoFields,
     hierarchical: true,
   },
@@ -109,7 +113,7 @@ export const tableCloud: TableSource[] = [
     service: "MongoDbAtlas",
     dataset: "MongoDbAtlasCollection",
     source: "MongoDbAtlasSource",
-    object: ["collectionName"],
+    object: mongoCollection,
     fields: mongoFields,
     hierarchical: true,
   },
