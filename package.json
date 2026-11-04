@@ -47,12 +47,13 @@
     "prepack": "pnpm build"
   },
   "peerDependencies": {
-    "@ingestron/definitions": "^1.1.0"
+    "@ingestron/definitions": "^1.8.0"
   },
   "devDependencies": {
-    "@ingestron/config": "^1.0.0",
-    "@ingestron/definitions": "^1.1.0",
+    "@ingestron/config": "^1.5.0",
+    "@ingestron/definitions": "^1.8.0",
     "@microsoft/api-extractor": "7.59.4",
+    "@microsoft/azure-data-factory-utilities": "1.0.3",
     "@types/node": "22.20.5",
     "eslint": "10.13.0",
     "eslint-plugin-jsdoc": "65.4.2",
