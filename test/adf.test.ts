@@ -16,6 +16,7 @@ describe("generated ADF resources", () => {
     expect(Object.keys(generate().files).sort()).toEqual([
       "dataset/ds_erp_erp_erp.json",
       "dataset/ds_erp_landing.json",
+      "integrationRuntime/shir-erp.json",
       "linkedService/ls_erp_erp_erp.json",
       "linkedService/ls_erp_keyvault.json",
       "linkedService/ls_erp_landing.json",
