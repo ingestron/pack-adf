@@ -82,7 +82,7 @@ export function runtimeProblems(settings: Data): string[] {
     ];
   if (shortRegion(runtime.location))
     return [
-      `runtime.location "${String(runtime.location)}" is a region's short name; use its display name, with capitals and spaces, as Data Factory writes it: Microsoft's export rewrites a short name only where every environment has the same region`,
+      `runtime.location "${String(runtime.location)}" is a region's short name; use its display name, with capitals and spaces, such as UK South, as Data Factory writes it: Microsoft's export rewrites a short name only where every environment has the same region`,
     ];
   if (settings.integration_runtime === defaultRuntime && Object.keys(runtime).length > 0)
     return [
@@ -91,7 +91,7 @@ export function runtimeProblems(settings: Data): string[] {
   return [];
 }
 
-/** A region written as its short name, such as `westus2`, rather than its display name. */
+/** A region written as its short name, such as `uksouth`, rather than its display name. */
 function shortRegion(location: unknown): boolean {
   return typeof location === "string" && /^[a-z][a-z0-9]*$/.test(location);
 }
