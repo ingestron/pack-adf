@@ -2,6 +2,7 @@
 import type { RequestSection, ResolvedModel } from "@ingestron/definitions";
 import { connectors } from "./connectors.js";
 import { afterCopyOf, timeoutSeconds } from "./after-copy-settings.js";
+import { runtimeLines } from "./runtime-request.js";
 /** Shared ADF infrastructure and source-specific access for the platform request. */
 export function prerequisites(model: ResolvedModel): RequestSection[] {
   const tables = model.tables.filter((table) => table.ingest?.pack === "adf");
@@ -9,9 +10,6 @@ export function prerequisites(model: ResolvedModel): RequestSection[] {
   const sources = new Set<string>();
   for (const table of tables) {
     const ingest = table.ingest!;
-    infrastructure.add(
-      `Integration runtime \`${String(ingest.settings.integration_runtime)}\` (${String(ingest.settings.runtime_kind)}), with network access and any required source drivers.`,
-    );
     if (ingest.settings.key_vault)
       infrastructure.add(
         `Key Vault \`${String(ingest.settings.key_vault)}\`, with the named secrets and factory identity access.`,
@@ -33,7 +31,7 @@ export function prerequisites(model: ResolvedModel): RequestSection[] {
       title: "ADF prerequisites",
       intro:
         "Provision these before running the generated assets. Generation does not inspect Azure or validate source credentials.",
-      lines: [...infrastructure, ...jobLines(model), ...sources],
+      lines: [...runtimeLines(model), ...infrastructure, ...jobLines(model), ...sources],
     },
   ];
 }

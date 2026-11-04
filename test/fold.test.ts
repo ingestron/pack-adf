@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import { adf } from "../src/index.js";
 import { base } from "./erp.js";
 import {
+  linkedRuntime,
+  sharedRuntime,
   erpEnvironments,
   erpProject,
   fold,
@@ -138,5 +140,16 @@ describe("triggers", () => {
     const state = (target: string) =>
       parametersOf(files, target).tr_erp_erp_properties_runtimeState;
     expect([state("dev"), state("test"), state("prod")]).toEqual(["Stopped", "Stopped", "Started"]);
+  });
+});
+
+describe("a linked runtime", () => {
+  it("links each environment to its own shared runtime, as a parameter", () => {
+    const models = resolveAll(linkedRuntime(), ["dev", "prod"]);
+    const files = fold(models).files;
+    const name = "shir-erp_properties_typeProperties_linkedInfo_resourceId";
+    expect(parametersOf(files, "dev")[name]).toBe(sharedRuntime(1));
+    expect(parametersOf(files, "prod")[name]).toBe(sharedRuntime(2));
+    expect(foldFailures(models)).toEqual([]);
   });
 });
