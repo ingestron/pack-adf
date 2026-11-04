@@ -420,5 +420,36 @@
         "type": "string"
       }
     ]
+  },
+  {
+    "name": "a credential's identity, which is keyed by the resource type alone, not by the credential's own type",
+    "definition": {
+      "Microsoft.DataFactory/factories/credentials": {
+        "properties": {
+          "typeProperties": {
+            "resourceId": "-"
+          }
+        }
+      }
+    },
+    "resources": {
+      "credential/cred-erp.json": {
+        "name": "cred-erp",
+        "properties": {
+          "type": "ManagedIdentity",
+          "typeProperties": {
+            "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-data/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-erp"
+          }
+        }
+      }
+    },
+    "parameters": [
+      {
+        "name": "cred-erp_properties_typeProperties_resourceId",
+        "file": "credential/cred-erp.json",
+        "path": ["properties", "typeProperties", "resourceId"],
+        "type": "string"
+      }
+    ]
   }
 ]

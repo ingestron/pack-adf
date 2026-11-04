@@ -29,6 +29,7 @@ export const armTypes: Record<string, string> = {
   pipeline: "Microsoft.DataFactory/factories/pipelines",
   trigger: "Microsoft.DataFactory/factories/triggers",
   integrationRuntime: "Microsoft.DataFactory/factories/integrationRuntimes",
+  credential: "Microsoft.DataFactory/factories/credentials",
 };
 
 /** Folders whose definitions are keyed by the resource's own `properties.type` first. */
