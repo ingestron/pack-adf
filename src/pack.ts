@@ -8,6 +8,7 @@ import { samePathProblems } from "./landing-output.js";
 import { layoutOf } from "./layout.js";
 import { connectors } from "./connectors.js";
 import { build, copyGroups, filesGroups } from "./build.js";
+import { buildEnvironments } from "./environments.js";
 import { adfFiles } from "./files-method.js";
 import { adfCopy } from "./method.js";
 import { request } from "./request.js";
@@ -56,6 +57,7 @@ export const adf: Pack = {
   contract,
   check: checkShared,
   build,
+  buildEnvironments,
   request,
 };
 
