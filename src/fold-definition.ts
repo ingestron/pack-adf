@@ -2,7 +2,7 @@
 // places of a fold: the property of each, by resource type, as Microsoft's format
 // requires (spec/behaviour.md, "The definition file").
 import type { EnvironmentsProblem } from "@ingestron/definitions";
-import { armTypes, isExpression, typedFolders, type Definition, type Step } from "./arm-export.js";
+import { definitionKeys, isExpression, type Definition, type Step } from "./arm-export.js";
 import type { Renders } from "./fold-files-compare.js";
 import type { Place } from "./fold-places.js";
 import { differ, inEach, propertyLabel, resourceLabel, sameShape } from "./fold-problems.js";
@@ -19,15 +19,11 @@ export function definitionFor(
   const problems: EnvironmentsProblem[] = [];
   for (const place of places) {
     const action = actionOf(place);
-    const folder = place.file.split("/")[0]!;
-    let node = (definition[armTypes[folder]!] ??= {}) as Data;
-    if (typedFolders.has(folder)) {
-      const type = String(
-        (JSON.parse(first[place.file]!) as Data & { properties: Data }).properties.type,
-      );
-      node = (node[type] ??= {}) as Data;
-    }
-    if (!action || !insert(node, place.path, action)) problems.push(notExpressed(place));
+    const keys = definitionKeys(place.file, JSON.parse(first[place.file]!));
+    let node: Data = definition;
+    for (const key of keys) node = (node[key] ??= {}) as Data;
+    if (!action || keys.length === 0 || !insert(node, place.path, action))
+      problems.push(notExpressed(place));
   }
   return { definition, problems };
 }

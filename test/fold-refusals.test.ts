@@ -87,7 +87,12 @@ describe("refused", () => {
       ),
     };
     const [problem] = folded("{}", "{}", changes).problems;
-    expect(problem).toMatchObject({ code: "DEPLOY_VALUE", file: "standard.yaml", line: 8 });
+    expect(problem).toMatchObject({
+      code: "DEPLOY_VALUE",
+      file: "standard.yaml",
+      line: 8,
+      hint: "Write the landing folder in project.yaml for each environment, such as abfss://landing@<account>.dfs.core.windows.net/<folder>.",
+    });
     expect(problem!.message).toBe(
       '"${envvar:LANDING}" is supplied only when deploying, but the landing folder "${envvar:LANDING}/erp" holds it; ADF splits the landing into the storage account\'s URL, the file system and the folder, so each must be known when generating.',
     );
@@ -99,6 +104,7 @@ describe("refused", () => {
       code: "DEPLOY_VALUE",
       message:
         '"${envvar:RUNTIME}" is supplied only when deploying, so it cannot name the integration runtime "${envvar:RUNTIME}"; a factory\'s resources are named when generating.',
+      hint: "Write the integration runtime's name in project.yaml for each environment.",
     });
   });
 
@@ -134,8 +140,9 @@ describe("refused", () => {
         code: "ARM_PARAMETERS",
         severity: "error",
         message:
-          "The ARM template would have 257 parameters: factoryName and 256 for values that differ between environments. Azure Resource Manager allows 256.",
+          "The ARM template would have 257 parameters: factoryName and 256 for values that differ between environments. Azure Resource Manager allows 256. The most come from properties.activities[].typeProperties.source.additionalColumns[].value of each pipeline (255), properties.runtimeState of each trigger (1).",
         file: "project.yaml",
+        hint: "Microsoft suggests three ways: make fewer values differ between environments, such as an audit column that holds the environment's name; give values that are the same in many places one global parameter; or split the definitions into more than one factory.",
       },
     ]);
   });

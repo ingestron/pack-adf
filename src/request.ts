@@ -11,11 +11,12 @@ interface Trigger {
 
 /** The Data Factory section of the platform request: one line per trigger. */
 export function request(model: ResolvedModel): RequestSection[] {
-  const triggers = Object.entries(build(model))
+  const files = build(model);
+  const triggers = Object.entries(files)
     .filter(([path]) => path.startsWith("trigger/"))
     .map(([, text]) => JSON.parse(text) as Trigger);
   if (triggers.length === 0) return [];
-  return [{ title: "Schedules", lines: triggers.map(line) }, ...prerequisites(model)];
+  return [{ title: "Schedules", lines: triggers.map(line) }, ...prerequisites(model, files)];
 }
 
 function line({ name, properties }: Trigger): string {
