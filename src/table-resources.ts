@@ -5,7 +5,7 @@ import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
 import { addResource } from "./resource-files.js";
 import { nativeSource, stagingOptions, tableTranslator } from "./table-copy-options.js";
 import { exportResources } from "./export-resources.js";
-import { landedFile, namesFiles } from "./layout.js";
+import { landedFile } from "./layout.js";
 import { tableSources } from "./table-method.js";
 import { nativeValue } from "./sql-auth.js";
 import { reference, windowTrigger, type Shared } from "./resources.js";
@@ -39,7 +39,7 @@ export function tableResources(model: ResolvedModel, shared: Shared): Record<str
         }),
         parameters: { windowStart: { type: "string" }, windowEnd: { type: "string" } },
         activities: tables.map((table) =>
-          tableActivity(table, source, shared, dataset(table), name, namesFiles(tables)),
+          tableActivity(table, source, shared, dataset(table), name),
         ),
       },
     });
@@ -118,7 +118,6 @@ function tableActivity(
   shared: Shared,
   dataset: string,
   name: string,
-  named: boolean,
 ): Data {
   const options = (table.ingest!.settings.source_options ?? {}) as Data;
   return activity(
@@ -127,7 +126,7 @@ function tableActivity(
     "Copy",
     {
       inputs: [reference(dataset, "DatasetReference")],
-      outputs: [tableOutput(table, source, shared, name, named)],
+      outputs: [tableOutput(table, source, shared, name)],
       typeProperties: {
         source: nativeSource(table, source),
         sink: tableSink(source),
@@ -150,35 +149,35 @@ function tableOutput(
   source: TableSource,
   shared: Shared,
   name: string,
-  named: boolean,
 ): Data {
   if (source.id !== "microsoft-365")
     return {
       ...reference(shared.landingDataset, "DatasetReference"),
       parameters: landedFile(table, "parquet"),
     };
-  // ADF names Microsoft 365's files itself unless a table of the connection names its file.
-  const { folder, file } = landedFile(table, "json");
+  // Microsoft 365 lands in a folder, in files Microsoft names (layoutProblems).
   return {
     ...reference(
       resourceName(table, "json_landing_dataset", `ds_${name}_json`),
       "DatasetReference",
     ),
-    parameters: named ? { folder, file } : { folder },
+    parameters: { folder: landedFile(table, "json").folder },
   };
 }
 
+/**
+ * Parquet; for Microsoft 365, a binary copy of the JSON files Microsoft writes, the only
+ * sink Microsoft's export accepts for it (spec/references.md).
+ */
 function tableSink(source: TableSource): Data {
-  const office = source.id === "microsoft-365";
+  if (source.id === "microsoft-365")
+    return { type: "BinarySink", storeSettings: { type: "AzureBlobFSWriteSettings" } };
   return {
-    type: office ? "JsonSink" : "ParquetSink",
+    type: "ParquetSink",
     storeSettings: {
       type: "AzureBlobFSWriteSettings",
       ...(source.staged && { copyBehavior: "MergeFiles" }),
     },
-    formatSettings: {
-      type: office ? "JsonWriteSettings" : "ParquetWriteSettings",
-      ...(office && { filePattern: "setOfObjects" }),
-    },
+    formatSettings: { type: "ParquetWriteSettings" },
   };
 }
