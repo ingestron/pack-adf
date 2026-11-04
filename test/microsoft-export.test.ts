@@ -11,6 +11,8 @@ import {
   erpEnvironments,
   erpProject,
   fold,
+  linkedRuntime,
+  managedRuntime,
   parametersOf,
   resolveAll,
   type Models,
@@ -23,6 +25,10 @@ import {
   writeFolder,
   type Template,
 } from "./microsoft-export.js";
+
+// Exported resources are untyped JSON.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Json = Record<string, any>;
 
 const tool = await exportTool();
 const title = tool.bundle
@@ -65,6 +71,8 @@ function catalogue(): Record<string, string> {
 const fixtures: Record<string, Models> = {
   "the connector catalogue": resolveAll(catalogue(), ["dev", "prod"]),
   "three environments": resolveAll(erpEnvironments(), ["dev", "test", "prod"]),
+  "a linked self-hosted runtime": resolveAll(linkedRuntime(), ["dev", "prod"]),
+  "an Azure runtime in a managed virtual network": resolveAll(managedRuntime(), ["dev", "prod"]),
   "a deploy-time vault": resolveAll(
     {
       ...base,
@@ -118,6 +126,37 @@ describe.skipIf(!tool.bundle).each(Object.entries(fixtures))(
         const [, property, resource] = /^Secure string for '([^']+)' of '([^']+)'$/.exec(metadata)!;
         const service = JSON.parse(built.files[`factory/linkedService/${resource}.json`]!);
         expect(service.properties.typeProperties[property!], name).toBeUndefined();
+      }
+    });
+
+    it("keeps every runtime a linked service connects through, as the factory describes it", () => {
+      const exported = new Map(
+        (template.resources as { name: string; properties: Record<string, unknown> }[]).map(
+          (resource) => [/'\/([^']+)'\)\]$/.exec(resource.name)![1]!, resource.properties],
+        ),
+      );
+      for (const [path, text] of Object.entries(built.files)) {
+        const resource = JSON.parse(text);
+        const via = resource.properties?.connectVia?.referenceName;
+        if (
+          path.startsWith("factory/linkedService/") &&
+          via &&
+          via !== "AutoResolveIntegrationRuntime"
+        )
+          expect(exported.get(resource.name)!.connectVia, path).toEqual(
+            resource.properties.connectVia,
+          );
+        if (!path.startsWith("factory/integrationRuntime/")) continue;
+        const properties = exported.get(resource.name)!;
+        expect(properties.type, path).toBe(resource.properties.type);
+        expect(properties.managedVirtualNetwork, path).toEqual(
+          resource.properties.managedVirtualNetwork,
+        );
+        const linked = (resource.properties.typeProperties ?? {}).linkedInfo;
+        if (linked)
+          expect((properties.typeProperties as Json).linkedInfo.resourceId, path).toMatch(
+            /^\[parameters\('|^\/subscriptions\//,
+          );
       }
     });
 

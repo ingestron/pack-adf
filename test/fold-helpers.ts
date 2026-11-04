@@ -101,3 +101,37 @@ export function parametersOf(files: Record<string, string>, target: string) {
   >;
   return Object.fromEntries(Object.entries(parameters).map(([name, { value }]) => [name, value]));
 }
+
+/** A shared runtime's resource ID in a subscription. */
+export const sharedRuntime = (subscription: number) =>
+  `/subscriptions/00000000-0000-0000-0000-00000000000${subscription}/resourceGroups/rg-shared/providers/Microsoft.DataFactory/factories/adf-shared/integrationruntimes/shir-erp`;
+
+/** The ERP project in dev and prod, whose runtime links to each environment's shared one. */
+export function linkedRuntime(): Record<string, string> {
+  return {
+    ...base,
+    "standard.yaml": base["standard.yaml"]!.replace(
+      "      integration_runtime: shir-erp\n",
+      "      integration_runtime: shir-erp\n      runtime: { shared: '${values.shared}' }\n",
+    ),
+    "project.yaml": erpProject([
+      `  dev: { values: { shared: '${sharedRuntime(1)}' } }`,
+      `  prod: { values: { shared: '${sharedRuntime(2)}' } }`,
+    ]),
+  };
+}
+
+/** The ERP project in dev and prod, through an Azure runtime in a managed virtual network. */
+export function managedRuntime(): Record<string, string> {
+  return {
+    ...base,
+    "standard.yaml": base["standard.yaml"]!.replace("erplake", "${values.lake}").replace(
+      "      integration_runtime: shir-erp\n",
+      "      integration_runtime: ir-erp\n      runtime_kind: azure\n      runtime: { location: UK South, managed_virtual_network: true, data_flow: { compute_type: General, core_count: 16, time_to_live: 10 } }\n",
+    ),
+    "project.yaml": erpProject([
+      "  dev: { values: { lake: erplakedev } }",
+      "  prod: { values: { lake: erplake } }",
+    ]),
+  };
+}
