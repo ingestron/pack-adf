@@ -37,14 +37,7 @@ const title = tool.bundle
   ? "Microsoft's export of the folded factory"
   : `Microsoft's export of the folded factory (skipped: ${tool.reason})`;
 
-/**
- * Connectors whose resources Microsoft's validator refuses, so the export stops: the
- * MongoDB collection datasets ("Collection name is required") and Microsoft 365
- * ("Microsoft 365 source only supports copying to binary format dataset").
- */
-const refused = ["mongodb", "mongodb-atlas", "azure-cosmos-db-mongodb", "microsoft-365"];
-
-/** The connector catalogue in dev and prod, whose storage accounts differ. */
+/** The whole connector catalogue in dev and prod, whose storage accounts differ. */
 function catalogue(): Record<string, string> {
   const files: Record<string, string> = {};
   const walk = (folder: string) => {
@@ -55,10 +48,6 @@ function catalogue(): Record<string, string> {
     }
   };
   walk(recipesFolder);
-  for (const connector of refused) {
-    delete files[`connections/${connector}.yaml`];
-    delete files[`flows/${connector}.yaml`];
-  }
   return {
     ...files,
     "standard.yaml": files["standard.yaml"]!.replace("databricks@2", "store@1"),
