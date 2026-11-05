@@ -22,6 +22,7 @@ export const runtimeName = {
   description:
     "Name of the integration runtime that reaches the source: 3 to 63 letters, digits and single hyphens. The factory's folder holds it, described by runtime_kind and runtime.",
   examples: ["shir-erp"],
+  find: "Data Factory Studio: Manage, then Integration runtimes.",
 };
 
 /** How the factory describes its integration runtime, beyond its name and kind. */

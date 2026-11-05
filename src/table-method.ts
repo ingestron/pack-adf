@@ -105,6 +105,7 @@ export const tableConnectors: Connector[] = tableSources.map((source) => ({
     ...(field.number && { type: "number" as const }),
     ...(field.secretMap && { type: "object" as const }),
     ...(field.values && { values: field.values }),
+    ...(field.find && { find: field.find }),
   })),
   generates: `a ${source.service} linked service, a full copy pipeline and a tumbling window trigger`,
   maturity: { status: "GA", checked: "2026-10-28" },
