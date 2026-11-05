@@ -1,4 +1,5 @@
 // Ordinary native table copies: concrete connector facts supply only documented properties.
+import { transportAuthentication } from "./transport-auth.js";
 import { activity, annotationsOf, describeCopy, describePipeline, policyOf } from "./design.js";
 import { resourceName } from "./resource-names.js";
 import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
@@ -75,6 +76,8 @@ function tableService(
     const value = ingest.connection.settings[key];
     if (value !== undefined) properties[field.native] = nativeValue(value, field, shared.keyVault);
   }
+  const authentication = transportAuthentication(source, ingest.connection.settings);
+  if (authentication) properties.authenticationType = authentication;
   return {
     name,
     properties: {
