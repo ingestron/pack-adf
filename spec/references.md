@@ -396,8 +396,10 @@ Accessed 2026-11-05:
   UsernameAndPassword authentication type. Binary transport protocol only
   supports Anonymous authentication type." So a Hive connection with
   `transport: Binary` writes `authenticationType: Anonymous` and takes no
-  `user` or `password`; `SASL` and `HTTP` write `UsernameAndPassword` and need
-  both.
+  `user` or `password`, and `SASL` writes `UsernameAndPassword` and needs
+  both. The page says nothing about HTTP transport: writing
+  `UsernameAndPassword` for it, with both, is the pack's choice, not
+  Microsoft's rule.
 - [Setting up HiveServer2](https://cwiki.apache.org/confluence/display/Hive/Setting+Up+HiveServer2):
   `hive.server2.thrift.port` defaults to 10000 for Binary transport, and
   `hive.server2.thrift.http.port` to 10001 for HTTP. The catalogue's example
