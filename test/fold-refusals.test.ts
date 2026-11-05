@@ -74,7 +74,7 @@ describe("refused", () => {
           '"${envvar:VAULT}" is supplied only when deploying, but it is part of a longer value, "https://${envvar:VAULT}.vault.azure.net", at properties.typeProperties.baseUrl of the linked service "ls_erp_keyvault"; an ARM parameter replaces a whole value.',
         file: "standard.yaml",
         line: 10,
-        hint: "Make the variable hold the whole value, such as the full URL, or write the value in project.yaml for each environment.",
+        hint: "Write the value in project.yaml for each environment, as a storage account's or Key Vault's name is; or make the variable hold the whole value, such as the full URL.",
       },
     ]);
   });
