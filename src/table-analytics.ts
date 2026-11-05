@@ -77,9 +77,13 @@ export const tableAnalytics: TableSource[] = [
     object: ["schema", "table"],
     fields: {
       ...thriftFields,
+      // Binary transport takes no login (transport-auth.ts).
+      user: { ...fields.user, optional: true },
+      password: { ...fields.password, optional: true },
       transport: {
         native: "thriftTransportProtocol",
-        description: "Thrift transport used by the server.",
+        description:
+          "Thrift transport used by the server. Binary connects anonymously; SASL and HTTP sign in with user and password.",
         values: ["Binary", "SASL", "HTTP"],
       },
       http_path: {
@@ -88,7 +92,12 @@ export const tableAnalytics: TableSource[] = [
         optional: true,
       },
     },
-    defaults: { ...tls, authenticationType: "UsernameAndPassword", serverType: "HiveServer2" },
+    defaults: { ...tls, serverType: "HiveServer2" },
+    transportAuthentication: {
+      Binary: "Anonymous",
+      SASL: "UsernameAndPassword",
+      HTTP: "UsernameAndPassword",
+    },
     version: "2.0",
     query: true,
   },

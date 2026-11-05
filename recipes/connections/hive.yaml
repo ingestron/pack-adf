@@ -5,7 +5,5 @@ connector: hive
 connectivity: private
 settings:
   host: "source.example.test"
-  port: 5432
-  user: "reader"
-  password: "${secret:source-password}"
+  port: 10000
   transport: "Binary"

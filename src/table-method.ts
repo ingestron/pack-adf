@@ -1,4 +1,5 @@
 // Full native copies use the existing method settings and connection checks.
+import { transportProblems } from "./transport-auth.js";
 import type { Connector, Method, ResolvedTable } from "@ingestron/definitions";
 import { layoutSettings, tablePlacement, windowSettings } from "./method.js";
 import { designSettings } from "./design-settings.js";
@@ -117,6 +118,7 @@ function checkTable(table: ResolvedTable): string[] {
   const source = tableSources.find((item) => item.id === ingest.connection.connector)!;
   const problems = [
     ...connectionProblems(source, ingest.connection.settings),
+    ...transportProblems(source, ingest.connection.settings),
     ...layoutProblems(table),
   ];
   const parts = source.object.length > 1 ? ingest.object.split(".") : [ingest.object];
