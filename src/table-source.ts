@@ -31,6 +31,11 @@ export interface TableSource {
   hierarchical?: boolean;
   staged?: boolean;
   runtime?: "self-hosted" | "azure";
+  /**
+   * The authentication each `transport` value takes, where the transport decides it, as for
+   * Hive; `Anonymous` takes no user or password, any other needs both.
+   */
+  transportAuthentication?: Record<string, string>;
 }
 
 /** Where an owner finds the common connection values, for a new project's README.md. */
