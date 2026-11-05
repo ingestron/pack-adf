@@ -3,17 +3,26 @@ import { nativeFileConnectors } from "./native-file-resources.js";
 import { tableConnectors } from "./table-method.js";
 import { identityExample, sqlAuthentication } from "./sql-auth.js";
 import { sqlTypes } from "./sql-types.js";
+import { finds } from "./table-source.js";
 import type { Connector } from "@ingestron/definitions";
 
 const sqlSettings: Connector["settings"] = [
-  { name: "server", description: "The host name the integration runtime reaches." },
+  {
+    name: "server",
+    description: "The host name the integration runtime reaches.",
+    find: finds.server,
+  },
   {
     name: "authentication",
     optional: true,
     description:
       "Authentication mode; defaults to SQL. Azure sources also accept ServicePrincipal, SystemAssignedManagedIdentity and UserAssignedManagedIdentity. SQL Server and RDS also accept Windows.",
   },
-  { name: "user", description: "The login; required for SQL or Windows authentication." },
+  {
+    name: "user",
+    description: "The login; required for SQL or Windows authentication.",
+    find: finds.user,
+  },
   {
     name: "password",
     description: "The login password; required for SQL or Windows authentication.",

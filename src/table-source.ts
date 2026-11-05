@@ -9,6 +9,8 @@ export interface ConnectionField {
   optional?: boolean;
   number?: boolean;
   values?: string[];
+  /** Where the owner finds the value, for a new project's README.md. */
+  find?: string;
 }
 
 /** Native facts for a full-copy table source; all vendor constants stay in the pack. */
@@ -31,6 +33,14 @@ export interface TableSource {
   runtime?: "self-hosted" | "azure";
 }
 
+/** Where an owner finds the common connection values, for a new project's README.md. */
+export const finds = {
+  server: "Your database administrator, or the server's overview page in its cloud portal.",
+  database: "Your database administrator.",
+  user: "Your database administrator, who creates a login that may read the tables.",
+  host: "The source's administrator, or its overview page in its cloud portal.",
+};
+
 /** A required text field mapped to one native property. */
 export function textField(native: string, description: string): ConnectionField {
   return { native, description };
@@ -43,9 +53,12 @@ export function secretField(native: string, description: string): ConnectionFiel
 
 /** The basic database credentials used by several native drivers. */
 export const databaseFields = {
-  server: textField("server", "Database host name or endpoint as reached by the runtime."),
-  database: textField("database", "Database to read."),
-  user: textField("username", "Account used to read the source."),
+  server: {
+    ...textField("server", "Database host name or endpoint as reached by the runtime."),
+    find: finds.server,
+  },
+  database: { ...textField("database", "Database to read."), find: finds.database },
+  user: { ...textField("username", "Account used to read the source."), find: finds.user },
   password: secretField("password", "Key Vault secret holding the account password."),
   /** The credential part of an ODBC connection string, which ADF keeps apart from it. */
   odbcCredential: {
