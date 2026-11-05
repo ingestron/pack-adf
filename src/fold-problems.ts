@@ -127,4 +127,4 @@ export const sameShape =
 
 /** The fix for a deploy-time value inside a longer text. */
 export const wholeValue =
-  "Make the variable hold the whole value, such as the full URL, or write the value in project.yaml for each environment.";
+  "Write the value in project.yaml for each environment, as a storage account's or Key Vault's name is; or make the variable hold the whole value, such as the full URL.";
