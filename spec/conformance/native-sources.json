@@ -518,10 +518,10 @@
     "method": "adf-table",
     "settings": {
       "host": "source.example.test",
-      "port": 5432,
+      "port": 10000,
       "user": "reader",
       "password": "${secret:source-password}",
-      "transport": "Binary"
+      "transport": "SASL"
     },
     "object": "sales.orders",
     "options": {},
@@ -536,13 +536,13 @@
         "authenticationType": "UsernameAndPassword",
         "serverType": "HiveServer2",
         "host": "source.example.test",
-        "port": 5432,
+        "port": 10000,
         "username": "reader",
         "password": {
           "type": "AzureKeyVaultSecret",
           "secretName": "source-password"
         },
-        "thriftTransportProtocol": "Binary"
+        "thriftTransportProtocol": "SASL"
       }
     },
     "field_mapping": {
