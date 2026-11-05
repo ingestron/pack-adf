@@ -386,3 +386,19 @@ A database's server, database and login come from its own administrator, so
 their `find` says so rather than naming a vendor's tool. `default` is not set
 on any setting yet: the [Hive connector](https://learn.microsoft.com/en-us/azure/data-factory/connector-hive)
 documents no default port, and the pack does not choose one for the owner.
+
+## Hive authentication
+
+Accessed 2026-11-05:
+
+- [Copy data from Hive](https://learn.microsoft.com/en-us/azure/data-factory/connector-hive)
+  (version 2.0 change log): "SASL transport protocol only supports
+  UsernameAndPassword authentication type. Binary transport protocol only
+  supports Anonymous authentication type." So a Hive connection with
+  `transport: Binary` writes `authenticationType: Anonymous` and takes no
+  `user` or `password`; `SASL` and `HTTP` write `UsernameAndPassword` and need
+  both.
+- [Setting up HiveServer2](https://cwiki.apache.org/confluence/display/Hive/Setting+Up+HiveServer2):
+  `hive.server2.thrift.port` defaults to 10000 for Binary transport, and
+  `hive.server2.thrift.http.port` to 10001 for HTTP. The catalogue's example
+  uses 10000.
