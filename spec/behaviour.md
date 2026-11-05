@@ -483,7 +483,7 @@ Before any file is written, in this order:
    `In the <kind> "<name>", <property> of the resource differs between environments in more than a value: it is <value> in <targets> and <value> in <targets>.`
 7. `DEPLOY_VALUE` for a deploy-time value inside a longer text, or in a list,
    with the hint
-   `Make the variable hold the whole value, such as the full URL, or write the value in project.yaml for each environment.`;
+   `Write the value in project.yaml for each environment, as a storage account's or Key Vault's name is; or make the variable hold the whole value, such as the full URL.`;
    and for two deploy-time values at one place.
 8. `ARM_PARAMETERS` when the template would have more than 256 parameters,
    `factoryName` and the secure strings the export adds included:
