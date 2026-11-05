@@ -369,3 +369,20 @@ disagree, the pack follows the validator, which is what users run.
 Experiments with the export (`main.js` SHA-256 `9c7cb272…fbb76aa`), 2026-11-05,
 on the connector catalogue and on hand-written factories for each case above;
 the tests now run every case through it.
+
+## Where to find a value (`find`)
+
+Accessed 2026-11-05. A new project's README.md shows these beside each value
+`ingestron init` writes as `REPLACE_ME`:
+
+- [Create a self-hosted integration runtime](https://learn.microsoft.com/en-us/azure/data-factory/create-self-hosted-integration-runtime):
+  in the Data Factory UI, the Manage tab, then Integration runtimes.
+- [Set and retrieve a secret from Key Vault using the Azure portal](https://learn.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal):
+  a vault's secrets are under Objects, Secrets, and Generate/Import adds one.
+- [Upload, download and list blobs with the Azure portal](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-portal):
+  a storage account's containers are under Data storage, Containers.
+
+A database's server, database and login come from its own administrator, so
+their `find` says so rather than naming a vendor's tool. `default` is not set
+on any setting yet: the [Hive connector](https://learn.microsoft.com/en-us/azure/data-factory/connector-hive)
+documents no default port, and the pack does not choose one for the owner.

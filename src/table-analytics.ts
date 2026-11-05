@@ -4,10 +4,11 @@ import {
   secretField,
   textField,
   portField,
+  finds,
   type TableSource,
 } from "./table-source.js";
 const thriftFields = {
-  host: textField("host", "Source host name as reached by the runtime."),
+  host: { ...textField("host", "Source host name as reached by the runtime."), find: finds.host },
   port: { ...portField, optional: false },
   user: fields.user,
   password: fields.password,

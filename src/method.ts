@@ -21,6 +21,7 @@ export const windowSettings = {
     pattern: abfss,
     description: "Landing folder, abfss://<container>@<account>.dfs.core.windows.net/<path>.",
     examples: ["abfss://landing@erplake.dfs.core.windows.net/erp"],
+    find: "Azure portal: Storage accounts, the account, then Data storage, Containers.",
   },
   integration_runtime: runtimeName,
   runtime: runtimeSchema,
@@ -29,6 +30,7 @@ export const windowSettings = {
     pattern: "^https://[^/]+\\.vault\\.azure\\.net/?$",
     description: "Key Vault holding the source's secrets.",
     examples: ["https://kv-erp.vault.azure.net"],
+    find: "Azure portal: Key vaults; the vault's name is in its URI, https://<name>.vault.azure.net.",
   },
   every: {
     type: "object",
