@@ -39,7 +39,10 @@ export interface Shared {
 }
 
 /** A reference to another ADF resource by name. */
-export const reference = (name: string, type: string) => ({ referenceName: name, type });
+export const reference = (name: string, type: string): { referenceName: string; type: string } => ({
+  referenceName: name,
+  type,
+});
 
 /** The Key Vault linked service; secrets are referenced from it. */
 export function keyVaultService(shared: Shared, baseUrl: string): Data {

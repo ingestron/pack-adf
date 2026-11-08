@@ -36,7 +36,11 @@ export function differ(message: string, file = valuesFile, hint?: string): Envir
 }
 
 /** A `DEPLOY_VALUE` error at the first use of a deploy-time value. */
-export function deployProblem(message: string, value: DeployValue, hint?: string) {
+export function deployProblem(
+  message: string,
+  value: DeployValue,
+  hint?: string,
+): EnvironmentsProblem {
   const use = value.uses[0];
   const problem: EnvironmentsProblem = {
     code: "DEPLOY_VALUE",

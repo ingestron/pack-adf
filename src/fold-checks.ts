@@ -58,7 +58,10 @@ export function namedProblems(renders: Renders, models: Models): EnvironmentsPro
  * More than ARM's 256 parameters, counting `factoryName` and the secure strings the
  * export adds, with the properties that make the most.
  */
-export function countProblems(folded: Folded, secrets: readonly AddedSecret[]) {
+export function countProblems(
+  folded: Folded,
+  secrets: readonly AddedSecret[],
+): EnvironmentsProblem[] {
   const count = folded.parameters.length + secrets.length + 1;
   if (count <= armParameterLimit) return [];
   const parts = [

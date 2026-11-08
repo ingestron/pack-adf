@@ -19,10 +19,10 @@ export const factoryFolder = "factory";
 export const definitionFile = `${factoryFolder}/arm-template-parameters-definition.json`;
 
 /** A target's ARM deployment parameter file. */
-export const parametersFile = (target: string) => `parameters/${target}.json`;
+export const parametersFile = (target: string): string => `parameters/${target}.json`;
 
 /** What a factory holds where a value is supplied when deploying. */
-export const placeholder = (name: string) => `<value of ${name}>`;
+export const placeholder = (name: string): string => `<value of ${name}>`;
 
 /** The folded files, the deploy-time values they take, and their ARM parameters. */
 export interface Folded {
@@ -32,7 +32,7 @@ export interface Folded {
 }
 
 /** ADF's Git JSON: tabs, and a final new line. */
-export const jsonText = (data: unknown) => `${JSON.stringify(data, null, "\t")}\n`;
+export const jsonText = (data: unknown): string => `${JSON.stringify(data, null, "\t")}\n`;
 
 /** Writes the factory, the definition and each target's parameter file. */
 export function writeFold(renders: Renders, models: Models, definition: Definition): Folded {
