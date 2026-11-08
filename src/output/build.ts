@@ -1,11 +1,11 @@
 // Turns the tables copied with adf-copy and adf-files into ADF resource files, path → JSON.
-import { afterCopy } from "../design/after-copy.js";
-import { decorate } from "../design/design.js";
-import { foreachPipeline } from "../resources/foreach.js";
-import { resourceName } from "../factory/resource-names.js";
-import { addCredentials } from "../factory/credentials.js";
-import { addRuntimes } from "../factory/runtimes.js";
-import { addResource, checkNameLengths, mergeResources } from "../factory/resource-files.js";
+import { afterCopy } from "../design/index.js";
+import { decorate } from "../design/index.js";
+import { foreachPipeline } from "../resources/index.js";
+import { resourceName } from "../factory/index.js";
+import { addCredentials } from "../factory/index.js";
+import { addRuntimes } from "../factory/index.js";
+import { addResource, checkNameLengths, mergeResources } from "../factory/index.js";
 import { tableGroups, tableResources } from "./table-resources.js";
 import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
 import {
@@ -14,7 +14,7 @@ import {
   landingFilesDataset,
   shareDataset,
   type FilesGroup,
-} from "../resources/files-resources.js";
+} from "../resources/index.js";
 import {
   copyPipeline,
   keyVaultService,
@@ -25,7 +25,7 @@ import {
   windowTrigger,
   type CopyGroup,
   type Shared,
-} from "../resources/resources.js";
+} from "../resources/index.js";
 
 /**
  * Every ADF resource file for one environment, in ADF's Git folder layout, with the

@@ -1,10 +1,10 @@
 // Export-only resources are built from the same definitions and Key Vault references.
-import { resourceName } from "../factory/resource-names.js";
+import { resourceName } from "../factory/index.js";
 import type { ResolvedTable } from "@ingestron/definitions";
-import { parseLanding } from "../design/landing.js";
+import { parseLanding } from "../design/index.js";
 import { reference, type Shared } from "./resources.js";
-import { vaultSecret } from "../connection/sql-auth.js";
-import type { TableSource } from "../connection/table-source.js";
+import { vaultSecret } from "../connection/index.js";
+import type { TableSource } from "../connection/index.js";
 type Data = Record<string, unknown>;
 /** Additional resources for staged exports and Microsoft 365's landing. */
 export function exportResources(

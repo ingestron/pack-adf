@@ -1,22 +1,22 @@
 // Ordinary native table copies: concrete connector facts supply only documented properties.
-import { transportAuthentication } from "../connection/transport-auth.js";
+import { transportAuthentication } from "../connection/index.js";
 import {
   activity,
   annotationsOf,
   describeCopy,
   describePipeline,
   policyOf,
-} from "../design/design.js";
-import { resourceName } from "../factory/resource-names.js";
+} from "../design/index.js";
+import { resourceName } from "../factory/index.js";
 import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
-import { addResource } from "../factory/resource-files.js";
-import { nativeSource, stagingOptions, tableTranslator } from "../resources/table-copy-options.js";
-import { exportResources } from "../resources/export-resources.js";
-import { landedFile } from "../design/layout.js";
-import { tableSources } from "../methods/table-method.js";
-import { nativeValue } from "../connection/sql-auth.js";
-import { reference, windowTrigger, type Shared } from "../resources/resources.js";
-import type { TableSource } from "../connection/table-source.js";
+import { addResource } from "../factory/index.js";
+import { nativeSource, stagingOptions, tableTranslator } from "../resources/index.js";
+import { exportResources } from "../resources/index.js";
+import { landedFile } from "../design/index.js";
+import { tableSources } from "../methods/index.js";
+import { nativeValue } from "../connection/index.js";
+import { reference, windowTrigger, type Shared } from "../resources/index.js";
+import type { TableSource } from "../connection/index.js";
 type Data = Record<string, unknown>;
 
 /** Resource files for native table sources, using one pipeline and linked service per connection. */

@@ -4,7 +4,7 @@ import {
   secretField as secret,
   textField as text,
   type TableSource,
-} from "../connection/table-source.js";
+} from "../connection/index.js";
 const rfcFields = {
   server: databaseFields.server,
   system_number: text("systemNumber", "Two-digit SAP system number."),

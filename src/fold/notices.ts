@@ -1,8 +1,8 @@
 // What the people who deploy the factory need to know, given as notices while generating
 // every environment and kept in the platform request too (spec/behaviour.md).
 import type { PackNotice, ResolvedModel } from "@ingestron/definitions";
-import { addedSecretNotices } from "../factory/added-secrets.js";
-import { runtimeNotices } from "../factory/runtime-request.js";
+import { addedSecretNotices } from "../factory/index.js";
+import { runtimeNotices } from "../factory/index.js";
 
 function notice({ message, hint }: { message: string; hint: string }): PackNotice {
   return { code: "PACK_NOTICE", severity: "warning", message, hint };

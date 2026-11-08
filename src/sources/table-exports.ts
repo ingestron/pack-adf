@@ -1,9 +1,5 @@
 // Exports which need connector-specific staging or landing authentication.
-import {
-  secretField as secret,
-  textField as text,
-  type TableSource,
-} from "../connection/table-source.js";
+import { secretField as secret, textField as text, type TableSource } from "../connection/index.js";
 /** Native exports; staging and source filters remain ordinary definition settings. */
 export const tableExports: TableSource[] = [
   {

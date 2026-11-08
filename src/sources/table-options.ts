@@ -1,8 +1,8 @@
 // Explicit native options: each connector accepts only the fields it can use.
 import type { Method, ResolvedTable } from "@ingestron/definitions";
-import { webRequestSettings, webRequestProblems } from "../connection/web-options.js";
-import { isSecret, nonEmpty } from "../connection/sql-auth.js";
-import type { TableSource } from "../connection/table-source.js";
+import { webRequestSettings, webRequestProblems } from "../connection/index.js";
+import { isSecret, nonEmpty } from "../connection/index.js";
+import type { TableSource } from "../connection/index.js";
 const text = { type: "string", minLength: 1 };
 /** Schema for named options; connector-specific applicability is checked below. */
 export const sourceOptionsSchema: Method["settings"] = {

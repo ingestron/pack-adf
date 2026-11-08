@@ -2,7 +2,7 @@
 // values where ADF cannot take them, and the ARM template's parameter count
 // (spec/behaviour.md, "What is refused").
 import type { EnvironmentsProblem } from "@ingestron/definitions";
-import type { AddedSecret } from "../factory/added-secrets.js";
+import type { AddedSecret } from "../factory/index.js";
 import type { Step } from "./arm-export.js";
 import type { Renders } from "./fold-files-compare.js";
 import type { Folded } from "./fold-write.js";

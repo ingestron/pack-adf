@@ -6,7 +6,7 @@ import {
   portField,
   finds,
   type TableSource,
-} from "../connection/table-source.js";
+} from "../connection/index.js";
 const thriftFields = {
   host: { ...textField("host", "Source host name as reached by the runtime."), find: finds.host },
   port: { ...portField, optional: false },

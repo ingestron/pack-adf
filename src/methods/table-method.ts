@@ -1,25 +1,21 @@
 // Full native copies use the existing method settings and connection checks.
-import { transportProblems } from "../connection/transport-auth.js";
+import { transportProblems } from "../connection/index.js";
 import type { Connector, Method, ResolvedTable } from "@ingestron/definitions";
 import { layoutSettings, tablePlacement, windowSettings } from "./method.js";
-import { designSettings } from "../design/design-settings.js";
-import { nonEmpty } from "../connection/sql-auth.js";
-import { layoutProblems, tableOutput } from "../design/landing-output.js";
-import { connectionProblems } from "../connection/connection-check.js";
-import { tableCloud } from "../sources/table-cloud.js";
-import { tableExports } from "../sources/table-exports.js";
-import {
-  sourceOptionNames,
-  sourceOptionProblems,
-  sourceOptionsSchema,
-} from "../sources/table-options.js";
-import { tableApps } from "../sources/table-apps.js";
-import { tableCrm } from "../sources/table-crm.js";
-import { tableSap } from "../sources/table-sap.js";
-import { tableProtocols } from "../sources/table-protocols.js";
-import { tableDatabases } from "../sources/table-databases.js";
-import { tableAnalytics } from "../sources/table-analytics.js";
-import type { TableSource } from "../connection/table-source.js";
+import { designSettings } from "../design/index.js";
+import { nonEmpty } from "../connection/index.js";
+import { layoutProblems, tableOutput } from "../design/index.js";
+import { connectionProblems } from "../connection/index.js";
+import { tableCloud } from "../sources/index.js";
+import { tableExports } from "../sources/index.js";
+import { sourceOptionNames, sourceOptionProblems, sourceOptionsSchema } from "../sources/index.js";
+import { tableApps } from "../sources/index.js";
+import { tableCrm } from "../sources/index.js";
+import { tableSap } from "../sources/index.js";
+import { tableProtocols } from "../sources/index.js";
+import { tableDatabases } from "../sources/index.js";
+import { tableAnalytics } from "../sources/index.js";
+import type { TableSource } from "../connection/index.js";
 
 /** Concrete native table sources. No source is registered without its required properties. */
 export const tableSources = [

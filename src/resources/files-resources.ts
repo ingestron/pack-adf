@@ -6,16 +6,16 @@ import {
   describeCopy,
   describePipeline,
   policyOf,
-} from "../design/design.js";
-import { resourceName } from "../factory/resource-names.js";
+} from "../design/index.js";
+import { resourceName } from "../factory/index.js";
 import {
   nativeFileService,
   nativeFileLocation,
   nativeFileParameters,
 } from "./native-file-resources.js";
-import { fileStores } from "../connection/file-sources.js";
+import { fileStores } from "../connection/index.js";
 import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
-import { parseLanding } from "../design/landing.js";
+import { parseLanding } from "../design/index.js";
 import { reference, type Shared } from "./resources.js";
 
 type Data = Record<string, unknown>;

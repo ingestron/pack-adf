@@ -4,7 +4,7 @@ import {
   secretField as secret,
   textField as text,
   type TableSource,
-} from "../connection/table-source.js";
+} from "../connection/index.js";
 const dynamicsFields = {
   url: text("serviceUri", "Dynamics organisation service URL."),
   client_id: text("servicePrincipalId", "Entra application ID."),

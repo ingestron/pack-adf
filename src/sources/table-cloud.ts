@@ -5,7 +5,7 @@ import {
   textField as text,
   portField,
   type TableSource,
-} from "../connection/table-source.js";
+} from "../connection/index.js";
 const mongoFields = {
   connection_string: secret(
     "connectionString",

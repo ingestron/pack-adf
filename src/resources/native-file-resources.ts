@@ -1,7 +1,7 @@
 // Additional native file stores use the same binary datasets and copy windows.
 import type { Connector } from "@ingestron/definitions";
-import { fileStores } from "../connection/file-sources.js";
-import { nativeValue } from "../connection/sql-auth.js";
+import { fileStores } from "../connection/index.js";
+import { nativeValue } from "../connection/index.js";
 import { reference, type Shared } from "./resources.js";
 import type { FilesGroup } from "./files-resources.js";
 

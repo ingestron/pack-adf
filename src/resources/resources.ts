@@ -1,12 +1,12 @@
 // ADF resources as data, in the JSON shape ADF keeps in Git:
 // { "name": …, "properties": { … } }.
-import { resourceName } from "../factory/resource-names.js";
+import { resourceName } from "../factory/index.js";
 import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
-import { parseLanding } from "../design/landing.js";
-import { landedFile } from "../design/layout.js";
-import { sqlTypes } from "../design/sql-types.js";
-import { sqlCredentials } from "../connection/sql-auth.js";
-import { query } from "../design/query.js";
+import { parseLanding } from "../design/index.js";
+import { landedFile } from "../design/index.js";
+import { sqlTypes } from "../design/index.js";
+import { sqlCredentials } from "../connection/index.js";
+import { query } from "../design/index.js";
 import {
   activity,
   additionalColumnsOf,
@@ -14,7 +14,7 @@ import {
   describeCopy,
   describePipeline,
   policyOf,
-} from "../design/design.js";
+} from "../design/index.js";
 
 type Data = Record<string, unknown>;
 

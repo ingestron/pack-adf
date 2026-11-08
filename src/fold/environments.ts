@@ -8,9 +8,9 @@ import {
   type EnvironmentsProblem,
   type TargetDifference,
 } from "@ingestron/definitions";
-import { addedSecretParameters } from "../factory/added-secrets.js";
+import { addedSecretParameters } from "../factory/index.js";
 import { valueAt } from "./arm-export.js";
-import { build } from "../output/build.js";
+import { build } from "../output/index.js";
 import { countProblems, landingProblems, namedProblems } from "./fold-checks.js";
 import { definitionFor } from "./fold-definition.js";
 import { fileProblems, type Renders } from "./fold-files-compare.js";

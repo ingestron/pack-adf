@@ -4,7 +4,7 @@ import {
   secretField as secret,
   textField as text,
   type TableSource,
-} from "../connection/table-source.js";
+} from "../connection/index.js";
 const client = {
   client_id: text("clientId", "OAuth application ID."),
   client_secret: secret("clientSecret", "Key Vault secret holding the OAuth application secret."),

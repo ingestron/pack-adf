@@ -1,8 +1,8 @@
 // Connector-specific Copy activity fields, kept separate from common pipeline assembly.
-import { additionalColumnsOf, auditMappings } from "../design/design.js";
+import { additionalColumnsOf, auditMappings } from "../design/index.js";
 import type { ResolvedTable } from "@ingestron/definitions";
 import { reference } from "./resources.js";
-import type { TableSource } from "../connection/table-source.js";
+import type { TableSource } from "../connection/index.js";
 type Data = Record<string, unknown>;
 /** Native source settings from validated, explicitly named definition options. */
 export function nativeSource(table: ResolvedTable, source: TableSource): Data {

@@ -1,10 +1,10 @@
 // Infrastructure requests name prerequisites without attempting to provision them.
 import type { RequestSection, ResolvedModel } from "@ingestron/definitions";
-import { connectors } from "../methods/connectors.js";
-import { afterCopyOf, timeoutSeconds } from "../design/after-copy-settings.js";
-import { addedSecretLines } from "../factory/added-secrets.js";
-import { credentialLines } from "../factory/credentials.js";
-import { runtimeLines } from "../factory/runtime-request.js";
+import { connectors } from "../methods/index.js";
+import { afterCopyOf, timeoutSeconds } from "../design/index.js";
+import { addedSecretLines } from "../factory/index.js";
+import { credentialLines } from "../factory/index.js";
+import { runtimeLines } from "../factory/index.js";
 /** Shared ADF infrastructure, source-specific access and values to supply, for the platform request. */
 export function prerequisites(
   model: ResolvedModel,

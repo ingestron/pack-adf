@@ -1,9 +1,9 @@
 // The sources this pack reads, described for the documentation site.
-import { nativeFileConnectors } from "../resources/native-file-resources.js";
+import { nativeFileConnectors } from "../resources/index.js";
 import { tableConnectors } from "./table-method.js";
-import { identityExample, sqlAuthentication } from "../connection/sql-auth.js";
-import { sqlTypes } from "../design/sql-types.js";
-import { finds } from "../connection/table-source.js";
+import { identityExample, sqlAuthentication } from "../connection/index.js";
+import { sqlTypes } from "../design/index.js";
+import { finds } from "../connection/index.js";
 import type { Connector } from "@ingestron/definitions";
 
 const sqlSettings: Connector["settings"] = [

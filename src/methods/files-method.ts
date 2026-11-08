@@ -1,14 +1,14 @@
 // The adf-files method: a Data Factory copy that moves files from a share the
 // data platform cannot reach into a landing folder as they are, so the
 // platform reads them with their own format.
-import { needsVault } from "../connection/vault.js";
-import { webRequestSettings, httpOptionProblems } from "../connection/web-options.js";
-import { fileStores } from "../connection/file-sources.js";
-import { connectionProblems } from "../connection/connection-check.js";
-import { filesOutput } from "../design/landing-output.js";
+import { needsVault } from "../connection/index.js";
+import { webRequestSettings, httpOptionProblems } from "../connection/index.js";
+import { fileStores } from "../connection/index.js";
+import { connectionProblems } from "../connection/index.js";
+import { filesOutput } from "../design/index.js";
 import type { Method, ResolvedTable } from "@ingestron/definitions";
 import { credentialProblems, placement, windowSettings } from "./method.js";
-import { fileDesignSettings } from "../design/design-settings.js";
+import { fileDesignSettings } from "../design/index.js";
 
 /** Copies files from a share with Azure Data Factory into a landing folder. */
 export const adfFiles: Method = {

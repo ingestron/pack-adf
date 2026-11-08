@@ -9,12 +9,12 @@ import {
   annotationsOf,
   describePipeline,
   policyOf,
-} from "../design/design.js";
-import { defaultParallel } from "../design/design-settings.js";
-import { staticFile } from "../design/layout.js";
-import { selectOf, watermarkOf } from "../design/query.js";
+} from "../design/index.js";
+import { defaultParallel } from "../design/index.js";
+import { staticFile } from "../design/index.js";
+import { selectOf, watermarkOf } from "../design/index.js";
 import { reference, type CopyGroup, type Shared } from "./resources.js";
-import { sqlTypes } from "../design/sql-types.js";
+import { sqlTypes } from "../design/index.js";
 
 type Data = Record<string, unknown>;
 

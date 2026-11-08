@@ -2,7 +2,7 @@
 // trigger files the pack generates so the two always agree.
 import type { RequestSection, ResolvedModel } from "@ingestron/definitions";
 import { prerequisites } from "./prerequisites.js";
-import { build } from "../output/build.js";
+import { build } from "../output/index.js";
 
 interface Trigger {
   name: string;

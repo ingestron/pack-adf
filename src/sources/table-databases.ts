@@ -5,7 +5,7 @@ import {
   textField,
   portField,
   type TableSource,
-} from "../connection/table-source.js";
+} from "../connection/index.js";
 
 const oracleFields = { server: fields.server, user: fields.user, password: fields.password };
 const connectionString = secretField(

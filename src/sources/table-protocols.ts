@@ -1,6 +1,6 @@
 // Protocol sources that return tables through native ADF datasets.
-import { webFields } from "../connection/web-auth.js";
-import { databaseFields, textField as text, type TableSource } from "../connection/table-source.js";
+import { webFields } from "../connection/index.js";
+import { databaseFields, textField as text, type TableSource } from "../connection/index.js";
 
 /** Native ODBC and OData sources, with explicit basic authentication. */
 export const tableProtocols: TableSource[] = [

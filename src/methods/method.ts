@@ -2,14 +2,14 @@
 // data platform reads them, for sources the platform cannot reach.
 import type { Method, ResolvedTable } from "@ingestron/definitions";
 
-import { afterCopySchema } from "../design/after-copy-settings.js";
-import { designPlacement, designSettings, fileDesignSettings } from "../design/design-settings.js";
-import { resourceNamesSchema } from "../factory/resource-names.js";
-import { runtimeName, runtimeSchema } from "../factory/runtimes.js";
-import { sqlTypes } from "../design/sql-types.js";
-import { sqlConnectionProblems, nonEmpty } from "../connection/sql-auth.js";
-import { layoutProblems, tableOutput } from "../design/landing-output.js";
-import { datedPath } from "../design/layout.js";
+import { afterCopySchema } from "../design/index.js";
+import { designPlacement, designSettings, fileDesignSettings } from "../design/index.js";
+import { resourceNamesSchema } from "../factory/index.js";
+import { runtimeName, runtimeSchema } from "../factory/index.js";
+import { sqlTypes } from "../design/index.js";
+import { sqlConnectionProblems, nonEmpty } from "../connection/index.js";
+import { layoutProblems, tableOutput } from "../design/index.js";
+import { datedPath } from "../design/index.js";
 
 const abfss = "^abfss://[^@/]+@[^/]+\\.dfs\\.core\\.windows\\.net(/.*)?$";
 
