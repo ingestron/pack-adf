@@ -1,7 +1,7 @@
 // Landing paths ADF would misread, a flow's path over a standard's layout,
 // and after_copy's names, IDs and timeouts.
 import { describe, expect, it } from "vitest";
-import { pathProblems } from "../src/layout.js";
+import { pathProblems } from "../src/design/layout.js";
 import { base, generate, json } from "./erp.js";
 
 const errors = (changes: Record<string, string>) =>

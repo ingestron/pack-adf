@@ -1,0 +1,68 @@
+// Infrastructure requests name prerequisites without attempting to provision them.
+import type { RequestSection, ResolvedModel } from "@ingestron/definitions";
+import { connectors } from "../methods/connectors.js";
+import { afterCopyOf, timeoutSeconds } from "../design/after-copy-settings.js";
+import { addedSecretLines } from "../factory/added-secrets.js";
+import { credentialLines } from "../factory/credentials.js";
+import { runtimeLines } from "../factory/runtime-request.js";
+/** Shared ADF infrastructure, source-specific access and values to supply, for the platform request. */
+export function prerequisites(
+  model: ResolvedModel,
+  files: Readonly<Record<string, string>>,
+): RequestSection[] {
+  const { infrastructure, sources } = tableLines(model);
+  return [
+    {
+      title: "ADF prerequisites",
+      intro:
+        "Provision these before running the generated assets. Generation does not inspect Azure or validate source credentials.",
+      lines: [
+        ...runtimeLines(model),
+        ...credentialLines(model),
+        ...infrastructure,
+        ...jobLines(model),
+        ...addedSecretLines(files),
+        ...sources,
+      ],
+    },
+  ];
+}
+
+/** The shared infrastructure and each connection's source access, from the ADF tables. */
+function tableLines(model: ResolvedModel): { infrastructure: Set<string>; sources: Set<string> } {
+  const tables = model.tables.filter((table) => table.ingest?.pack === "adf");
+  const infrastructure = new Set<string>();
+  const sources = new Set<string>();
+  for (const table of tables) {
+    const ingest = table.ingest!;
+    if (ingest.settings.key_vault)
+      infrastructure.add(
+        `Key Vault \`${String(ingest.settings.key_vault)}\`, with the named secrets and factory identity access.`,
+      );
+    infrastructure.add(
+      `Landing \`${String(ingest.settings.landing)}\`, with write access for the factory identity; Microsoft 365 uses its configured application.`,
+    );
+    const connector = connectors.find((item) => item.id === ingest.connection.connector)!;
+    sources.add(
+      `Connection \`${ingest.connection.id}\`: source permissions and runtime prerequisites from [${connector.title}](${connector.docs}).`,
+    );
+    if ((ingest.settings.source_options as Record<string, unknown> | undefined)?.staging_sas)
+      infrastructure.add(
+        "Azure Blob staging storage with a SAS secret permitting source export, runtime reads and cleanup.",
+      );
+  }
+  return { infrastructure, sources };
+}
+
+/** The job after the copies: the factory's role on it, and its limits within after_copy.timeout. */
+function jobLines(model: ResolvedModel): string[] {
+  const afterCopy = afterCopyOf(model);
+  if (!afterCopy) return [];
+  const name = afterCopy.job.split("/").at(-1)!;
+  const total = timeoutSeconds(afterCopy.timeout) ?? 0;
+  return [
+    `The factory's managed identity needs the Container Apps Jobs Operator role on \`${name}\`, or a custom role with Microsoft.App/jobs/read, start/action, stop/execution/action and executions/read.`,
+    `Set \`${name}\`'s replica timeout to ${Math.floor(total / 2)} seconds and retry limit to 1, so a retried run ends within after_copy.timeout (${afterCopy.timeout}).`,
+    "When you turn after_copy on, set `start` to the next window: the new triggers run every window since `start`, each copying again and starting the job.",
+  ];
+}

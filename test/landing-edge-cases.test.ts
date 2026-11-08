@@ -1,7 +1,7 @@
 // Layouts that would lose data, collide, or produce invalid ADF output.
 import type { ResolvedModel } from "@ingestron/definitions";
 import { describe, expect, it } from "vitest";
-import { pathProblems } from "../src/layout.js";
+import { pathProblems } from "../src/design/layout.js";
 import { base, generate, landing } from "./erp.js";
 import { tableProject } from "./table-project.js";
 

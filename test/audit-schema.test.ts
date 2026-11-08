@@ -4,7 +4,7 @@
 import { memoryFiles } from "@ingestron/config";
 import { resolveDefinitions, type Pack } from "@ingestron/definitions";
 import { describe, expect, it } from "vitest";
-import { auditValues } from "../src/design-settings.js";
+import { auditValues } from "../src/design/design-settings.js";
 import { adf } from "../src/index.js";
 import { base } from "./erp.js";
 import { store } from "./store-pack.js";

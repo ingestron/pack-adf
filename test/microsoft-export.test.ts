@@ -2,7 +2,7 @@
 // environment's file sets is in the exported template, and the template with an
 // environment's parameters is what that environment's own factory exports to.
 import { describe, expect, it } from "vitest";
-import { suppliedTexts } from "../src/view.js";
+import { suppliedTexts } from "../src/fold/view.js";
 import { exportFixtures, ownTemplate } from "./export-fixtures.js";
 import { fold, parametersOf } from "./fold-helpers.js";
 import {

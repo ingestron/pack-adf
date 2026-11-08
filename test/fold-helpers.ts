@@ -8,7 +8,7 @@ import {
   type ResolvedModel,
 } from "@ingestron/definitions";
 import { adf } from "../src/index.js";
-import { factoryView, sameResource, suppliedTexts } from "../src/view.js";
+import { factoryView, sameResource, suppliedTexts } from "../src/fold/view.js";
 import { base, withAfterCopy } from "./erp.js";
 import { store } from "./store-pack.js";
 
