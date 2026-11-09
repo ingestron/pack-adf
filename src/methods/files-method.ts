@@ -9,6 +9,7 @@ import { filesOutput } from "../design/index.js";
 import type { Method, ResolvedTable } from "@ingestron/definitions";
 import { credentialProblems, placement, windowSettings } from "./method.js";
 import { fileDesignSettings } from "../design/index.js";
+import { filesIntent } from "./intent.js";
 
 /** Copies files from a share with Azure Data Factory into a landing folder. */
 export const adfFiles: Method = {
@@ -26,8 +27,9 @@ export const adfFiles: Method = {
     options: {},
     schema_hints: true,
     every: { frequency: "Hour", interval: 24 },
-    retries: 2,
   },
+  intentDefaults: { load: { mode: "files" } },
+  intent: filesIntent,
   settings: {
     type: "object",
     additionalProperties: false,

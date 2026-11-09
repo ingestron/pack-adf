@@ -2,5 +2,6 @@
 export { connectors } from "./connectors.js";
 export { contract } from "./contract.js";
 export { adfFiles } from "./files-method.js";
+export { intent } from "./intent.js";
 export { adfCopy } from "./method.js";
 export { adfTable, tableSources } from "./table-method.js";

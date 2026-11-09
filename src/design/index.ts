@@ -12,6 +12,7 @@ export {
   designSettings,
   fileDesignSettings,
 } from "./design-settings.js";
+export { intentAuditColumns } from "./intent-audit.js";
 export {
   activity,
   additionalColumnsOf,
@@ -21,6 +22,7 @@ export {
   describeCopy,
   describePipeline,
   policyOf,
+  withOperations,
 } from "./design.js";
 export { filesOutput, layoutProblems, samePathProblems, tableOutput } from "./landing-output.js";
 export { parseLanding } from "./landing.js";

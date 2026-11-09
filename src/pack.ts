@@ -10,9 +10,9 @@ import { connectors } from "./methods/index.js";
 import { build, copyGroups, filesGroups } from "./output/index.js";
 import { buildEnvironments } from "./fold/index.js";
 import { adfFiles } from "./methods/index.js";
-import { adfCopy } from "./methods/index.js";
+import { adfCopy, intent } from "./methods/index.js";
 import { request } from "./request/index.js";
-import { checkingAfterCopy } from "./design/index.js";
+import { checkingAfterCopy, intentAuditColumns, withOperations } from "./design/index.js";
 
 /**
  * The Azure Data Factory pack, version 2. Use it with a platform pack:
@@ -56,6 +56,8 @@ export const adf: Pack = {
   },
   connectors,
   platformFields: ["schedule.paused"],
+  platformSection: { type: "object", additionalProperties: false, properties: {} },
+  intent,
   contract,
   check: checkShared,
   build,
@@ -67,7 +69,9 @@ export const adf: Pack = {
  * Settings that become shared resources must agree: one Key Vault and one
  * landing storage per project, and one runtime and schedule per source database.
  */
-function checkShared(model: ResolvedModel): string[] {
+function checkShared(given: ResolvedModel): string[] {
+  // Tables that leave retries out take the standard's policy, so tables compare as built.
+  const model = withOperations(given);
   const tables = model.tables.filter((table) =>
     /^adf-(copy|files|table)$/.test(table.ingest?.method ?? ""),
   );
@@ -78,7 +82,7 @@ function checkShared(model: ResolvedModel): string[] {
     return [...problems, (error as Error).message];
   }
   for (const group of copyGroups(model)) {
-    const loop = differing(group.tables, (settings) => foreachKeys(settings));
+    const loop = differing(group.tables, (settings, table) => foreachKeys(settings, table));
     if (loop)
       problems.push(
         `the adf-copy tables of ${group.connection.id}.${group.database} share one ForEach, so pattern, parallel, activity and audit_columns must be the same; ${loop}`,
@@ -136,9 +140,15 @@ function annotationProblems(model: ResolvedModel): string[] {
 }
 
 /** The settings a ForEach's tables share: the pattern always, the rest under foreach. */
-function foreachKeys(settings: Record<string, unknown>): unknown[] {
+function foreachKeys(settings: Record<string, unknown>, table: ResolvedTable): unknown[] {
   if (settings.pattern !== "foreach") return [settings.pattern ?? "activities"];
-  return [settings.pattern, settings.parallel, settings.activity, settings.audit_columns];
+  return [
+    settings.pattern,
+    settings.parallel,
+    settings.activity,
+    settings.audit_columns,
+    intentAuditColumns(table),
+  ];
 }
 
 const shareKeys = ["integration_runtime", "runtime_kind", "every", "start", "retries", "paused"];
@@ -156,9 +166,9 @@ const groupKeys = [
 /** "<table> differs from <first>" for the first table whose values differ, else undefined. */
 function differing(
   tables: ResolvedTable[],
-  values: (settings: Record<string, unknown>) => unknown[],
+  values: (settings: Record<string, unknown>, table: ResolvedTable) => unknown[],
 ): string | undefined {
-  const key = (table: ResolvedTable) => JSON.stringify(values(table.ingest?.settings ?? {}));
+  const key = (table: ResolvedTable) => JSON.stringify(values(table.ingest?.settings ?? {}, table));
   const [first] = tables;
   const different = tables.find((table) => key(table) !== key(first!));
   return first && different && `${different.name} differs from ${first.name}`;

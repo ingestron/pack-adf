@@ -2,7 +2,8 @@
 import { transportProblems } from "../connection/index.js";
 import type { Connector, Method, ResolvedTable } from "@ingestron/definitions";
 import { layoutSettings, tablePlacement, windowSettings } from "./method.js";
-import { designSettings } from "../design/index.js";
+import { designSettings, intentAuditColumns } from "../design/index.js";
+import { tableIntent } from "./intent.js";
 import { nonEmpty } from "../connection/index.js";
 import { layoutProblems, tableOutput } from "../design/index.js";
 import { connectionProblems } from "../connection/index.js";
@@ -44,8 +45,9 @@ export const adfTable: Method = {
     format: "parquet",
     mode: "full",
     every: { frequency: "Hour", interval: 24 },
-    retries: 2,
   },
+  intentDefaults: { load: { mode: "full" } },
+  intent: tableIntent,
   settings: {
     type: "object",
     additionalProperties: false,
@@ -138,10 +140,11 @@ function checkTable(table: ResolvedTable): string[] {
 
 /** Audit columns are mapped by name; sources read by path or by ADF's own columns are refused. */
 function auditSupport(table: ResolvedTable, source: TableSource): string[] {
-  if (!table.ingest!.settings.audit_columns) return [];
   if (!source.hierarchical && source.id !== "microsoft-365") return [];
+  const why = `for ${source.title} yet: its columns are read by path, not by name`;
   return [
-    `audit_columns are not offered for ${source.title} yet: its columns are read by path, not by name`,
+    ...(table.ingest!.settings.audit_columns ? [`audit_columns are not offered ${why}`] : []),
+    ...(intentAuditColumns(table).length > 0 ? [`the layer's audit is not offered ${why}`] : []),
   ];
 }
 

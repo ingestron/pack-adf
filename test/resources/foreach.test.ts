@@ -19,7 +19,8 @@ const pipeline = (lines: string[], flow = twoTables()) => {
     "standard.yaml": standard(["pattern: foreach", ...lines]),
     "flow.yaml": flow,
   });
-  expect(result.diagnostics).toEqual([]);
+  // The mode settings are other names for intent, which the core says once.
+  expect(result.diagnostics.filter((item) => item.code !== "SETTING_MOVED")).toEqual([]);
   return { files, properties: json(files, "pipeline/pl_erp_erp.json").properties };
 };
 

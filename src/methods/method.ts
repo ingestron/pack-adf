@@ -10,6 +10,7 @@ import { sqlTypes } from "../design/index.js";
 import { sqlConnectionProblems, nonEmpty } from "../connection/index.js";
 import { layoutProblems, tableOutput } from "../design/index.js";
 import { datedPath } from "../design/index.js";
+import { copyAliases, copyIntent } from "./intent.js";
 
 const abfss = "^abfss://[^@/]+@[^/]+\\.dfs\\.core\\.windows\\.net(/.*)?$";
 
@@ -62,7 +63,8 @@ export const windowSettings = {
   retries: {
     type: "integer",
     minimum: 0,
-    description: "How often a failed window is tried again, five minutes apart.",
+    description:
+      "How often a failed window is tried again, five minutes apart. Default: the standard's `operations.retries.count`, else 2.",
   },
   after_copy: afterCopySchema,
   paused: {
@@ -139,9 +141,11 @@ export const adfCopy: Method = {
     runtime_kind: "self-hosted",
     mode: "full",
     every: { frequency: "Hour", interval: 24 },
-    retries: 2,
     encrypt: "mandatory",
   },
+  intentDefaults: { load: { mode: "full" } },
+  aliases: copyAliases,
+  intent: copyIntent,
   settings: {
     type: "object",
     additionalProperties: false,
