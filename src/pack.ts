@@ -20,6 +20,7 @@ import { checkingAfterCopy } from "./design/index.js";
  * @example
  * const result = loadDefinitions("definitions", { packs: [databricks, adf], environment: "dev" });
  * if (result.model) console.log(Object.keys(adf.build(result.model)));
+ * @public
  */
 export const adf: Pack = {
   id: "adf",
