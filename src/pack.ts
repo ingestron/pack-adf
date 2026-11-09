@@ -1,18 +1,18 @@
 // The pack: three methods, rules for private sources, and the build function.
-import { adfTable } from "./table-method.js";
-import { tableGroups } from "./table-resources.js";
-import { contract } from "./contract.js";
+import { adfTable } from "./methods/index.js";
+import { tableGroups } from "./output/index.js";
+import { contract } from "./methods/index.js";
 import type { Pack, ResolvedModel, ResolvedTable } from "@ingestron/definitions";
-import { parseLanding } from "./landing.js";
-import { samePathProblems } from "./landing-output.js";
-import { layoutOf } from "./layout.js";
-import { connectors } from "./connectors.js";
-import { build, copyGroups, filesGroups } from "./build.js";
-import { buildEnvironments } from "./environments.js";
-import { adfFiles } from "./files-method.js";
-import { adfCopy } from "./method.js";
-import { request } from "./request.js";
-import { checkingAfterCopy } from "./after-copy-settings.js";
+import { parseLanding } from "./design/index.js";
+import { samePathProblems } from "./design/index.js";
+import { layoutOf } from "./design/index.js";
+import { connectors } from "./methods/index.js";
+import { build, copyGroups, filesGroups } from "./output/index.js";
+import { buildEnvironments } from "./fold/index.js";
+import { adfFiles } from "./methods/index.js";
+import { adfCopy } from "./methods/index.js";
+import { request } from "./request/index.js";
+import { checkingAfterCopy } from "./design/index.js";
 
 /**
  * The Azure Data Factory pack, version 2. Use it with a platform pack:
@@ -20,6 +20,7 @@ import { checkingAfterCopy } from "./after-copy-settings.js";
  * @example
  * const result = loadDefinitions("definitions", { packs: [databricks, adf], environment: "dev" });
  * if (result.model) console.log(Object.keys(adf.build(result.model)));
+ * @public
  */
 export const adf: Pack = {
   id: "adf",

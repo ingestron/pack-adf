@@ -3,7 +3,7 @@
 // the pack enforces.
 import { methodReference, type FieldInfo } from "@ingestron/definitions";
 import { describe, expect, it } from "vitest";
-import { auditValues, defaultParallel, designSettings } from "../src/design-settings.js";
+import { auditValues, defaultParallel, designSettings } from "../src/design/design-settings.js";
 import { adf } from "../src/index.js";
 
 type Schema = Record<string, unknown>;
