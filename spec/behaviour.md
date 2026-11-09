@@ -249,14 +249,17 @@ The pack declares what it does with each intent path and value (section 11 of th
 definitions specification) in `intent`, and `intentCoverageGaps` is empty. A path
 or value it does not build is `not-yet` with the reason "Planned."
 
-ADF only lands files. The core judges `load.*` and `retention.landed_files` at the
-ingest step, and `history`, `sequence`, `rescued`, `storage.*`,
-`retention.time_travel`, `retention.log` and `quality.results` at the store step.
+ADF only lands files. The core judges `load.mode`, `load.cursor` and
+`retention.landed_files` at the ingest step, and `load.deletes`, `history`,
+`sequence`, `rescued`, `storage.*`, `retention.time_travel`, `retention.log` and
+`quality.results` at the store step.
 When a table ends at the landed files (`store: none`) the ingest step judges every
 path. The store-owned paths are therefore `not-applicable` with the reason "ADF only
 lands files; nothing keeps the table.": on a stored table the store's pack judges
-them, and on a table that ends at the files nothing keeps it. `load.deletes` is
-`elsewhere`: the store applies deletes to the table.
+them, and on a table that ends at the files nothing keeps it. The step that
+writes the table judges `load.deletes`: the store step on a stored table, and
+this pack on a table that ends at the landed files, where `load.deletes` is
+`not-yet` ("Planned."), so a delete condition there is reported.
 
 Used, all generally available (status checked 2026-11-09, sources in
 `references.md`):
@@ -270,6 +273,7 @@ Used, all generally available (status checked 2026-11-09, sources in
 | `audit: loaded_at`                                                                  | An additional column of `run.trigger_time`, only when the table ends at the landed files. Otherwise the store step writes the table and adds it, and ADF adds nothing. |
 | `operations.retries`                                                                | The tumbling window trigger's retry count. The wait stays five minutes.                                                                                                |
 | `operations.timeout`                                                                | The Copy activity's timeout.                                                                                                                                           |
+| `operations.schedule: project`                                                      | Tumbling window triggers from the methods' schedule settings, the same for every flow. `operations.schedule: flow` is `not-yet` ("Planned.").                          |
 
 `adf-copy` also leaves `load.mode: files` to `adf-files` and `adf-table` has no
 incremental load; `adf-files` copies files as they are, so it adds no columns. Each

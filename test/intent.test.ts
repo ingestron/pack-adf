@@ -1,6 +1,6 @@
 // Intent (spec/behaviour.md, section "Intent"): what the pack declares it applies, the
 // settings that are other names for intent, and the Platform section.
-import { intentCoverageGaps } from "@ingestron/definitions";
+import { intentCoverageGaps, intentUseOf } from "@ingestron/definitions";
 import { describe, expect, it } from "vitest";
 import { adf } from "../src/index.js";
 import { base } from "./erp.js";
@@ -25,6 +25,7 @@ describe("the pack's intent coverage", () => {
       "audit=loaded_at",
       "operations.retries",
       "operations.timeout",
+      "operations.schedule=project",
     ]) {
       const use = adf.intent?.[key];
       expect(use, key).toMatchObject({
@@ -32,6 +33,13 @@ describe("the pack's intent coverage", () => {
         status: { level: "ga", checked: "2026-11-09" },
       });
     }
+  });
+
+  it("plans a schedule per flow and deletes on the tables it ends at", () => {
+    const planned = { use: "not-yet", reason: "Planned." };
+    expect(intentUseOf(adf, "operations.schedule", "flow")).toEqual(planned);
+    expect(intentUseOf(adf, "load.deletes.when")).toEqual(planned);
+    expect(intentUseOf(adf, "load.deletes.mode", "soft")).toEqual(planned);
   });
 
   it("leaves what a store keeps to the store, and says so when nothing does", () => {

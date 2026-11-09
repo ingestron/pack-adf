@@ -38,8 +38,6 @@ const landsOnly: IntentUse = {
   reason: "ADF only lands files; nothing keeps the table.",
 };
 
-const storeKeeps: IntentUse = { use: "elsewhere", reason: "The store step keeps the table." };
-
 /** The paths the step that stores the table judges. */
 const storeOwned = (path: string) =>
   [
@@ -68,9 +66,9 @@ export const intent: Record<string, IntentUse> = {
     pages.incremental,
   ),
   "load.cursor": used("The watermark column of an incremental copy.", pages.incremental),
-  // The load mode judges deletes at the source; the store step applies them to the table.
-  "load.deletes.mode": storeKeeps,
-  "load.deletes.when": storeKeeps,
+  // The step that writes the table judges deletes: a store step of its own pack, or this
+  // pack on a table that ends at the landed files, which applies none yet.
+  "load.deletes": notYet,
   "audit=run_id": used("An additional column of @pipeline().RunId.", pages.variables),
   "audit=window_start": used(
     "An additional column of the tumbling window's start.",
@@ -89,6 +87,11 @@ export const intent: Record<string, IntentUse> = {
     pages.tumbling,
   ),
   "operations.timeout": used("The Copy activity's timeout.", pages.policy),
+  "operations.schedule=project": used(
+    "Tumbling window triggers from the methods' schedule settings, the same for every flow.",
+    pages.tumbling,
+  ),
+  "operations.schedule=flow": notYet,
 };
 
 /** What differs for `adf-copy`, which reads a table, not files. */
