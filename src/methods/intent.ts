@@ -38,6 +38,23 @@ const landsOnly: IntentUse = {
   reason: "ADF only lands files; nothing keeps the table.",
 };
 
+/**
+ * The checking and cleansing paths. ADF lands the files as the source gives them, so on a
+ * table that ends at the landed files nothing checks or cleanses them (the core says so with
+ * `NOT_APPLIED`), and on a stored table the store step's pack does.
+ */
+const landedAsGiven: IntentUse = {
+  use: "not-applicable",
+  reason:
+    "The files are landed as the source gives them; check and cleanse them in the table that reads them.",
+};
+
+/** The paths that check or cleanse the rows of a kept table; `quality.results` is store-owned. */
+const checkedOrCleansed = (path: string) =>
+  (path.startsWith("quality.") && path !== "quality.results") ||
+  path.startsWith("cleanse.") ||
+  path === "deduplicate";
+
 /** The paths the step that stores the table judges. */
 const storeOwned = (path: string) =>
   [
@@ -52,7 +69,10 @@ const storeOwned = (path: string) =>
 /** Every path and value as planned, so each takes the entry below it, if any. */
 function planned(): Record<string, IntentUse> {
   return Object.fromEntries(
-    Object.keys(intentPaths).map((path) => [path, storeOwned(path) ? landsOnly : notYet]),
+    Object.keys(intentPaths).map((path) => [
+      path,
+      checkedOrCleansed(path) ? landedAsGiven : storeOwned(path) ? landsOnly : notYet,
+    ]),
   );
 }
 

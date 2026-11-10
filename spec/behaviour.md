@@ -261,6 +261,17 @@ writes the table judges `load.deletes`: the store step on a stored table, and
 this pack on a table that ends at the landed files, where `load.deletes` is
 `not-yet` ("Planned."), so a delete condition there is reported.
 
+The checking and cleansing paths (`quality.rules`, `quality.actions`,
+`quality.table-checks`, `quality.quarantine`, `cleanse.trim`, `cleanse.empty`,
+`cleanse.map`, `cleanse.case`, `cleanse.default`, `cleanse.timezone` and
+`deduplicate`) are `not-applicable` with the reason "The files are landed as the
+source gives them; check and cleanse them in the table that reads them." The pack
+copies the files as the source gives them and checks and cleanses nothing. On a
+stored table the store step's pack does this work, and on a table that ends at the
+landed files the core reports each check with `NOT_APPLIED` and the hint to add a
+store step. `quality.results` stays with the store-owned paths above: ADF keeps no
+results because nothing keeps the table.
+
 Used, all generally available (status checked 2026-11-09, sources in
 `references.md`):
 

@@ -60,6 +60,34 @@ describe("the pack's intent coverage", () => {
   });
 });
 
+describe("checking and cleansing", () => {
+  it("leaves them to the table that reads the landed files", () => {
+    const reason =
+      "The files are landed as the source gives them; check and cleanse them in the table that reads them.";
+    const checks: [string, string?][] = [
+      ["quality.rules", "notNull"],
+      ["quality.rules", "pattern"],
+      ["quality.actions", "warn"],
+      ["quality.actions", "drop"],
+      ["quality.actions", "fail"],
+      ["quality.table-checks", "true"],
+      ["quality.quarantine", "true"],
+      ["cleanse.trim", "true"],
+      ["cleanse.empty", "true"],
+      ["cleanse.map", "true"],
+      ["cleanse.case", "true"],
+      ["cleanse.default", "true"],
+      ["cleanse.timezone", "true"],
+      ["deduplicate", "true"],
+    ];
+    for (const [path, value] of checks)
+      expect(intentUseOf(adf, path, value), `${path}=${value}`).toEqual({
+        use: "not-applicable",
+        reason,
+      });
+  });
+});
+
 describe("load intent and the mode settings", () => {
   it("builds the same pipeline from load intent as from the settings", () => {
     const fromSettings = generate({
