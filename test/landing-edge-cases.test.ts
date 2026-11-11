@@ -19,6 +19,13 @@ const withCopies = (contract: string) =>
     "schema:\n",
     "schema:\n  - name: copies\n    logicalType: object\n    properties:\n      - { name: invoice_id, logicalType: integer }\n",
   );
+const moved = [
+  { code: "SETTING_MOVED", message: '"mode" is now written as intent: load.mode: incremental.' },
+  {
+    code: "SETTING_MOVED",
+    message: '"watermark_column" is now written as intent: load.cursor: modified_at.',
+  },
+];
 const problems = (changes: Record<string, string>) =>
   generate(changes).result.diagnostics.map(({ code, message }) => ({ code, message }));
 const lost =
@@ -63,6 +70,7 @@ describe("loads that hold only the window's changes", () => {
       `${incremental}      every: { frequency: Hour, interval: 1 }\n      path: "{object}/{object}_{yyyy}{MM}{dd}.parquet"\n`,
     );
     expect(problems({ "standard.yaml": standard })).toEqual([
+      ...moved,
       { code: "METHOD_CHECK", message: `"adf-copy" for table "invoices": ${lost}.` },
     ]);
   });

@@ -243,6 +243,101 @@ is set closer to the table than the `path` (in the flow, for example), the
 layout wins, the path is not used, and the table is not refused. A path with
 only `{object}` and `{connection}` is not refused by this rule.
 
+## Intent
+
+The pack declares what it does with each intent path and value (section 11 of the
+definitions specification) in `intent`, and `intentCoverageGaps` is empty. A path
+or value it does not build is `not-yet` with the reason "Planned.", except the
+`access` paths, which are `not-applicable` (Access, below).
+
+ADF only lands files. The core judges `load.mode`, `load.cursor` and
+`retention.landed_files` at the ingest step, and `load.deletes`, `history`,
+`sequence`, `rescued`, `storage.*`, `retention.time_travel`, `retention.log` and
+`quality.results` at the store step.
+When a table ends at the landed files (`store: none`) the ingest step judges every
+path. The store-owned paths are therefore `not-applicable` with the reason "ADF only
+lands files; nothing keeps the table.": on a stored table the store's pack judges
+them, and on a table that ends at the files nothing keeps it. The step that
+writes the table judges `load.deletes`: the store step on a stored table, and
+this pack on a table that ends at the landed files, where `load.deletes` is
+`not-yet` ("Planned."), so a delete condition there is reported.
+
+The checking and cleansing paths (`quality.rules`, `quality.actions`,
+`quality.table-checks`, `quality.quarantine`, `cleanse.trim`, `cleanse.empty`,
+`cleanse.map`, `cleanse.case`, `cleanse.default`, `cleanse.timezone` and
+`deduplicate`) are `not-applicable` with the reason "The files are landed as the
+source gives them; check and cleanse them in the table that reads them." The pack
+copies the files as the source gives them and checks and cleanses nothing. On a
+stored table the store step's pack does this work, and on a table that ends at the
+landed files the core reports each check with `NOT_APPLIED` and the hint to add a
+store step. `quality.results` stays with the store-owned paths above: ADF keeps no
+results because nothing keeps the table.
+
+Used, all generally available (status checked 2026-11-09, sources in
+`references.md`):
+
+| Intent                                                                              | What the pack does                                                                                                                                                     |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `load.mode: full`                                                                   | `adf-copy` and `adf-table` copy the whole selection each window.                                                                                                       |
+| `load.mode: files`                                                                  | `adf-files` copies the files changed in the window.                                                                                                                    |
+| `load.mode: incremental`, `load.cursor`                                             | `adf-copy` copies the rows past the watermark column in the window.                                                                                                    |
+| `audit: run_id`, `window_start`, `window_end`, `source_object`, `source_connection` | An additional column of the copy source: `run.id`, `run.window_start`, `run.window_end`, `source.object`, `source.connection`.                                         |
+| `audit: loaded_at`                                                                  | An additional column of `run.trigger_time`, only when the table ends at the landed files. Otherwise the store step writes the table and adds it, and ADF adds nothing. |
+| `operations.retries`                                                                | The tumbling window trigger's retry count. The wait stays five minutes.                                                                                                |
+| `operations.timeout`                                                                | The Copy activity's timeout.                                                                                                                                           |
+| `operations.schedule: project`                                                      | Tumbling window triggers from the methods' schedule settings, the same for every flow. `operations.schedule: flow` is `not-yet` ("Planned.").                          |
+
+`adf-copy` also leaves `load.mode: files` to `adf-files` and `adf-table` has no
+incremental load; `adf-files` copies files as they are, so it adds no columns. Each
+is `not-applicable` on that method.
+
+### Access
+
+ADF lands files and keeps no table, so it has no access to grant, mask or
+filter on a table. Storage access is set on the storage account, not in the
+pipelines. Every `access` path and value is `not-applicable` with the reason
+"Landed files are outside the tables; storage access is set on the storage
+account." on every method: `access.grants` (`read` and `write`),
+`access.exact`, `access.masks` (every mask) and `access.filters`. A role, an
+exact grant mode, a mask or a filter that reaches ADF is `NOT_APPLIED`, a
+warning, as for any other path. On a stored table the store step's pack
+judges access; on a table that ends at the landed files, where nothing keeps
+the table, the definitions package resolves none (definitions specification,
+section 8.2). The pack generates no grant, mask or filter, so its files are the
+ones it built before access existed.
+
+### Settings that are other names for intent
+
+On `adf-copy`, `mode` is `load.mode` (`full` or `incremental`) and `watermark_column`
+is `load.cursor`. The methods' intent defaults are `load.mode: full` for `adf-copy`
+and `adf-table`, and `load.mode: files` for `adf-files`. A setting written is
+`SETTING_MOVED`, as the core reports for every alias, and builds the same files as
+the intent.
+
+### Audit columns from the layer
+
+The audit values the table's intent names are added after the columns of
+`audit_columns`, each named by the intent's `as` (`_run_id` unless renamed), on
+`adf-copy` and `adf-table` and described in the landed output like any audit column.
+A column named in both `audit_columns` and the layer's audit is a method check
+problem: `the audit column "<as>" is named twice: in audit_columns and in the layer's
+audit`. The layer's audit gets the other checks of `audit_columns` (the name, a clash
+with the contract, case). Sources read by path refuse it, like `audit_columns`.
+Under `pattern: foreach` the tables of one pipeline must agree on it.
+
+### Operations
+
+`retries` and `activity.timeout` stay settings, and they win. When a table leaves
+them out, the pipeline takes `operations.retries.count` for `retries` (else 2, which is
+no longer a method default) and `operations.timeout` for `activity.timeout`,
+converted to minutes, rounded up and kept within the setting's 10 to 10080 minutes.
+Moving these two settings to intent, with `SETTING_MOVED`, is planned.
+
+### The Platform section
+
+The Platform's `adf` section is empty: `platformSection` has no properties, so `adf: {}`
+is valid and any key in it is `BAD_SETTING`.
+
 ## Starting a job after the copies
 
 `after_copy` is a platform setting of every ADF method, set under each method a

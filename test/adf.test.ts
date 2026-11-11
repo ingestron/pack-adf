@@ -138,6 +138,7 @@ describe("refusals", () => {
         (item) => item.message,
       ),
     ).toEqual([
+      '"mode" is now written as intent: load.mode: incremental.',
       '"adf-copy" for table "invoices": the connection\'s password must be ${secret:…}, the name of a Key Vault secret.',
       '"adf-copy" for table "invoices": incremental mode needs "watermark_column".',
     ]);

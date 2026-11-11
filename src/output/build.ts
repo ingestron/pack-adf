@@ -1,6 +1,6 @@
 // Turns the tables copied with adf-copy and adf-files into ADF resource files, path → JSON.
 import { afterCopy } from "../design/index.js";
-import { decorate } from "../design/index.js";
+import { decorate, withOperations } from "../design/index.js";
 import { foreachPipeline } from "../resources/index.js";
 import { resourceName } from "../factory/index.js";
 import { addCredentials } from "../factory/index.js";
@@ -33,7 +33,8 @@ import {
  * @example
  * const files = build(model); // { "pipeline/pl_erp_erp.json": "{…}", … }
  */
-export function build(model: ResolvedModel): Record<string, string> {
+export function build(given: ResolvedModel): Record<string, string> {
+  const model = withOperations(given);
   const copies = copyGroups(model);
   const shares = filesGroups(model);
   const native = tableGroups(model);

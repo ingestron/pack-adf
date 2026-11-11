@@ -2,6 +2,7 @@
 // table or a ForEach over the table list, the copy's retry policy, audit
 // columns added to the landed rows, and where the factory files them.
 import type { ResolvedTable } from "@ingestron/definitions";
+import { intentAuditColumns } from "./intent-audit.js";
 
 /** A value ADF fills in when it runs, its column type, and what it means. */
 export interface AuditValue {
@@ -183,7 +184,17 @@ export function designProblems(table: ResolvedTable): string[] {
   const contract = new Set(table.contract.columns.map((column) => column.name.toLowerCase()));
   for (const [name, value] of Object.entries(columns))
     problems.push(...auditProblems(name, value, contract));
-  problems.push(...caseProblems(Object.keys(columns)));
+  const fromIntent = intentAuditColumns(table);
+  for (const [name, value] of fromIntent) {
+    if (Object.hasOwn(columns, name))
+      problems.push(
+        `the audit column "${name}" is named twice: in audit_columns and in the layer's audit`,
+      );
+    else problems.push(...auditProblems(name, value, contract));
+  }
+  problems.push(
+    ...caseProblems([...new Set([...Object.keys(columns), ...fromIntent.map(([name]) => name)])]),
+  );
   return problems;
 }
 

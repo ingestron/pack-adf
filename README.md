@@ -334,6 +334,30 @@ factories unconnected to Git, as Microsoft recommends.
 3. Where the deployment creates a self-hosted runtime in a factory that had
    none, register a node with it before the copies run.
 
+## What changed in 2.3
+
+The pack reads the standard's intent: what a table keeps and how its data is
+loaded, such as `load.mode: incremental`, written once for every engine. A
+project that declares no intent gets the same files as with 2.2.
+
+- Two `adf-copy` settings are now other names for intent. They still work and
+  build the same files, but each is a `SETTING_MOVED` warning with the fix
+  `Write as intent`: `mode` is `load.mode` (`full` or `incremental`), and
+  `watermark_column` is `load.cursor`.
+- New output appears only where the project declares it:
+  - a layer's `audit` values: `run_id`, `window_start`, `window_end`,
+    `source_object` and `source_connection` are columns added to the copy
+    source after `audit_columns`, on `adf-copy` and `adf-table`; `loaded_at`
+    is added only when the table ends at the landed files. A column named in
+    both places is a problem;
+  - the standard's `operations`: a table that leaves out `retries` takes
+    `operations.retries.count`, and one that leaves out `activity.timeout`
+    takes `operations.timeout`, in minutes. Without them, `retries` is still
+    2; it is no longer a default of the method, and the setting's description
+    says so.
+- The Platform has an `adf` section, which takes no fields yet.
+- Needs `@ingestron/definitions` 1.13 or later.
+
 ## What changed in 2.0
 
 - One factory in `build/adf/` for every environment, in place of a factory

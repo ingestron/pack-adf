@@ -65,6 +65,37 @@ Accessed 2026-11-03:
   an official source. The documentation does not say whether `if` evaluates
   both branches, so a rerun must give `windowStart` and `windowEnd`.
 
+## Intent
+
+Accessed 2026-11-09. Each source gives the feature's release status: none of
+these pages marks the feature as a preview, so each is generally available.
+
+- **`load.mode` full and files** (`adf-copy`, `adf-table`, `adf-files`):
+  - [Copy activity overview](https://learn.microsoft.com/en-us/azure/data-factory/copy-activity-overview):
+    copies the source selection to the sink.
+  - [Incrementally copy data](https://learn.microsoft.com/en-us/azure/data-factory/tutorial-incremental-copy-overview):
+    "Loading new and changed files only by using LastModifiedDate" is the
+    file filter `adf-files` uses.
+- **`load.mode` incremental and `load.cursor`** (`adf-copy`): the same page,
+  "Delta data loading from database by using a watermark": a watermark is a
+  column with the last updated time stamp or an incrementing key, and the copy
+  loads the changed data between an old and a new watermark.
+- **`audit` run values**:
+  - [System variables](https://learn.microsoft.com/en-us/azure/data-factory/control-flow-system-variables):
+    `@pipeline().RunId` (the run's ID) and `@pipeline().TriggerTime` (when the
+    trigger actually fired), which `run_id` and `loaded_at` use.
+  - [Create tumbling window triggers](https://learn.microsoft.com/en-us/azure/data-factory/how-to-create-tumbling-window-trigger):
+    `@trigger().outputs.windowStartTime` and `windowEndTime`, passed to the
+    pipeline as parameters, which `window_start` and `window_end` use.
+  - [Copy activity overview, Add additional columns during copy](https://learn.microsoft.com/en-us/azure/data-factory/copy-activity-overview#add-additional-columns-during-copy):
+    a static value, which `source_object` and `source_connection` use.
+- **`operations.retries`**: the tumbling window page, `retryPolicy`: `count` is
+  an integer, default 0, and `intervalInSeconds` defaults to 30 with a minimum of 30. The pack sets the count from the policy and keeps the interval at 300.
+- **`operations.timeout`**:
+  [Pipelines and activities, Activity policy](https://learn.microsoft.com/en-us/azure/data-factory/concepts-pipelines-activities#activity-policy):
+  `timeout` of a Copy activity, with the 10 minute minimum noted under "Design
+  settings".
+
 ## Design settings
 
 Accessed 2026-11-03, against current Microsoft documentation. Each setting

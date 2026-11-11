@@ -24,3 +24,22 @@ it("resolves and builds a project with only the ADF pack", () => {
     ),
   ).toBe(true);
 });
+
+it("reports a delete condition on a table that ends at the landed files, which ADF judges", () => {
+  const standard = base["standard.yaml"]!.replace(
+    "packs: [store@1, adf@2]",
+    "packs: [adf@2]\nstore: { default: none }",
+  );
+  const flow = base["flow.yaml"]!.replace(
+    "contract: invoices",
+    "contract: invoices, load: { deletes: { when: \"op = 'D'\" } }",
+  );
+  expect(flow).toContain("deletes");
+  const result = resolveDefinitions(
+    memoryFiles({ ...base, "standard.yaml": standard, "flow.yaml": flow }),
+    { packs: [adf], environment: "dev" },
+  );
+  expect(result.diagnostics.map((item) => [item.code, item.message])).toEqual([
+    ["NOT_APPLIED", "load.deletes.when: op = 'D' isn't applied on adf: Planned."],
+  ]);
+});

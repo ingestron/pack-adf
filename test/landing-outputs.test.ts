@@ -18,6 +18,13 @@ function outputOf(changes: Record<string, string>) {
   return (result.model as ResolvedModel).tables[0]!.ingest!.output;
 }
 
+const moved = [
+  { code: "SETTING_MOVED", message: '"mode" is now written as intent: load.mode: incremental.' },
+  {
+    code: "SETTING_MOVED",
+    message: '"watermark_column" is now written as intent: load.cursor: modified_at.',
+  },
+];
 const problems = (changes: Record<string, string>) =>
   generate(changes).result.diagnostics.map(({ code, message }) => ({ code, message }));
 
@@ -79,13 +86,14 @@ describe("checks", () => {
 
   it("refuses incremental loads into one replaced file with nothing to merge them", () => {
     const standard = withSettings(endAtFiles(base["standard.yaml"]!), incremental);
-    expect(problems({ "standard.yaml": standard })).toEqual([]);
+    expect(problems({ "standard.yaml": standard })).toEqual(moved);
     expect(outputOf({ "standard.yaml": standard })?.loads).toBe("add");
     const snapshot = withSettings(
       endAtFiles(base["standard.yaml"]!),
       `${incremental}      layout: snapshot\n`,
     );
     expect(problems({ "standard.yaml": snapshot })).toEqual([
+      ...moved,
       { code: "METHOD_CHECK", message: `"adf-copy" for table "invoices": ${lost}.` },
     ]);
   });
@@ -96,6 +104,7 @@ describe("checks", () => {
       `${incremental}      path: "{object}/latest.parquet"\n`,
     );
     expect(problems({ "standard.yaml": standard })).toEqual([
+      ...moved,
       { code: "METHOD_CHECK", message: `"adf-copy" for table "invoices": ${lost}.` },
     ]);
   });

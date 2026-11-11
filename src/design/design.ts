@@ -1,7 +1,8 @@
 // The design settings applied to generated resources: the Copy activity's
 // policy and description, and the project's factory folder and annotations.
 import type { Column, ResolvedModel, ResolvedTable } from "@ingestron/definitions";
-import { auditValueOf } from "./design-settings.js";
+import { auditValueOf, designRanges } from "./design-settings.js";
+import { intentAuditColumns } from "./intent-audit.js";
 
 type Data = Record<string, unknown>;
 
@@ -10,6 +11,53 @@ export function timespan(minutes: number): string {
   const two = (value: number) => String(value).padStart(2, "0");
   const days = Math.floor(minutes / 1440);
   return `${days}.${two(Math.floor((minutes % 1440) / 60))}:${two(minutes % 60)}:00`;
+}
+
+/** How often a failed window is tried again when neither the settings nor the standard say. */
+export const defaultRetries = 2;
+
+/** Seconds in each unit of an operations duration. */
+const unitSeconds: Record<string, number> = { s: 1, m: 60, h: 3600, d: 86400 };
+
+/**
+ * An operations timeout (a whole number and `s`, `m`, `h` or `d`, such as `2h`) as the minutes
+ * of the Copy activity's timeout: rounded up, and within the limits of `activity.timeout`.
+ */
+export function timeoutMinutes(duration: string): number {
+  const seconds = Number(duration.slice(0, -1)) * unitSeconds[duration.slice(-1)]!;
+  const { minimum, maximum } = designRanges.timeout;
+  return Math.min(maximum, Math.max(minimum, Math.ceil(seconds / 60)));
+}
+
+/**
+ * The model with the standard's operations policy written into the settings of the ADF tables
+ * that leave them out: `retries` from `operations.retries.count` (else two), and
+ * `activity.timeout` from `operations.timeout`. The settings win over the policy.
+ */
+export function withOperations(model: ResolvedModel): ResolvedModel {
+  const { retries, timeout } = model.operations;
+  return {
+    ...model,
+    tables: model.tables.map((table) => {
+      if (table.ingest?.pack !== "adf") return table;
+      const settings = table.ingest.settings;
+      const activity = settings.activity as { timeout?: number } | undefined;
+      return {
+        ...table,
+        ingest: {
+          ...table.ingest,
+          settings: {
+            ...settings,
+            retries: settings.retries ?? retries?.count ?? defaultRetries,
+            ...(timeout !== undefined &&
+              activity?.timeout === undefined && {
+                activity: { ...activity, timeout: timeoutMinutes(timeout) },
+              }),
+          },
+        },
+      };
+    }),
+  };
 }
 
 /**
@@ -79,9 +127,12 @@ export function decorate(files: Record<string, string>, model: ResolvedModel): v
   }
 }
 
-/** The table's audit columns, name to value, in the order written. */
-function auditColumns(table: ResolvedTable): [string, string][] {
-  return Object.entries((table.ingest!.settings.audit_columns ?? {}) as Record<string, string>);
+/** The table's audit columns, name to value: `audit_columns` as written, then those of the intent. */
+export function auditColumns(table: ResolvedTable): [string, string][] {
+  return [
+    ...Object.entries((table.ingest!.settings.audit_columns ?? {}) as Record<string, string>),
+    ...intentAuditColumns(table),
+  ];
 }
 
 /**
