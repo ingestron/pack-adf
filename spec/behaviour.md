@@ -247,7 +247,8 @@ only `{object}` and `{connection}` is not refused by this rule.
 
 The pack declares what it does with each intent path and value (section 11 of the
 definitions specification) in `intent`, and `intentCoverageGaps` is empty. A path
-or value it does not build is `not-yet` with the reason "Planned."
+or value it does not build is `not-yet` with the reason "Planned.", except the
+`access` paths, which are `not-applicable` (Access, below).
 
 ADF only lands files. The core judges `load.mode`, `load.cursor` and
 `retention.landed_files` at the ingest step, and `load.deletes`, `history`,
@@ -289,6 +290,21 @@ Used, all generally available (status checked 2026-11-09, sources in
 `adf-copy` also leaves `load.mode: files` to `adf-files` and `adf-table` has no
 incremental load; `adf-files` copies files as they are, so it adds no columns. Each
 is `not-applicable` on that method.
+
+### Access
+
+ADF lands files and keeps no table, so it has no access to grant, mask or
+filter on a table. Storage access is set on the storage account, not in the
+pipelines. Every `access` path and value is `not-applicable` with the reason
+"Landed files are outside the tables; storage access is set on the storage
+account." on every method: `access.grants` (`read` and `write`),
+`access.exact`, `access.masks` (every mask) and `access.filters`. A role, an
+exact grant mode, a mask or a filter that reaches ADF is `NOT_APPLIED`, a
+warning, as for any other path. On a stored table the store step's pack
+judges access; on a table that ends at the landed files, where nothing keeps
+the table, the definitions package resolves none (definitions specification,
+section 8.2). The pack generates no grant, mask or filter, so its files are the
+ones it built before access existed.
 
 ### Settings that are other names for intent
 

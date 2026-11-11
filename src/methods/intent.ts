@@ -1,5 +1,6 @@
 // What the pack does with each intent path and value (definitions specification, section 11).
-// Every other path and value is planned: the mapping in spec/behaviour.md is the target.
+// Every other path and value is planned, except access, which does not apply: the mapping in
+// spec/behaviour.md is the target.
 import {
   intentPaths,
   type FeatureStatus,
@@ -49,6 +50,15 @@ const landedAsGiven: IntentUse = {
     "The files are landed as the source gives them; check and cleanse them in the table that reads them.",
 };
 
+/**
+ * ADF lands files and keeps no table; storage access is set on the storage account
+ * (spec/behaviour.md, "Access").
+ */
+const outsideTables: IntentUse = {
+  use: "not-applicable",
+  reason: "Landed files are outside the tables; storage access is set on the storage account.",
+};
+
 /** The paths that check or cleanse the rows of a kept table; `quality.results` is store-owned. */
 const checkedOrCleansed = (path: string) =>
   (path.startsWith("quality.") && path !== "quality.results") ||
@@ -71,7 +81,13 @@ function planned(): Record<string, IntentUse> {
   return Object.fromEntries(
     Object.keys(intentPaths).map((path) => [
       path,
-      checkedOrCleansed(path) ? landedAsGiven : storeOwned(path) ? landsOnly : notYet,
+      path.startsWith("access.")
+        ? outsideTables
+        : checkedOrCleansed(path)
+          ? landedAsGiven
+          : storeOwned(path)
+            ? landsOnly
+            : notYet,
     ]),
   );
 }

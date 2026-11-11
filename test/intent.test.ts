@@ -1,6 +1,6 @@
 // Intent (spec/behaviour.md, section "Intent"): what the pack declares it applies, the
 // settings that are other names for intent, and the Platform section.
-import { intentCoverageGaps, intentUseOf } from "@ingestron/definitions";
+import { intentCoverageGaps, intentUseOf, type Method } from "@ingestron/definitions";
 import { describe, expect, it } from "vitest";
 import { adf } from "../src/index.js";
 import { base } from "./erp.js";
@@ -57,6 +57,32 @@ describe("the pack's intent coverage", () => {
         use: "not-applicable",
         reason: "ADF only lands files; nothing keeps the table.",
       });
+  });
+});
+
+describe("access", () => {
+  it("leaves it to the storage account, on every method", () => {
+    const reason =
+      "Landed files are outside the tables; storage access is set on the storage account.";
+    const values: [string, string?][] = [
+      ["access.grants", "read"],
+      ["access.grants", "write"],
+      ["access.exact", "true"],
+      ["access.masks", "null"],
+      ["access.masks", "hash"],
+      ["access.masks", "redact"],
+      ["access.masks", "function"],
+      ["access.filters", "true"],
+    ];
+    for (const method of Object.values(adf.methods)) {
+      const coverage = { intent: { ...adf.intent, ...(method as Method).intent } };
+      expect(intentCoverageGaps(coverage)).toEqual([]);
+      for (const [path, value] of values)
+        expect(intentUseOf(coverage, path, value), `${path}=${value}`).toEqual({
+          use: "not-applicable",
+          reason,
+        });
+    }
   });
 });
 
