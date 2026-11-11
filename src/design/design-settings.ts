@@ -224,7 +224,7 @@ function auditProblems(name: string, value: string, contract: Set<string>): stri
   if (reserved.includes(name.toLowerCase()))
     problems.push(`audit column "${name}" is a name the packs that read the files use; rename it`);
   if (contract.has(name.toLowerCase()))
-    problems.push(`audit column "${name}" is a contract column; give it another name`);
+    problems.push(`audit column "${name}" is in the contract or the source metadata; rename it`);
   if (/^(run|source)\./i.test(value) && !auditValueOf(value))
     problems.push(`audit column "${name}" uses "${value}"; run and source values: ${known}`);
   else if (value.startsWith("@") || value.includes("@{"))

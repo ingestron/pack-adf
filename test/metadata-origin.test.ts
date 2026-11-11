@@ -96,4 +96,30 @@ describe("a table with no contract", () => {
     ]);
     expect(Object.keys(files).some((path) => path.startsWith("pipeline/"))).toBe(true);
   });
+
+  it("refuses an audit column named like one of the metadata's columns", () => {
+    const standard = base["standard.yaml"]!.replace(
+      "      start: 2026-10-01T00:00:00Z\n",
+      "      start: 2026-10-01T00:00:00Z\n      audit_columns: { AMOUNT: run.id }\n",
+    );
+    const { result } = generate({
+      ...withoutContract({ "standard.yaml": standard }),
+      "erp.metadata.yaml": metadata("erp.dbo.Invoices"),
+    });
+    expect(result.diagnostics.map((item) => item.message).join("\n")).toContain(
+      'audit column "AMOUNT" is in the contract or the source metadata; rename it',
+    );
+  });
+
+  it("refuses a column path for a column the metadata does not have", () => {
+    const project = tableProject("rest", "  url: https://source.example.test", "orders");
+    project["standard.yaml"] += '      source_options: { column_paths: { missing: "$.id" } }\n';
+    const { result } = generate({
+      ...withoutContract(project),
+      "erp.metadata.yaml": metadata("orders"),
+    });
+    expect(result.diagnostics.map((item) => item.message).join("\n")).toContain(
+      "column_paths.missing is not a column of the contract or the source metadata",
+    );
+  });
 });

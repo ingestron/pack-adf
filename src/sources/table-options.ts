@@ -184,7 +184,7 @@ function mappingProblems(table: ResolvedTable, options: Record<string, unknown>)
   const columns = new Set(table.contract.columns.map((column) => column.name));
   const problems = Object.keys((options.column_paths ?? {}) as object)
     .filter((key) => !columns.has(key))
-    .map((key) => `column_paths.${key} is not a contract column`);
+    .map((key) => `column_paths.${key} is not a column of the contract or the source metadata`);
   problems.push(...webRequestProblems(options));
   return problems;
 }
