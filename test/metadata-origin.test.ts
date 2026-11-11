@@ -107,7 +107,7 @@ describe("a table with no contract", () => {
       "erp.metadata.yaml": metadata("erp.dbo.Invoices"),
     });
     expect(result.diagnostics.map((item) => item.message).join("\n")).toContain(
-      'audit column "AMOUNT" is in the contract or the source metadata; rename it',
+      'audit column "AMOUNT" is a column of the source metadata; rename it',
     );
   });
 
@@ -119,7 +119,7 @@ describe("a table with no contract", () => {
       "erp.metadata.yaml": metadata("orders"),
     });
     expect(result.diagnostics.map((item) => item.message).join("\n")).toContain(
-      "column_paths.missing is not a column of the contract or the source metadata",
+      "column_paths.missing is not a column of the source metadata",
     );
   });
 });

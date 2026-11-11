@@ -43,9 +43,9 @@ describe("ADF design settings", () => {
     expect(messages(['audit_columns: { "1st": run.id }']).join("\n")).toContain("1st");
   });
 
-  it("refuses an audit column that is a column of the contract", () => {
+  it("refuses an audit column that is a contract column", () => {
     expect(messages(["audit_columns: { AMOUNT: run.id }"]).join("\n")).toContain(
-      'audit column "AMOUNT" is in the contract or the source metadata; rename it',
+      'audit column "AMOUNT" is a contract column',
     );
   });
 

@@ -2,6 +2,7 @@
 // table or a ForEach over the table list, the copy's retry policy, audit
 // columns added to the landed rows, and where the factory files them.
 import type { ResolvedTable } from "@ingestron/definitions";
+import { caseProblems, reserved } from "./audit-names.js";
 import { intentAuditColumns } from "./intent-audit.js";
 
 /** A value ADF fills in when it runs, its column type, and what it means. */
@@ -181,7 +182,13 @@ export function designProblems(table: ResolvedTable): string[] {
   if (settings.parallel !== undefined && settings.pattern !== "foreach")
     problems.push("parallel applies to pattern: foreach");
   const columns = (settings.audit_columns ?? {}) as Record<string, string>;
-  const contract = new Set(table.contract.columns.map((column) => column.name.toLowerCase()));
+  const contract = {
+    names: new Set(table.contract.columns.map((column) => column.name.toLowerCase())),
+    clash:
+      table.contract.origin === "metadata"
+        ? "is a column of the source metadata; rename it"
+        : "is a contract column; give it another name",
+  };
   for (const [name, value] of Object.entries(columns))
     problems.push(...auditProblems(name, value, contract));
   const fromIntent = intentAuditColumns(table);
@@ -198,24 +205,12 @@ export function designProblems(table: ResolvedTable): string[] {
   return problems;
 }
 
-/** Columns the packs that read the files add themselves (DuckDB's file name, Databricks' rescued data). */
-const reserved = ["_ingestron_file", "_rescued_data"];
-
-/** Audit columns whose names differ only by case: the engines compare names case-insensitively. */
-function caseProblems(names: string[]): string[] {
-  const seen = new Map<string, string>();
-  const problems: string[] = [];
-  for (const name of names) {
-    const earlier = seen.get(name.toLowerCase());
-    if (earlier)
-      problems.push(`audit columns "${earlier}" and "${name}" differ only by case; rename one`);
-    else seen.set(name.toLowerCase(), name);
-  }
-  return problems;
-}
-
 /** Problems with one audit column: its name, a clash with the contract, its value. */
-function auditProblems(name: string, value: string, contract: Set<string>): string[] {
+function auditProblems(
+  name: string,
+  value: string,
+  contract: { names: Set<string>; clash: string },
+): string[] {
   const problems: string[] = [];
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name))
     problems.push(
@@ -223,8 +218,8 @@ function auditProblems(name: string, value: string, contract: Set<string>): stri
     );
   if (reserved.includes(name.toLowerCase()))
     problems.push(`audit column "${name}" is a name the packs that read the files use; rename it`);
-  if (contract.has(name.toLowerCase()))
-    problems.push(`audit column "${name}" is in the contract or the source metadata; rename it`);
+  if (contract.names.has(name.toLowerCase()))
+    problems.push(`audit column "${name}" ${contract.clash}`);
   if (/^(run|source)\./i.test(value) && !auditValueOf(value))
     problems.push(`audit column "${name}" uses "${value}"; run and source values: ${known}`);
   else if (value.startsWith("@") || value.includes("@{"))
