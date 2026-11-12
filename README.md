@@ -12,7 +12,7 @@ packs: [databricks@2, adf@2]
 
 | Method      | Copies                                                                                         | From                                                                                            |
 | ----------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `adf-copy`  | Tables as Parquet: only the contract's columns, the whole table or only the window's changes   | The SQL Server family: SQL Server, Azure SQL Database and Managed Instance, Synapse, RDS        |
+| `adf-copy`  | Tables as Parquet: only the table's columns, the whole table or only the window's changes      | The SQL Server family: SQL Server, Azure SQL Database and Managed Instance, Synapse, RDS        |
 | `adf-table` | Whole tables as Parquet (JSON for Microsoft 365); the store decides whether to append or merge | ADF's other native connectors: databases, SAP, SaaS applications, exports and protocols         |
 | `adf-files` | Files as they are                                                                              | File shares, HTTP, FTP and SFTP, HDFS, and cloud file stores (Azure, Amazon S3, Google, Oracle) |
 

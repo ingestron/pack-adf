@@ -52,7 +52,7 @@ describe("generated ADF resources", () => {
     });
   });
 
-  it("copies only the contract's columns into a Parquet file per window", () => {
+  it("copies only the table's columns into a Parquet file per window", () => {
     const pipeline = json(generate().files, "pipeline/pl_erp_erp.json");
     const copy = pipeline.properties.activities[0];
     expect(copy.name).toBe("copy_invoices");

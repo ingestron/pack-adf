@@ -72,7 +72,7 @@ export const adfFiles: Method = {
       schema_hints: {
         type: "boolean",
         description:
-          "Pass the contract's column types to the reader, so CSV and JSON columns are typed.",
+          "Pass the table's column types to the reader, so CSV and JSON columns are typed.",
       },
       files: {
         type: "string",

@@ -51,7 +51,7 @@ describe("a table with no contract", () => {
       ...withoutContract(tableProject("postgresql", settings, "sales.orders")),
       "erp.metadata.yaml": metadata("sales.orders"),
     });
-    expect(result.model, JSON.stringify(result.diagnostics)).toBeDefined();
+    expect(result.diagnostics).toEqual([]);
     expect(result.model?.tables[0]?.contract).toMatchObject({
       id: "erp:sales.orders",
       origin: "metadata",
@@ -69,7 +69,7 @@ describe("a table with no contract", () => {
       ...withoutContract({}),
       "erp.metadata.yaml": metadata("erp.dbo.Invoices"),
     });
-    expect(result.model, JSON.stringify(result.diagnostics)).toBeDefined();
+    expect(result.diagnostics).toEqual([]);
     expect(result.model?.tables[0]?.contract.origin).toBe("metadata");
     expect(Object.values(files).join("\n")).toContain(
       "SELECT [invoice_id], [amount] FROM [dbo].[Invoices]",
@@ -89,12 +89,14 @@ describe("a table with no contract", () => {
       }),
       "erp.metadata.yaml": metadata("sales/orders"),
     });
-    expect(result.model, JSON.stringify(result.diagnostics)).toBeDefined();
+    expect(result.diagnostics).toEqual([]);
     expect(result.model?.tables[0]?.contract.columns.map((column) => column.name)).toEqual([
       "invoice_id",
       "amount",
     ]);
-    expect(Object.keys(files).some((path) => path.startsWith("pipeline/"))).toBe(true);
+    const activity = JSON.parse(files["pipeline/pl_erp_erp.json"]!).properties.activities[0];
+    expect(activity.description).toBe("Copies the files of sales/orders to landing as they are.");
+    expect(activity.typeProperties.source.type).toBe("BinarySource");
   });
 
   it("refuses an audit column named like one of the metadata's columns", () => {
@@ -120,6 +122,23 @@ describe("a table with no contract", () => {
     });
     expect(result.diagnostics.map((item) => item.message).join("\n")).toContain(
       "column_paths.missing is not a column of the source metadata",
+    );
+  });
+});
+
+describe("settings that name the table's columns", () => {
+  it("say the table's columns, since a table's columns can come from source metadata", () => {
+    const files = adf.methods["adf-files"]!.settings as {
+      properties: { schema_hints: { description: string } };
+    };
+    expect(files.properties.schema_hints.description).toBe(
+      "Pass the table's column types to the reader, so CSV and JSON columns are typed.",
+    );
+    const table = adf.methods["adf-table"]!.settings as {
+      properties: { source_options: { properties: { column_paths: { description: string } } } };
+    };
+    expect(table.properties.source_options.properties.column_paths.description).toContain(
+      "the table's column names mapped to native JSON paths",
     );
   });
 });
