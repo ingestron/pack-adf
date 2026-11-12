@@ -322,7 +322,7 @@ The audit values the table's intent names are added after the columns of
 A column named in both `audit_columns` and the layer's audit is a method check
 problem: `the audit column "<as>" is named twice: in audit_columns and in the layer's
 audit`. The layer's audit gets the other checks of `audit_columns` (the name, a clash
-with the contract, case). Sources read by path refuse it, like `audit_columns`.
+with the table's columns, case). Sources read by path refuse it, like `audit_columns`.
 Under `pattern: foreach` the tables of one pipeline must agree on it.
 
 ### Operations
