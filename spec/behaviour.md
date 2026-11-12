@@ -10,7 +10,7 @@ fields. No generated resource requires a manual configuration edit.
 `adf-copy` reads `sqlserver`, `azure-sql-database`,
 `azure-sql-managed-instance`, `azure-synapse` and `amazon-rds-sqlserver`.
 The flow object is `database.schema.table`, with three non-empty parts.
-The pack selects contract columns and renames physical source columns using
+The pack selects the table's columns and renames physical source columns using
 SQL Server quoting. Incremental mode uses the existing half-open window.
 
 Connection settings include `server`, and `authentication` (default `SQL`).
@@ -60,7 +60,7 @@ native-property mappings and required values. Secrets use Key Vault
 references. `object` supplies the native dataset's table/entity selectors;
 `query` optionally supplies a native read query only where the connector
 supports it. Unsupported incremental modes fail rather than copying a full
-snapshot silently. Copy column mappings preserve contract column names.
+snapshot silently. Copy column mappings preserve the table's column names.
 The downstream store decides whether snapshots append or merge.
 
 The method shares the existing landing, runtime, Key Vault and window
@@ -82,7 +82,7 @@ Relative paths reject traversal, backslashes and ADF expressions.
 
 Native source options are validated against each connector's allowlist. Open Hub
 exposes `exclude_last_request` (false for full snapshots); Web tables require a
-zero-based table index. Hierarchical sources use JSON paths for contract columns,
+zero-based table index. Hierarchical sources use JSON paths for the table's columns,
 with an optional collection reference for REST arrays. PostgreSQL and Greenplum
 fix SSL verification to the vendor's numeric value 5. Ports remain configurable.
 Snowflake and Databricks Delta exports require an Azure Blob SAS staging secret
