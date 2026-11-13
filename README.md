@@ -356,7 +356,7 @@ project that declares no intent gets the same files as with 2.2.
     2; it is no longer a default of the method, and the setting's description
     says so.
 - The Platform has an `adf` section, which takes no fields yet.
-- Needs `@ingestron/definitions` 1.13 or later.
+- Needs `@ingestron/definitions` 1.14 or later.
 
 ## What changed in 2.0
 
