@@ -70,7 +70,7 @@ export const sourceOptionsSchema: Method["settings"] = {
       type: "object",
       additionalProperties: text,
       description:
-        "Hierarchical source: contract column names mapped to native JSON paths. Root paths start with $; paths inside the selected array are relative.",
+        "Hierarchical source: the table's column names mapped to native JSON paths. Root paths start with $; paths inside the selected array are relative.",
     },
     ...webRequestSettings,
     pagination: {
