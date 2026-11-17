@@ -7,7 +7,9 @@ import { parseLanding } from "./design/index.js";
 import { samePathProblems } from "./design/index.js";
 import { layoutOf } from "./design/index.js";
 import { connectors } from "./methods/index.js";
-import { build, copyGroups, filesGroups } from "./output/index.js";
+import { build, connectionProblems, copyGroups, differing, filesGroups } from "./output/index.js";
+import { defaultTriggerProblems, expressionProblems } from "./output/index.js";
+import { checkBackfill, flowProblems } from "./triggers/index.js";
 import { buildEnvironments } from "./fold/index.js";
 import { adfFiles } from "./methods/index.js";
 import { adfCopy, intent } from "./methods/index.js";
@@ -63,6 +65,7 @@ export const adf: Pack = {
   build,
   buildEnvironments,
   request,
+  checkFirstWrites: checkBackfill,
 };
 
 /**
@@ -75,9 +78,12 @@ function checkShared(given: ResolvedModel): string[] {
   const tables = model.tables.filter((table) =>
     /^adf-(copy|files|table)$/.test(table.ingest?.method ?? ""),
   );
-  const problems = projectProblems(tables);
+  const problems = [...projectProblems(tables), ...flowProblems(model)];
   try {
+    problems.push(...connectionProblems(model), ...expressionProblems(model));
     build(model);
+    // After the build, which refuses names the default triggers could not have.
+    problems.push(...defaultTriggerProblems(model));
   } catch (error) {
     return [...problems, (error as Error).message];
   }
@@ -162,17 +168,6 @@ const groupKeys = [
   "retries",
   "paused",
 ];
-
-/** "<table> differs from <first>" for the first table whose values differ, else undefined. */
-function differing(
-  tables: ResolvedTable[],
-  values: (settings: Record<string, unknown>, table: ResolvedTable) => unknown[],
-): string | undefined {
-  const key = (table: ResolvedTable) => JSON.stringify(values(table.ingest?.settings ?? {}, table));
-  const [first] = tables;
-  const different = tables.find((table) => key(table) !== key(first!));
-  return first && different && `${different.name} differs from ${first.name}`;
-}
 
 function landingConflicts(tables: ResolvedTable[]): string[] {
   const seen = new Map<string, string>();

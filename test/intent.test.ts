@@ -35,9 +35,29 @@ describe("the pack's intent coverage", () => {
     }
   });
 
-  it("plans a schedule per flow and deletes on the tables it ends at", () => {
+  it("uses a schedule per flow, with the standard's retries and concurrency", () => {
+    const flow = intentUseOf(adf, "operations.schedule", "flow");
+    expect(flow).toMatchObject({ use: "used" });
+    expect(flow).toMatchObject({
+      status: {
+        source:
+          "https://learn.microsoft.com/en-us/azure/data-factory/how-to-create-schedule-trigger",
+        checked: "2026-11-15",
+      },
+    });
+    for (const key of ["operations.retries", "operations.concurrency"])
+      expect(adf.intent?.[key], key).toMatchObject({
+        use: "used",
+        does: expect.stringContaining("flow's tumbling windows"),
+        status: {
+          source:
+            "https://learn.microsoft.com/en-us/azure/data-factory/how-to-create-tumbling-window-trigger",
+        },
+      });
+  });
+
+  it("plans deletes on the tables it ends at", () => {
     const planned = { use: "not-yet", reason: "Planned." };
-    expect(intentUseOf(adf, "operations.schedule", "flow")).toEqual(planned);
     expect(intentUseOf(adf, "load.deletes.when")).toEqual(planned);
     expect(intentUseOf(adf, "load.deletes.mode", "soft")).toEqual(planned);
   });

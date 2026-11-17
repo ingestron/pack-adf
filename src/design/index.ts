@@ -27,5 +27,13 @@ export {
 export { filesOutput, layoutProblems, samePathProblems, tableOutput } from "./landing-output.js";
 export { parseLanding } from "./landing.js";
 export { datedPath, landedFile, layoutOf, staticFile } from "./layout.js";
-export { query, selectOf, watermarkOf } from "./query.js";
+export {
+  concatenated,
+  filterSegments,
+  literal,
+  plainValue,
+  renderFilter,
+  stamp,
+} from "./filter.js";
+export { isIncremental, query, selectOf, setsLoad, watermarkOf } from "./query.js";
 export { sqlTypes } from "./sql-types.js";

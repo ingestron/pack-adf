@@ -13,6 +13,7 @@ import {
   windowed,
   type Extension,
 } from "./layout.js";
+import { parameterNames } from "./path-parameters.js";
 
 /** The tabular methods' files: the extension follows the source (JSON for Microsoft 365). */
 export function extensionOf(table: ResolvedTable): Extension {
@@ -52,7 +53,7 @@ export function layoutProblems(table: ResolvedTable): string[] {
   const office = officeLayoutProblems(table);
   if (office.length > 0) return office;
   if (layoutOf(table) === "path") {
-    const problems = pathProblems(String(path), extensionOf(table));
+    const problems = pathProblems(String(path), extensionOf(table), parameterNames(table));
     if (problems.length > 0) return problems;
   }
   if (windowed(table) && replacesFile(table) && !table.store)

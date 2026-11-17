@@ -16,6 +16,7 @@ import {
 import { fileStores } from "../connection/index.js";
 import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
 import { parseLanding } from "../design/index.js";
+import { flowParameters } from "./flow-parameters.js";
 import { reference, type Shared } from "./resources.js";
 
 type Data = Record<string, unknown>;
@@ -109,7 +110,11 @@ export function filesPipeline(
     properties: {
       description: describePipeline(group.tables, "each with its own Copy activity"),
       activities: group.tables.map((table) => filesActivity(table, group, shared)),
-      parameters: { windowStart: { type: "string" }, windowEnd: { type: "string" } },
+      parameters: {
+        windowStart: { type: "string" },
+        windowEnd: { type: "string" },
+        ...flowParameters(group.tables),
+      },
       annotations: annotationsOf(model, group.tables),
     },
   };

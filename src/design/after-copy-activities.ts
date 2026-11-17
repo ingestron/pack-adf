@@ -12,23 +12,31 @@ const after = (activity: string, condition = "Succeeded") => ({
 });
 const expression = (value: string) => ({ value, type: "Expression" });
 
-/** The parent pipeline for one schedule's connection pipelines. */
+/** The parameters a parent pipeline takes, and passes to each pipeline it runs: the window. */
+const windowParameters: Data = { windowStart: { type: "string" }, windowEnd: { type: "string" } };
+
+/**
+ * The parent pipeline for one schedule's connection pipelines. It declares `parameters` and passes
+ * each to every pipeline it runs; by default the window, `windowStart` and `windowEnd`.
+ */
 export function parentPipeline(
   name: string,
   children: string[],
   job: { job: string; timeout: string },
+  parameters: Data = windowParameters,
 ): Data {
+  const passed = Object.keys(parameters);
   return {
     name,
     properties: {
       description: "Runs the schedule's copies, then the job after them, and waits for it.",
-      parameters: { windowStart: { type: "string" }, windowEnd: { type: "string" } },
+      parameters,
       variables: {
         execution: { type: "String" },
         job_status: { type: "String", defaultValue: "Running" },
       },
       activities: [
-        ...children.map(copyActivity),
+        ...children.map((child) => copyActivity(child, passed)),
         ...startActivities(job.job, children),
         waitActivity(job.job, job.timeout),
         checkActivity(),
@@ -47,17 +55,16 @@ export function runName(child: string): string {
   return `run_${child.slice(0, 44)}_${(hash >>> 0).toString(16).padStart(8, "0").slice(0, 6)}`;
 }
 
-function copyActivity(child: string): Data {
+function copyActivity(child: string, passed: string[]): Data {
   return {
     name: runName(child),
     type: "ExecutePipeline",
     typeProperties: {
       pipeline: { referenceName: child, type: "PipelineReference" },
       waitOnCompletion: true,
-      parameters: {
-        windowStart: "@pipeline().parameters.windowStart",
-        windowEnd: "@pipeline().parameters.windowEnd",
-      },
+      parameters: Object.fromEntries(
+        passed.map((parameter) => [parameter, `@pipeline().parameters.${parameter}`]),
+      ),
     },
   };
 }

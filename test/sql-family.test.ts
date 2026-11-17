@@ -1,3 +1,4 @@
+import { compactSql } from "./sql-text.js";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { adf } from "../src/index.js";
@@ -53,7 +54,7 @@ describe("SQL family native resources", () => {
         const source = json(files, "pipeline/pl_erp_erp.json").properties.activities[0]
           .typeProperties.source;
         expect(source.type).toBe(item.source);
-        expect(source.sqlReaderQuery).toContain("FROM [dbo].[Invoices]");
+        expect(compactSql(source.sqlReaderQuery)).toContain(compactSql("FROM [dbo].[Invoices]"));
         if (authentication === "ServicePrincipal") {
           expect(service.typeProperties.servicePrincipalCredential).toMatchObject({
             type: "AzureKeyVaultSecret",

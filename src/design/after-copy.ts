@@ -4,6 +4,7 @@
 // retry never copies the schedule again or starts the job twice.
 import type { ResolvedModel } from "@ingestron/definitions";
 import { parentPipeline } from "./after-copy-activities.js";
+import { flowParents, retryCopies, text } from "./after-copy-flows.js";
 import { afterCopyOf } from "./after-copy-settings.js";
 
 type Data = Record<string, unknown>;
@@ -20,12 +21,20 @@ interface Trigger {
   } & Data;
 }
 
-/** Replaces the connection pipelines' triggers with one parent pipeline and trigger per schedule. */
-export function afterCopy(files: Record<string, string>, model: ResolvedModel): void {
+/**
+ * Replaces the connection pipelines' triggers with one parent pipeline and trigger per schedule.
+ * A trigger a flow writes, named in `flowTriggers`, keeps its name and starts a parent of its own.
+ */
+export function afterCopy(
+  files: Record<string, string>,
+  model: ResolvedModel,
+  flowTriggers: ReadonlySet<string> = new Set(),
+): void {
   const job = afterCopyOf(model);
   if (!job) return;
+  flowParents(files, job, flowTriggers);
   // Started schedules first, then by start, so the plain name goes to the earliest started one.
-  const groups = [...scheduleGroups(files).values()].sort(
+  const groups = [...scheduleGroups(files, flowTriggers).values()].sort(
     (a, b) => Number(stopped(a[0]!)) - Number(stopped(b[0]!)) || startOf(a[0]!) - startOf(b[0]!),
   );
   const used = new Set<string>();
@@ -92,11 +101,15 @@ function stamp(time: number): string {
   return `${date}${clock}`;
 }
 
-/** Every trigger, removed from the files and grouped by its window settings and state. */
-function scheduleGroups(files: Record<string, string>): Map<string, Trigger[]> {
+/** Every default trigger, removed from the files and grouped by its window settings and state. */
+function scheduleGroups(
+  files: Record<string, string>,
+  flowTriggers: ReadonlySet<string>,
+): Map<string, Trigger[]> {
   const groups = new Map<string, Trigger[]>();
   for (const path of Object.keys(files).filter((key) => key.startsWith("trigger/"))) {
     const trigger = JSON.parse(files[path]!) as Trigger;
+    if (flowTriggers.has(trigger.name)) continue;
     // Retries move onto each pipeline's copies, so they do not split a schedule.
     const key = JSON.stringify([
       { ...trigger.properties.typeProperties, retryPolicy: undefined },
@@ -107,31 +120,6 @@ function scheduleGroups(files: Record<string, string>): Map<string, Trigger[]> {
   }
   return groups;
 }
-
-/** The trigger's retries move onto the connection pipeline's copies. */
-function retryCopies(
-  files: Record<string, string>,
-  child: string,
-  retry: { count: number; intervalInSeconds: number },
-): void {
-  const path = `pipeline/${child}.json`;
-  const pipeline = JSON.parse(files[path]!) as { properties: { activities: Data[] } };
-  // The team's own activity policy wins; Copy activities in a ForEach count too.
-  const nested = (item: Data) =>
-    item.type === "ForEach"
-      ? ((item.typeProperties as { activities: Data[] }).activities ?? [])
-      : [item];
-  for (const activity of pipeline.properties.activities.flatMap(nested))
-    if (activity.type === "Copy")
-      activity.policy = {
-        retry: retry.count,
-        retryIntervalInSeconds: retry.intervalInSeconds,
-        ...(activity.policy as Data | undefined),
-      };
-  files[path] = text(pipeline);
-}
-
-const text = (resource: unknown) => `${JSON.stringify(resource, null, "\t")}\n`;
 
 function parentTrigger(first: Trigger, name: string, pipeline: string): Trigger {
   const { pipelineReference } = first.properties.pipeline;
