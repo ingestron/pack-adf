@@ -58,7 +58,8 @@ describe("generated ADF resources", () => {
     expect(copy.name).toBe("copy_invoices");
     expect(copy.typeProperties.source).toEqual({
       type: "SqlSource",
-      sqlReaderQuery: "SELECT [invoice_id], [amount], [modified_at] FROM [dbo].[Invoices]",
+      sqlReaderQuery:
+        "SELECT\n  [invoice_id],\n  [amount],\n  [modified_at]\nFROM [dbo].[Invoices]",
     });
     expect(copy.typeProperties.sink).toEqual({
       type: "ParquetSink",
@@ -77,7 +78,7 @@ describe("generated ADF resources", () => {
       .properties.activities[0];
     expect(copy.typeProperties.source.sqlReaderQuery).toEqual({
       value:
-        "SELECT [invoice_id], [amount], [modified_at] FROM [dbo].[Invoices] WHERE [modified_at] >= '@{formatDateTime(pipeline().parameters.windowStart, 'yyyy-MM-dd HH:mm:ss')}' AND [modified_at] < '@{formatDateTime(pipeline().parameters.windowEnd, 'yyyy-MM-dd HH:mm:ss')}'",
+        "SELECT\n  [invoice_id],\n  [amount],\n  [modified_at]\nFROM [dbo].[Invoices]\nWHERE [modified_at] >= '@{formatDateTime(pipeline().parameters.windowStart, 'yyyy-MM-dd HH:mm:ss')}'\n  AND [modified_at] < '@{formatDateTime(pipeline().parameters.windowEnd, 'yyyy-MM-dd HH:mm:ss')}'",
       type: "Expression",
     });
   });

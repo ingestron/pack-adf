@@ -7,13 +7,15 @@ export {
   shareDataset,
   type FilesGroup,
 } from "./files-resources.js";
-export { foreachPipeline } from "./foreach.js";
+export { flowParameters, ownFlow } from "./flow-parameters.js";
+export { foreachPipeline, foreachQuery } from "./foreach.js";
 export { nativeFileConnectors } from "./native-file-resources.js";
 export {
   copyPipeline,
   keyVaultService,
   landingDataset,
   landingService,
+  paused,
   reference,
   sourceDataset,
   sqlServerService,

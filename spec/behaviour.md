@@ -188,10 +188,24 @@ incremental`, or a `source_options.date_filter_column`) always defaults to
 - A `path` pattern is relative to the landing folder, includes `{object}`, ends
   in a file name with the format's extension, and uses only the tokens
   `{object}`, `{connection}`, `{yyyy}`, `{MM}`, `{dd}`, `{HH}` (the window's
-  start) and `{run}` (the run id). It must not start with `/`, have an empty
+  start), `{run}` (the run id) and `{parameters.<name>}` (a parameter of the
+  flow). It must not start with `/`, have an empty
   folder name, use `.` or `..` as a folder, have a brace outside a `{token}`,
   or have a folder or file name that ADF reads as an expression (starting with
   `@`, or holding `@{`). Each problem is a method check problem.
+- `{parameters.<name>}` names a parameter the flow declares, or a built-in:
+  `windowStart` and `windowEnd`, and `load` when a trigger of the flow sets it.
+  Any other name is a method check problem, with the message
+  `{parameters.<name>} names no parameter of the flow.` It is written into the
+  sink path as an expression over `pipeline().parameters.<name>`, by the parameter's type, and is a `*` in
+  the reported location, like the date tokens. A `date` is
+  `formatDateTime(…, 'yyyy-MM-dd')`; a `datetime`, `windowStart` and
+  `windowEnd` are `formatDateTime(…, 'yyyy-MM-ddTHHmmss')`, with no colon;
+  an `int`, `float` or `bool` is `string(…)`; a `string` and `load` are
+  `replace(replace(replace(…, '/', '_'), '\', '_'), '..', '_')`, so a value
+  typed by hand cannot change the folder structure, and nothing is refused at
+  run time. Like the date tokens, it is a run-time token for the rule under
+  `pattern: foreach`, below.
 
 An object whose name starts with `@` or holds `@{` is a method check problem.
 
@@ -236,6 +250,14 @@ type. Any other text is landed as written. Text that starts with `run.` or
 `source.` in any case but is not one of those names is a method check problem,
 as is text that starts with `@` or holds `@{`, which ADF would read as an
 expression.
+
+`run.parameters.<name>` (in any case of `run.parameters`) is a further value:
+the pipeline's parameter `<name>`, as the expression
+`@pipeline().parameters.<name>`, in a column of type `string`. The name must be
+a parameter the flow declares, or `windowStart`, `windowEnd`, or `load` when a
+trigger of the flow sets it; otherwise it is a method check problem naming the
+audit column: `audit column "<column>" uses "<value>", which names no parameter
+of the flow`.
 
 Under `pattern: foreach`, a path with date or run tokens is a method check
 problem. It is refused only when the path is the layout in use: if a `layout`
@@ -283,9 +305,10 @@ Used, all generally available (status checked 2026-11-09, sources in
 | `load.mode: incremental`, `load.cursor`                                             | `adf-copy` copies the rows past the watermark column in the window.                                                                                                    |
 | `audit: run_id`, `window_start`, `window_end`, `source_object`, `source_connection` | An additional column of the copy source: `run.id`, `run.window_start`, `run.window_end`, `source.object`, `source.connection`.                                         |
 | `audit: loaded_at`                                                                  | An additional column of `run.trigger_time`, only when the table ends at the landed files. Otherwise the store step writes the table and adds it, and ADF adds nothing. |
-| `operations.retries`                                                                | The tumbling window trigger's retry count. The wait stays five minutes.                                                                                                |
+| `operations.retries`                                                                | The tumbling window trigger's retry count. The wait stays five minutes. On a flow's tumbling windows, the count and wait, unless the trigger writes its own.           |
+| `operations.concurrency`                                                            | On a flow's tumbling windows, `maxConcurrency`, unless the trigger writes its own.                                                                                     |
 | `operations.timeout`                                                                | The Copy activity's timeout.                                                                                                                                           |
-| `operations.schedule: project`                                                      | Tumbling window triggers from the methods' schedule settings, the same for every flow. `operations.schedule: flow` is `not-yet` ("Planned.").                          |
+| `operations.schedule: project`                                                      | Tumbling window triggers from the methods' schedule settings, the same for every flow. `operations.schedule: flow` is the flow's own triggers.                         |
 
 `adf-copy` also leaves `load.mode: files` to `adf-files` and `adf-table` has no
 incremental load; `adf-files` copies files as they are, so it adds no columns. Each
@@ -387,6 +410,275 @@ The parent:
 of `timeout`, in seconds) and retry limit (1); and, because new triggers run
 every window since `start`, to set `start` to the next window when turning
 `after_copy` on.
+
+## Triggers and parameters
+
+A flow may write `triggers` and `parameters` under its `ingest` (definitions
+specification, section 5.1). The tables of a flow that writes either leave
+the connection's pipeline and share a pipeline of their own; every other
+table keeps the pipeline it always had, so a project whose flows write
+neither generates the same files as before.
+
+- **Grouping.** `groupKey` gives `<connection>` for a table whose flow writes
+  neither, and `<connection>/<flow>` for one whose flow writes either; the
+  flow is the table's origin. The `adf-copy` groups add the source database
+  to the key, as before. Tables with one key share a pipeline, a trigger
+  and their annotations; the settings the pack requires a group to share
+  are checked for each group.
+- **Names.** The connection's pipeline and trigger are `pl_<project>_<connection>`
+  and `tr_<project>_<connection>`, with `_<database>` where `adf-copy` names it.
+  A flow's own are the same with `_<flow>` added at the end, and
+  `resource_names.pipeline` and `resource_names.trigger` replace them as
+  before. A name generated twice with different content is refused.
+- **Shared resources.** Groups of one connection (and database) share its linked
+  service, source dataset and export-only resources, which are written once.
+  The settings that feed them (`integration_runtime`, `runtime_kind`, and
+  `encrypt` for `adf-copy`, `staging_sas` for `adf-table`) must agree across all
+  the groups, whether or not a flow has a pipeline of its own; the check
+  names them as it does within one group. A repeat that differs from what was
+  written is refused as generated more than once, never settled by the first.
+- **Parameters.** A pipeline of a flow's own declares, after `windowStart` and
+  `windowEnd` (and `tables` under `pattern: foreach`):
+  - each parameter the flow declares, as `{ type, defaultValue }` with the ADF
+    type below and the declared `default`, escaped as a literal (below);
+  - `load`, `{ type: "String", defaultValue }`, only when a trigger of the
+    flow sets `load`; the default is `incremental` when any table of the
+    group has load mode `incremental`, else `full`.
+
+  | Ingestron                    | ADF      |
+  | ---------------------------- | -------- |
+  | `string`, `date`, `datetime` | `String` |
+  | `int`                        | `Int`    |
+  | `float`                      | `Float`  |
+  | `bool`                       | `Bool`   |
+
+  A pipeline without a flow of its own declares nothing more.
+
+- **Default trigger.** A pipeline whose flow writes parameters but no
+  triggers has the one tumbling window trigger the methods' settings describe,
+  as every other pipeline does.
+- **A flow's triggers.** A pipeline whose flow writes triggers has one ADF
+  trigger for each, in `trigger/` and instead of the default trigger. Each
+  passes the trigger's `parameters`: a literal as written, escaped as below,
+  and `{ expression }` as `{ "type": "Expression", "value": <expression> }`.
+  ADF evaluates a string that starts with `@`, and `@{…}` inside any string,
+  so a literal string, here and in a parameter's `defaultValue`, has a
+  leading `@` written `@@` and each `@{` written `@@{`, which ADF reads back
+  as the text written (`@home` is written `@@home`). Its
+  `runtimeState` is `Stopped` when the trigger writes `paused: true`, else as
+  for every trigger (see "Triggers" under the next section).
+  - A `schedule` trigger is a `ScheduleTrigger` with one `pipelines` entry, the
+    flow's pipeline and its parameters: first `windowStart` and `windowEnd`
+    (see "A schedule's window"), then the trigger's own. Its `recurrence` has
+    `frequency`, `interval`, `startTime`, `endTime` when written, `timeZone`
+    and, from `at`, a `schedule` of `weekDays`, `monthDays`,
+    `monthlyOccurrences` (`{ day, occurrence }`), `hours` and `minutes`.
+    `timeZone` is the Windows name of the trigger's zone (CLDR
+    `windowsZones`, `src/triggers/windows-zones.ts`). In `UTC`, times are
+    written `yyyy-MM-ddTHH:mm:ssZ`; in any other zone, as the zone's local
+    time `yyyy-MM-ddTHH:mm:ss`, converted from `start` and `end` as written
+    (with `Z` or an offset, an instant; without, already the zone's local time).
+  - A `tumbling-window` trigger is a `TumblingWindowTrigger` on the flow's
+    pipeline, passing `windowStart` and `windowEnd` from
+    `@trigger().outputs.windowStartTime` and `windowEndTime` before the
+    trigger's parameters. It has no `timeZone`: `startTime` and `endTime` are
+    converted to UTC. `delay`, a dependency's `size` and `offset` are written as
+    timespans, `[-][d.]hh:mm:ss`. `maxConcurrency` is the trigger's
+    `concurrency`, else the standard's `operations.concurrency.max_runs`, else 1.
+    `retryPolicy` is the trigger's `retries`, else the standard's
+    `operations.retries`, with the interval in seconds; else, as for the
+    default trigger, the method's `retries` (2 when none) every 300 seconds.
+    A dependency on itself (`self: true`, or its own `<flow>/<name>`) is a
+    `SelfDependencyTumblingWindowTriggerReference`; one on another trigger is a
+    `TumblingWindowTriggerDependencyReference` naming that trigger's generated
+    name. A dependency on a tumbling window this pack does not write, such as
+    another pack's in a project that uses both, is a check problem (see "What
+    ADF refuses"), and the trigger that depends on it is not written. It has the `annotations` `ingestron:flow-trigger`, which marks it as
+    one a flow writes, and `ingestron:backfill` too when the trigger writes
+    `backfill: true`. The default trigger has no annotations, so its file is
+    as it was before flows wrote triggers.
+- **Backfill.** ADF runs every window from a tumbling window's `startTime` to
+  now when the trigger is published. The pack's `checkFirstWrites` (definitions
+  specification, section 2.1) refuses such a file, as one problem for each,
+  when all of these hold:
+  - its path has a `trigger/` folder, wherever that is (the Synapse pack copies
+    these files under its own folders);
+  - it is a `TumblingWindowTrigger` with the `ingestron:flow-trigger`
+    annotation, and no `ingestron:backfill` one;
+  - its path is not in `generatedBefore`, the paths the output folder's
+    manifest lists. A first generation, which lists none, refuses it too, and
+    so does a rename: a change of frequency or interval names a new file;
+  - its `startTime` is before `now`, and at least one window has ended since:
+    a start less than one window ago leaves nothing to run again.
+
+  Default triggers are never checked, whatever their `start` and whether or not
+  the folder has a manifest: a project that writes no triggers must keep
+  generating as it did, and nothing there could confirm the start.
+
+  The message, with `<trigger>` the trigger's name, `<start>` its `startTime`
+  and `<n>` the number of windows that have ended between them (Minute and Hour
+  windows by their length; Month windows by calendar months in UTC, keeping to
+  the last day of a shorter month):
+
+  ```text
+  <trigger> is new and starts at <start>: ADF would run <n> past windows again. Move `start` to now or later, or write `backfill: true` on the trigger.
+  ```
+
+- **A schedule's window.** A schedule trigger passes the window a tumbling
+  window passes itself, from its `lookback` (a duration, written as minutes
+  and rounded up when it is not whole minutes). For a lookback of `2h`:
+
+  ```text
+  windowStart  @formatDateTime(addMinutes(trigger().scheduledTime, -120), 'yyyy-MM-ddTHH:mm:ssZ')
+  windowEnd    @trigger().scheduledTime
+  ```
+
+  With `load: full`, or no lookback, both are `@trigger().scheduledTime`, so
+  they record when the run happened. With `after_copy`, the schedule's
+  parent pipeline declares and passes both on to the flow's pipeline and the
+  job, so the copies and the job see the same window.
+
+- **The `load` switch.** When a trigger of the flow sets `load`, an
+  incremental table's source query becomes an expression that reads the
+  pipeline's `load` parameter: a full run selects every row, and any other
+  only those in the window. The select is written once, as the text of an
+  interpolated string (each `@{` in it written `@@{`), and only the WHERE part
+  switches, so a long select does not count twice towards ADF's limit on an
+  expression. Single quotes inside the branches are doubled.
+
+  ```text
+  <select>@{if(equals(pipeline().parameters.load,'full'), '', concat('\nWHERE <column> >= ''', <windowStart>, '''\n  AND <column> < ''', <windowEnd>, ''''))}
+  ```
+
+  `<windowStart>` and `<windowEnd>` are `formatDateTime` of the pipeline
+  parameter, as an unswitched query writes them. A full table's query never
+  reads `load`, and a table of a flow that sets no `load` keeps the query it
+  had. Under `pattern: foreach` the item's window filter is left out when
+  `load` is `full`. A further predicate, such as a filter, is added as
+  `WHERE (<predicate>)` on the full branch (`''` when there is none) and
+  after the window on the incremental one: `WHERE (<window>) AND (<predicate>)`.
+
+- **The source filter.** `adf-copy` filters source rows: a table's
+  `ingest.filter`, written in SQL Server's dialect, narrows the query as
+  `WHERE (<filter>\n)`, or `WHERE (<window>) AND (<filter>\n)` in an
+  incremental table, in every form of the query (plain, the `load` switch's
+  branches and `pattern: foreach`). The closing parenthesis is on a line of
+  its own, so a filter that ends in a `--` comment cannot comment it out.
+  Definitions refuses a filter whose parentheses do not balance, which
+  would escape the pack's. Each `{{ parameters.<name> }}` becomes a typed, escaped piece of an
+  ADF expression, never raw text, because a run started by hand can pass any
+  value:
+
+  | Parameter type | Rendered as                                                           |
+  | -------------- | --------------------------------------------------------------------- |
+  | `string`       | `'@{replace(pipeline().parameters.x, '''', '''''')}'`                 |
+  | `date`         | `'@{formatDateTime(pipeline().parameters.x, 'yyyy-MM-dd')}'`          |
+  | `datetime`     | `'@{formatDateTime(pipeline().parameters.x, 'yyyy-MM-dd HH:mm:ss')}'` |
+  | `int`, `float` | `(@{int(pipeline().parameters.x)})`, `(@{float(…)})`                  |
+  | `bool`         | `@{if(bool(pipeline().parameters.x), '1', '0')}`                      |
+
+  A string's single quotes are doubled. A number is in parentheses so a negative value cannot form a `--` comment. A
+  date or datetime is read by ADF, so a value that is not one fails the
+  expression instead of reaching the source. The built-in `windowStart` and
+  `windowEnd` render as datetimes, quoted as the window does, and `load`
+  renders as a string; neither needs declaring.
+
+  A reference stands in plain SQL code, which definitions enforces: never
+  inside `'…'`, `"…"`, `[…]` or a comment, because the pack's quotes would
+  then close the text early. To match part of a value, join it in code:
+  `name LIKE '%' + {{ parameters.p }} + '%'`, not `name LIKE '%{{ parameters.p }}%'`.
+
+  Under the `load` switch the filter narrows both branches. Under
+  `pattern: foreach` the query expression builds each table's filter itself,
+  for the item whose `table` names it (an expression inside an item's text is
+  never evaluated), so the filter does not depend on the item. The escaping
+  covers parameter values. A person who can start a run with a `tables` value
+  of their own can already change the source query, as before. Text outside
+  the references is the filter as written. A query with no filter is as it
+  was.
+
+  The pack refuses, as check problems: a `date` or `datetime` parameter whose
+  default, or whose literal value in a trigger, is not a real date and time
+  (the message names the parameter); and a filter that reads
+  `{{ parameters.load }}` when no trigger of the flow sets `load`, since the
+  pipeline then has no such parameter.
+
+  ADF allows at most 8,192 characters in one expression (see
+  `references.md`, "Expressions"). A query that reads parameters is one
+  expression, and grows with its columns and filter, and under
+  `pattern: foreach` with every filtered table of the group. The pack
+  refuses, as a check problem, a query longer than that, and a trigger's
+  expression longer than that:
+
+  ```text
+  The query of the table "<table>" is an ADF expression of <n> characters; ADF allows at most 8,192 characters in an expression. Shorten its filter, or copy fewer columns.
+  The trigger "<flow>/<name>" passes "<parameter>" an expression of <n> characters; ADF allows at most 8,192 characters in an expression.
+  ```
+
+  Under `pattern: foreach` the first names the group's tables:
+  `the tables "<a>", "<b>"`. `<n>` is written with thousands separated by
+  commas.
+
+- **Trigger names.** A schedule is `tr_<pipeline>_<name>` and a tumbling
+  window `tr_<pipeline>_<name>_<size>`, where `<pipeline>` is the flow
+  pipeline's name without `pl_`, and `<size>` is `m`, `h` or `mo` for
+  `Minute`, `Hour` or `Month` followed by the interval, such as
+  `tr_erp_erp_b_hourly_h1`. ADF cannot edit a published tumbling window's
+  frequency or interval, so changing either names a new trigger rather than
+  editing the old one.
+- **What ADF refuses.** Each is a pack check problem naming the trigger
+  (`"<flow>/<name>"`) and the limit, before anything is generated:
+  `at.weekdays` without `Week`; `at.month_days` or `at.occurrences` without
+  `Month`; an interval outside 1–1000; a tumbling window by `Day` or `Week`,
+  or under 5 minutes; `concurrency` outside 1–50; a retry interval under 30
+  seconds; more than five dependencies; a dependency on itself (either
+  form) without a negative offset; an `end` not after `start`; a zone with no
+  Windows name; and a second tumbling window on one flow's pipeline, which
+  would load each window twice. Two more are about the flow as a whole:
+
+  ```text
+  "<flow>/<name>" depends on "<flow>/<target>", which this pack does not generate; a tumbling window can depend only on another of this factory's tumbling windows.
+  The flow "<flow>" copies tables from more than one database and writes its own triggers; split it into one flow per database.
+  ```
+
+  The first is for a dependency on a tumbling window that no flow of this
+  pack writes (definitions only checks that the project has one). The second
+  is for a flow whose `adf-copy` tables are in more than one source database:
+  each database has a pipeline of its own, so each would carry a copy of the
+  flow's triggers, and a dependency on one of them could name only the
+  first. A flow that writes no triggers keeps one default trigger for each
+  pipeline, as before. The schema refuses an `interval` over 1000 and a
+  `concurrency` outside 1–50 where they are written; the pack keeps its own
+  checks for a value it takes from the standard. A tumbling window that writes no
+  `concurrency` or `retries` is held to the same limits for the values it
+  takes from the standard's `operations.concurrency.max_runs` and
+  `operations.retries`, and the message says where they came from.
+
+- **The standard's rules and the default trigger.** The default trigger is
+  judged as a tumbling window in UTC, from the method's `every`, `start` and
+  `retries`. A standard whose `operations.triggers.types` leaves out
+  `tumbling-window` gets:
+
+  ```text
+  The standard allows only <types> triggers. The default trigger "<name>" is a tumbling-window trigger; write the flow's own triggers, or ask for tumbling-window in the standard's `operations.triggers.types`.
+  ```
+
+  A run start outside the standard's `operations.triggers.hours` gets the
+  message definitions gives for a flow's trigger, with the default trigger's
+  name:
+
+  ```text
+  "<name>" starts a run at <HH:mm> (<zone>), outside the hours the standard allows here: <from>–<to>.
+  ```
+
+- **After the copies.** With `after_copy`, a trigger a flow writes keeps its
+  name, settings and dependencies, and starts a parent pipeline of its own,
+  `pl_<trigger name without tr_>`. The parent declares each parameter the
+  trigger passes, as the flow's pipeline declares it, runs the flow's pipeline
+  passing each on, then the job, as the next section describes. A tumbling
+  window's retries move onto the flow pipeline's Copy activities and its own
+  retry count becomes 0. The default triggers are grouped into parents as
+  before, without the flows' triggers.
 
 ## One factory for every environment
 
@@ -705,3 +997,11 @@ catalogue through it with no exceptions.
   are the pack's.
 - For some connectors it adds secure string parameters of its own (see
   "Secure strings the export adds").
+
+# Source query layout
+
+Generated SQL Server-family Copy queries use SELECT on its own line, one
+indented projected column per line, FROM on its own line, and, for incremental
+queries, WHERE and AND on separate lines. Quoting, expression substitutions
+and window predicates retain their existing semantics. The multiline string
+is JSON-escaped when embedded in a pipeline resource.

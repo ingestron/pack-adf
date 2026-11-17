@@ -4,9 +4,15 @@ import type { RequestSection, ResolvedModel } from "@ingestron/definitions";
 import { prerequisites } from "./prerequisites.js";
 import { build } from "../output/index.js";
 
+interface Every {
+  frequency: string;
+  interval: number;
+}
+
+/** A tumbling window gives its size in `typeProperties`, a schedule in its `recurrence`. */
 interface Trigger {
   name: string;
-  properties: { runtimeState: string; typeProperties: { frequency: string; interval: number } };
+  properties: { runtimeState: string; typeProperties: Every & { recurrence?: Every } };
 }
 
 /** The Data Factory section of the platform request: one line per trigger. */
@@ -20,7 +26,7 @@ export function request(model: ResolvedModel): RequestSection[] {
 }
 
 function line({ name, properties }: Trigger): string {
-  const { frequency, interval } = properties.typeProperties;
+  const { frequency, interval } = properties.typeProperties.recurrence ?? properties.typeProperties;
   const unit = frequency.toLowerCase();
   const every = interval === 1 ? unit : `${interval} ${unit}s`;
   const state = properties.runtimeState === "Started" ? "started" : "stopped";

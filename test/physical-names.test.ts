@@ -12,7 +12,7 @@ describe("physical names", () => {
     expect(result.diagnostics).toEqual([]);
     const pipeline = json(files, "pipeline/pl_erp_erp.json");
     expect(pipeline.properties.activities[0].typeProperties.source.sqlReaderQuery).toBe(
-      "SELECT [invoice_id], [amt] AS [amount], [modified_at] FROM [dbo].[Invoices]",
+      "SELECT\n  [invoice_id],\n  [amt] AS [amount],\n  [modified_at]\nFROM [dbo].[Invoices]",
     );
   });
 });

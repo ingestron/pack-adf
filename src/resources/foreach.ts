@@ -12,7 +12,9 @@ import {
 } from "../design/index.js";
 import { defaultParallel } from "../design/index.js";
 import { staticFile } from "../design/index.js";
-import { selectOf, watermarkOf } from "../design/index.js";
+import { selectOf, setsLoad, watermarkOf } from "../design/index.js";
+import { flowParameters } from "./flow-parameters.js";
+import { windowAndFilter } from "./foreach-filter.js";
 import { reference, type CopyGroup, type Shared } from "./resources.js";
 import { sqlTypes } from "../design/index.js";
 
@@ -21,10 +23,27 @@ type Data = Record<string, unknown>;
 const expression = (value: string) => ({ value, type: "Expression" });
 const at = (name: string) => `formatDateTime(pipeline().parameters.${name}, 'yyyy-MM-dd HH:mm:ss')`;
 
-/** The item's query, with the window filter when the item names a watermark column. */
-const queryExpression =
-  "@{item().query}@{if(empty(item().watermark), '', concat(' WHERE ', item().watermark, " +
-  `' >= ''', ${at("windowStart")}, ''' AND ', item().watermark, ' < ''', ${at("windowEnd")}, ''''))}`;
+/**
+ * The item's query, with the window filter when the item names a watermark column; a full run
+ * leaves it out, when a trigger of the flow sets `load`. A table's own filter follows. The
+ * select is the item's own text, so only the WHERE part is built here.
+ * @example foreachQuery(group.tables) // "@{item().query}@{if(empty(item().watermark), '', …)}"
+ */
+export function foreachQuery(tables: ResolvedTable[]): string {
+  return queryExpression(setsLoad(tables[0]!), tables);
+}
+
+const queryExpression = (load: boolean, tables: ResolvedTable[]) => {
+  const skip = load
+    ? "or(empty(item().watermark), equals(pipeline().parameters.load,'full'))"
+    : "empty(item().watermark)";
+  const filtered = windowAndFilter(tables, skip);
+  if (filtered) return `@{item().query}${filtered}`;
+  return (
+    `@{item().query}@{if(${skip}, '', concat(' WHERE ', item().watermark, ` +
+    `' >= ''', ${at("windowStart")}, ''' AND ', item().watermark, ' < ''', ${at("windowEnd")}, ''''))}`
+  );
+};
 
 /** The item's file, or a new file per run named by the window's start and the run. */
 const fileExpression =
@@ -78,6 +97,7 @@ export function foreachPipeline(
         windowStart: { type: "string" },
         windowEnd: { type: "string" },
         tables: { type: "array", defaultValue: group.tables.map(itemOf) },
+        ...flowParameters(group.tables),
       },
       annotations: annotationsOf(model, group.tables),
     },
@@ -104,7 +124,7 @@ function copyTable(group: CopyGroup, shared: Shared): Data {
       typeProperties: {
         source: {
           type: sqlTypes[group.connection.connector]!.source,
-          sqlReaderQuery: expression(queryExpression),
+          sqlReaderQuery: expression(foreachQuery(group.tables)),
           ...additionalColumnsOf(first, true),
         },
         sink: {

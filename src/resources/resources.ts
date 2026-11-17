@@ -5,6 +5,7 @@ import type { ResolvedModel, ResolvedTable } from "@ingestron/definitions";
 import { parseLanding } from "../design/index.js";
 import { landedFile } from "../design/index.js";
 import { sqlTypes } from "../design/index.js";
+import { flowParameters } from "./flow-parameters.js";
 import { sqlCredentials } from "../connection/index.js";
 import { query } from "../design/index.js";
 import {
@@ -127,7 +128,11 @@ export function copyPipeline(
   name: string,
 ): Data {
   const activities = group.tables.map((table) => copyActivity(table, group, shared));
-  const parameters = { windowStart: { type: "string" }, windowEnd: { type: "string" } };
+  const parameters = {
+    windowStart: { type: "string" },
+    windowEnd: { type: "string" },
+    ...flowParameters(group.tables),
+  };
   return {
     name,
     properties: {

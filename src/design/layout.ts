@@ -2,6 +2,7 @@
 // new file per run (increments), or a path pattern of the project's own.
 import type { ResolvedTable } from "@ingestron/definitions";
 import { parseLanding } from "./landing.js";
+import { parameterInPath, parameterPrefix } from "./path-parameters.js";
 
 /** How a table's files are laid out in the landing folder. */
 export type Layout = "snapshot" | "increments" | "path";
@@ -17,6 +18,8 @@ const windowTokens: Record<string, string[] | undefined> = {
 };
 const tokens = ["object", "connection", ...windowParts, "run"];
 const tokenPattern = /\{([^{}]*)\}/g;
+const slot = "\uE000";
+const slotPattern = new RegExp(`${slot}(\\d+)${slot}`, "g");
 
 /**
  * `path` when the table sets a path pattern; else its `layout`; else
@@ -66,13 +69,12 @@ export function landedFile(
 ): { folder: string; file: string } {
   const ingest = table.ingest!;
   const { path } = parseLanding(String(ingest.settings.landing));
-  const relative =
+  const parts =
     layoutOf(table) === "increments"
-      ? `${ingest.object}/${incrementName(extension)}`
-      : relativePath(table, extension, (part) => expressionOf(table, part));
-  const slash = relative.lastIndexOf("/");
-  const folder = [path, relative.slice(0, Math.max(slash, 0))].filter(Boolean).join("/");
-  return { folder, file: relative.slice(slash + 1) };
+      ? [...ingest.object.split("/"), incrementName(extension)]
+      : relativeParts(table, extension, (part) => expressionOf(table, part));
+  const folder = [path, ...parts.slice(0, -1)].filter(Boolean).join("/");
+  return { folder, file: parts.at(-1)! };
 }
 
 /**
@@ -81,10 +83,10 @@ export function landedFile(
  */
 export function landedLocation(table: ResolvedTable, extension: Extension): string {
   const landing = String(table.ingest!.settings.landing).replace(/\/+$/, "");
-  const relative = relativePath(table, extension, (part) =>
+  const relative = relativeParts(table, extension, (part) =>
     part === "object" || part === "connection" ? expressionOf(table, part) : "*",
   );
-  return `${landing}/${relative.replace(/\*+/g, "*")}`;
+  return `${landing}/${relative.join("/").replace(/\*+/g, "*")}`;
 }
 
 /**
@@ -105,22 +107,31 @@ export function replacesFile(table: ResolvedTable): boolean {
 }
 
 /**
- * Problems with a path pattern, as METHOD_CHECK messages.
+ * Problems with a path pattern, as METHOD_CHECK messages; `parameters` are the names a
+ * `{parameters.<name>}` token may give.
  * @example pathProblems("{object}/", "parquet") // ['the path pattern "{object}/" must end in a file name']
  */
-export function pathProblems(path: string, extension: Extension): string[] {
+export function pathProblems(
+  path: string,
+  extension: Extension,
+  parameters: string[] = [],
+): string[] {
   const quoted = `the path pattern "${path}"`;
   if (path.endsWith("/") || path.split("/").at(-1) === "")
     return [`${quoted} must end in a file name`];
   const misread = segmentProblems(quoted, path);
   if (misread.length > 0) return misread;
-  const unknown = [...path.matchAll(tokenPattern)]
-    .map((match) => match[1] ?? "")
-    .filter((name) => !tokens.includes(name))
+  const named = [...path.matchAll(tokenPattern)].map((match) => match[1] ?? "");
+  const byParameter = (name: string) => name.startsWith(parameterPrefix);
+  const unknown = named
+    .filter((name) => !tokens.includes(name) && !byParameter(name))
     .map((name) => `${quoted} uses an unknown token {${name}}; tokens: ${tokens.join(", ")}`);
+  const undeclared = named
+    .filter((name) => byParameter(name) && !parameters.includes(name.slice(parameterPrefix.length)))
+    .map((name) => `{${name}} names no parameter of the flow.`);
   const object = path.includes("{object}") ? [] : [`${quoted} must include {object}`];
   const suffix = path.endsWith(`.${extension}`) ? [] : [`${quoted} must end in .${extension}`];
-  return [...unknown, ...object, ...suffix];
+  return [...unknown, ...undeclared, ...object, ...suffix];
 }
 
 /** Folder and file names ADF would misread or refuse: problems naming `what`. */
@@ -147,23 +158,36 @@ export function expressionProblems(what: string, segments: string[]): string[] {
   return [];
 }
 
-/** The file's path under the landing folder, with each token replaced. */
-function relativePath(
+/**
+ * The file's path under the landing folder as its folders and file name, with each token replaced.
+ * A path pattern is split before its tokens are replaced, so a `/` inside an expression is not a split.
+ */
+function relativeParts(
   table: ResolvedTable,
   extension: Extension,
   replace: (token: string) => string,
-): string {
+): string[] {
   const object = table.ingest!.object;
   const layout = layoutOf(table);
-  if (layout === "snapshot") return `${object}/${object}.${extension}`;
-  if (layout === "increments") return `${object}/*.${extension}`;
-  return String(table.ingest!.settings.path).replace(tokenPattern, (_match, name: string) =>
-    replace(name),
+  if (layout === "snapshot") return `${object}/${object}.${extension}`.split("/");
+  if (layout === "increments") return `${object}/*.${extension}`.split("/");
+  // The object and connection may hold a `/`, which splits; a date, run or parameter token
+  // is an expression, kept whole behind a placeholder while the path is split.
+  const kept: string[] = [];
+  const text = String(table.ingest!.settings.path).replace(tokenPattern, (_match, name) =>
+    name === "object" || name === "connection"
+      ? replace(name)
+      : `${slot}${kept.push(replace(name)) - 1}${slot}`,
   );
+  return text
+    .split("/")
+    .map((part) => part.replace(slotPattern, (_match, at) => kept[Number(at)]!));
 }
 
-/** A token as ADF writes it: a literal, or an expression over the window or the run. */
+/** A token as ADF writes it: a literal, or an expression over the window, the run or a parameter. */
 function expressionOf(table: ResolvedTable, token: string): string {
+  if (token.startsWith(parameterPrefix))
+    return parameterInPath(table, token.slice(parameterPrefix.length));
   if (token === "object") return table.ingest!.object;
   if (token === "connection") return table.ingest!.connection.id;
   if (token === "run") return "@{pipeline().RunId}";
