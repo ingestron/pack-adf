@@ -71,9 +71,10 @@ describe("a table with no contract", () => {
     });
     expect(result.diagnostics).toEqual([]);
     expect(result.model?.tables[0]?.contract.origin).toBe("metadata");
-    expect(Object.values(files).join("\n")).toContain(
-      "SELECT [invoice_id], [amount] FROM [dbo].[Invoices]",
-    );
+    const pipeline = Object.entries(files).find(([path]) => path.startsWith("pipeline/"))!;
+    expect(
+      JSON.parse(pipeline[1]).properties.activities[0].typeProperties.source.sqlReaderQuery,
+    ).toBe("SELECT\n  [invoice_id],\n  [amount]\nFROM [dbo].[Invoices]");
   });
 
   it("copies files as they are, and builds", () => {

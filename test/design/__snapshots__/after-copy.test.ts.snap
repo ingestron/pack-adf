@@ -131,7 +131,7 @@ exports[`after_copy > generates as before without after_copy 1`] = `
 				"typeProperties": {
 					"source": {
 						"type": "SqlSource",
-						"sqlReaderQuery": "SELECT [invoice_id], [amount], [modified_at] FROM [dbo].[Invoices]"
+						"sqlReaderQuery": "SELECT\\n  [invoice_id],\\n  [amount],\\n  [modified_at]\\nFROM [dbo].[Invoices]"
 					},
 					"sink": {
 						"type": "ParquetSink",

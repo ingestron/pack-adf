@@ -435,3 +435,115 @@ Accessed 2026-11-05:
   `hive.server2.thrift.port` defaults to 10000 for Binary transport, and
   `hive.server2.thrift.http.port` to 10001 for HTTP. The catalogue's example
   uses 10000.
+
+## Triggers
+
+Accessed 2026-11-15. Each page applies to Azure Data Factory and Azure Synapse
+Analytics, and was last updated 2026-08-05:
+
+- [Create schedule triggers](https://learn.microsoft.com/en-us/azure/data-factory/how-to-create-schedule-trigger):
+  `ScheduleTrigger`, its `recurrence` (`frequency`, `interval` 1 to 1,000,
+  `startTime`, `endTime`, `timeZone`, `schedule`), the `pipelines` entries,
+  whose `parameters` is mandatory (`{}` when there are none), and the list of
+  `timeZone` values, which the page says is incomplete. Its JSON schema
+  writes a parameter's value either as a plain value,
+  `"<parameter 2 Name>" : "<parameter 2 Value>"`, or as
+  `"<parameter 1 Name>": { "type": "Expression", "value": "<parameter 1 Value>" }`;
+  the pack writes a literal the first way and an expression the second.
+- [Create tumbling window triggers](https://learn.microsoft.com/en-us/azure/data-factory/how-to-create-tumbling-window-trigger):
+  `TumblingWindowTrigger` with one `pipeline`, `delay` as `hh:mm:ss`,
+  `maxConcurrency` 1 to 50, `retryPolicy.intervalInSeconds` at least 30, a
+  minimum window of 5 minutes, no `timeZone`, and "After a tumbling window
+  trigger is published, the `interval` and `frequency` values can't be edited".
+- [Pipeline execution and triggers](https://learn.microsoft.com/en-us/azure/data-factory/concepts-pipeline-execution-triggers):
+  pipelines and triggers are many-to-many except for the tumbling window,
+  which starts one pipeline; the daylight-saving rule; the trigger type
+  comparison.
+- [Create tumbling window trigger dependencies](https://learn.microsoft.com/en-us/azure/data-factory/tumbling-window-trigger-dependency):
+  `TumblingWindowTriggerDependencyReference` with `referenceTrigger`,
+  `SelfDependencyTumblingWindowTriggerReference`, `size` and `offset` as
+  timespans, "A tumbling window trigger can depend on a maximum of five other
+  triggers", and "Self-dependency should always be a negative offset".
+- [System variables](https://learn.microsoft.com/en-us/azure/data-factory/control-flow-system-variables):
+  `@trigger().scheduledTime` and `@trigger().startTime` for both types, and
+  `@trigger().outputs.windowStartTime` and `windowEndTime` for a tumbling
+  window. Trigger date-times are UTC, in ISO 8601.
+
+Where the pages disagree, the pack takes this reading:
+
+- **Tumbling `endTime` is optional.** The tumbling window page's property table
+  marks it required, but its JSON outline and the dependency page mark it
+  optional, and their examples leave it out. The pack writes it only when the
+  trigger writes `end`. A schedule's `endTime`, which the schedule page's table
+  also marks required while calling it optional, is written the same way.
+- **Tumbling `frequency` is `Minute`, `Hour` or `Month`.** The JSON outlines say
+  `Minute/Hour`; the property table allows `Minute`, `Hour` and `Month`, and
+  describes "minutes, hours, or months". `Day` and `Week` are in neither, so a
+  tumbling window a flow writes by `Day` or `Week` is refused, with 24 or 168
+  hours suggested. The default trigger keeps every frequency it accepted
+  before, so existing output does not change.
+- **`hours` are 0–23 and `minutes` 0–59.** The schedule page's outline says
+  `0-23` and `0-59`; the concepts page's outline says `0-24` and `0-60`; the
+  tables say only "Integer". The flow schema allows 0–23 and 0–59.
+- **`interval` is 1–1000 for both types.** The schedule pages give 1 to 1,000;
+  the tumbling window page says only "A positive integer".
+
+`timeZone` is the Windows name of the trigger's IANA zone, from the Unicode
+CLDR's `windowsZones.xml`, with the zone's other names from CLDR's
+`bcp47/timezone.xml`, both read on 2026-11-17 and kept in
+`src/triggers/windows-zones.ts`, generated from them. The
+schedule page's own list names only some zones and points to the portal for
+the rest; the pack assumes ADF accepts the Windows zone names CLDR gives. A
+zone CLDR maps to no Windows zone is refused.
+
+The pages are silent on some recurrences. Ingestron's checks (definitions
+specification, section 11.6) assume the following, and the pack's output relies
+on ADF doing the same:
+
+- **A local time the clocks skip runs after the change.** The pages say only
+  that a trigger by `Day` or longer "auto-adjusts for the twice-a-year change",
+  and that `Minute` and `Hour` keep "regular intervals". They do not say what
+  happens to a time that does not exist on the day the clocks go forward; the
+  checks take it to run that much later.
+- **A local time the clocks repeat runs once, at its first occurrence.** The
+  pages do not say whether a time that happens twice when the clocks go back
+  runs once or twice, or at which of the two.
+- **`Week` with an interval counts seven-day blocks from the start date.** The
+  pages say an interval of 3 by `week` "recurs every three weeks", but not
+  where a week begins, so not which weekdays of `weekDays` fall in a week that
+  runs.
+- **A missing `at` hour or minute takes the start's.** The pages say "when
+  hours or minutes aren't set in the schedule for a trigger, the hours or
+  minutes of the first execution are used as defaults", and that the minutes
+  of an every-hour schedule "are controlled by the `startTime` value". They do
+  not say which "first execution" is meant when the start is not on the
+  schedule; the checks take the start's.
+- **A month day the month lacks is skipped.** The pages say a monthly trigger
+  "scheduled to run only on day 31 … runs only in those months that have a
+  thirty-first day", and that a missing fifth Friday does not run. They do not
+  say the same of a monthly trigger without `schedule` that starts on the 29th
+  to 31st, or of a negative day that counts back past the first of the month,
+  such as -31 in April; the checks skip those too.
+- **Tumbling `Day` and `Week` windows are fixed lengths in UTC.** The pages
+  say tumbling windows are "fixed-sized" and have no time zone, and do not
+  list `Day` or `Week` at all. Definitions checks such a window as 24 or 168
+  hours of UTC; the pack refuses a flow's tumbling window by either.
+
+## Expressions
+
+Accessed 2026-11-15:
+
+- [Azure subscription and service limits, quotas, and constraints](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits),
+  section "Azure Data Factory limits": "Characters per expression", default
+  limit 8,192 and maximum limit 8,192. The pack refuses a query, or a
+  trigger's expression, longer than that (`src/output/expression-limit.ts`).
+  Data Factory's limits are published in that Azure page's table.
+- [Expressions and functions](https://learn.microsoft.com/en-us/azure/data-factory/control-flow-expression-language-functions)
+  (Azure Data Factory and Azure Synapse): "If a literal string is needed that
+  starts with @, it must be escaped by using @@", with `"@@"` giving a one
+  character string `@`; and, for string interpolation, the example
+  `"Answer is: @@{pipeline().parameters.myNumber}"`, which returns the text
+  `Answer is: @{pipeline().parameters.myNumber}`. So a literal the pack
+  writes where ADF reads expressions (a trigger's parameter value, a
+  parameter's `defaultValue`, the select of the `load` switch) has a leading
+  `@` written `@@`, and each `@{` written `@@{`.

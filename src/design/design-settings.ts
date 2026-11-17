@@ -4,6 +4,8 @@
 import type { ResolvedTable } from "@ingestron/definitions";
 import { caseProblems, reserved } from "./audit-names.js";
 import { intentAuditColumns } from "./intent-audit.js";
+import { parameterAuditOf, valueProblems } from "./audit-parameters.js";
+import { parameterNames } from "./path-parameters.js";
 
 /** A value ADF fills in when it runs, its column type, and what it means. */
 export interface AuditValue {
@@ -60,8 +62,6 @@ export const auditValues: Record<string, AuditValue> = {
   },
 };
 
-const known = Object.keys(auditValues).join(", ");
-
 /** What `parallel` copies at once when it is not set. */
 export const defaultParallel = 4;
 
@@ -83,8 +83,13 @@ const auditMeanings = Object.values(auditValues).map((value) =>
   `${value.description} (${value.type}).`.replace(/^./, (letter) => letter.toUpperCase()),
 );
 
-/** The run or source value a written audit value names, in any case; undefined for literal text. */
+/**
+ * The run or source value a written audit value names, in any case; undefined for literal text.
+ * `run.parameters.<name>` is the pipeline parameter of that name, and its column is a string.
+ */
 export function auditValueOf(written: string): AuditValue | undefined {
+  const dynamic = parameterAuditOf(written);
+  if (dynamic) return dynamic;
   const key = written.toLowerCase();
   return Object.hasOwn(auditValues, key) ? auditValues[key] : undefined;
 }
@@ -145,7 +150,7 @@ export const designSettings = {
         { type: "string", minLength: 1 },
       ],
       description:
-        "What the column holds: one of these run or source values, in any case, or literal text, such as `${environment.name}`, which is written as it is.",
+        "What the column holds: one of these run or source values, in any case, `run.parameters.<name>` for a parameter the flow declares (or `windowStart`, `windowEnd`, `load`), or literal text, such as `${environment.name}`, which is written as it is.",
     },
     examples: [{ _loaded_at: "run.trigger_time", _run_id: "run.id", _source: "source.object" }],
   },
@@ -183,6 +188,7 @@ export function designProblems(table: ResolvedTable): string[] {
     problems.push("parallel applies to pattern: foreach");
   const columns = (settings.audit_columns ?? {}) as Record<string, string>;
   const contract = {
+    parameters: parameterNames(table),
     names: new Set(table.contract.columns.map((column) => column.name.toLowerCase())),
     clash:
       table.contract.origin === "metadata"
@@ -209,7 +215,7 @@ export function designProblems(table: ResolvedTable): string[] {
 function auditProblems(
   name: string,
   value: string,
-  contract: { names: Set<string>; clash: string },
+  contract: { names: Set<string>; clash: string; parameters: string[] },
 ): string[] {
   const problems: string[] = [];
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name))
@@ -220,9 +226,6 @@ function auditProblems(
     problems.push(`audit column "${name}" is a name the packs that read the files use; rename it`);
   if (contract.names.has(name.toLowerCase()))
     problems.push(`audit column "${name}" ${contract.clash}`);
-  if (/^(run|source)\./i.test(value) && !auditValueOf(value))
-    problems.push(`audit column "${name}" uses "${value}"; run and source values: ${known}`);
-  else if (value.startsWith("@") || value.includes("@{"))
-    problems.push(`audit column "${name}" holds "${value}", which ADF reads as an expression`);
+  problems.push(...valueProblems(name, value, Object.keys(auditValues), contract.parameters));
   return problems;
 }

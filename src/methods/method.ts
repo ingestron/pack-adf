@@ -108,7 +108,7 @@ export const layoutSettings = {
   path: {
     type: "string",
     description:
-      "A path of your own for each table's file under the landing folder, instead of `layout`. It must include `{object}` and end in `.parquet` (`.json` for Microsoft 365). Its other tokens are `{connection}`, the window start's `{yyyy}`, `{MM}`, `{dd}` and `{HH}`, and `{run}`. A run adds a file when the path has `{run}`, or the date tokens down to the window's unit, such as `{HH}` for hourly windows; otherwise it replaces the file. Setting `path` and `layout` in the same place is refused; set in different places, the one nearer the table wins.",
+      "A path of your own for each table's file under the landing folder, instead of `layout`. It must include `{object}` and end in `.parquet` (`.json` for Microsoft 365). Its other tokens are `{connection}`, the window start's `{yyyy}`, `{MM}`, `{dd}` and `{HH}`, `{run}` and `{parameters.<name>}` for a parameter the flow declares (or `windowStart`, `windowEnd`, `load`). A run adds a file when the path has `{run}`, or the date tokens down to the window's unit, such as `{HH}` for hourly windows; otherwise it replaces the file. Setting `path` and `layout` in the same place is refused; set in different places, the one nearer the table wins.",
     examples: ["{object}/{yyyy}/{MM}/{dd}/{object}_{run}.parquet"],
   },
 };
@@ -135,6 +135,7 @@ export const adfCopy: Method = {
   connectivity: ["private", "workspace", "public"],
   produces: "files",
   renames: true,
+  filters: true,
   placement: tablePlacement,
   defaults: {
     format: "parquet",

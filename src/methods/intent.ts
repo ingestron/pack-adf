@@ -18,15 +18,16 @@ const pages = {
   variables: "https://learn.microsoft.com/en-us/azure/data-factory/control-flow-system-variables",
   tumbling:
     "https://learn.microsoft.com/en-us/azure/data-factory/how-to-create-tumbling-window-trigger",
+  schedule: "https://learn.microsoft.com/en-us/azure/data-factory/how-to-create-schedule-trigger",
   policy:
     "https://learn.microsoft.com/en-us/azure/data-factory/concepts-pipelines-activities#activity-policy",
 };
 
-const ga = (source: string): FeatureStatus => ({ level: "ga", checked: "2026-11-09", source });
-const used = (does: string, source: string): IntentUse => ({
+const ga = (source: string, checked: string): FeatureStatus => ({ level: "ga", checked, source });
+const used = (does: string, source: string, checked = "2026-11-09"): IntentUse => ({
   use: "used",
   does,
-  status: ga(source),
+  status: ga(source, checked),
 });
 const notYet: IntentUse = { use: "not-yet", reason: "Planned." };
 
@@ -119,15 +120,24 @@ export const intent: Record<string, IntentUse> = {
     pages.variables,
   ),
   "operations.retries": used(
-    "The tumbling window trigger's retry count; the wait stays five minutes.",
+    "The tumbling window trigger's retry count; the wait stays five minutes. On a flow's tumbling windows it is the retry count and wait, unless the trigger writes its own.",
     pages.tumbling,
+  ),
+  "operations.concurrency": used(
+    "On a flow's tumbling windows, `maxConcurrency` (1 to 50), unless the trigger writes its own.",
+    pages.tumbling,
+    "2026-11-15",
   ),
   "operations.timeout": used("The Copy activity's timeout.", pages.policy),
   "operations.schedule=project": used(
     "Tumbling window triggers from the methods' schedule settings, the same for every flow.",
     pages.tumbling,
   ),
-  "operations.schedule=flow": notYet,
+  "operations.schedule=flow": used(
+    "The flow's own triggers: tumbling window triggers on the flow's pipeline, and schedule triggers.",
+    pages.schedule,
+    "2026-11-15",
+  ),
 };
 
 /** What differs for `adf-copy`, which reads a table, not files. */
